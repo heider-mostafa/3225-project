@@ -1,10 +1,18 @@
 'use client'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { User } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase/config'
+import { createBrowserClient } from '@supabase/ssr'
 import { Toaster } from '@/components/ui/toaster'
 import { I18nProvider } from '@/components/i18n-provider'
 import { ErrorBoundary } from '@/components/error-boundary'
+
+// Lazy Supabase client initialization
+function getSupabaseClient() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+}
 
 // Create auth context
 const AuthContext = createContext<{
@@ -23,6 +31,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Only initialize Supabase client on the client side
+    if (typeof window === 'undefined') {
+      setLoading(false)
+      return
+    }
+
+    const supabase = getSupabaseClient()
+
     // Get initial session
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user)
