@@ -33,26 +33,31 @@ export interface EmailOptions {
 }
 
 export class MailgunClient {
-  private apiKey: string;
-  private domain: string;
-  private baseUrl: string;
-  private webhookSigningKey: string;
+  private apiKey: string | null = null;
+  private domain: string | null = null;
+  private baseUrl: string = 'https://api.mailgun.net/v3';
+  private webhookSigningKey: string | null = null;
+  private initialized: boolean = false;
 
-  constructor() {
+  private initialize() {
+    if (this.initialized) return;
+    
     this.apiKey = process.env.MAILGUN_API_KEY!;
     this.domain = process.env.MAILGUN_DOMAIN!;
     this.webhookSigningKey = process.env.MAILGUN_WEBHOOK_SIGNING_KEY!;
-    this.baseUrl = 'https://api.mailgun.net/v3';
 
     if (!this.apiKey || !this.domain) {
       throw new Error('Mailgun configuration missing. Please set MAILGUN_API_KEY and MAILGUN_DOMAIN environment variables.');
     }
+    
+    this.initialized = true;
   }
 
   /**
    * Send a single email
    */
   async sendEmail(options: EmailOptions): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    this.initialize();
     try {
       const formData = new FormData();
       
@@ -63,7 +68,7 @@ export class MailgunClient {
       });
 
       // From address
-      formData.append('from', options.from || `VirtualEstate <noreply@${this.domain}>`);
+      formData.append('from', options.from || `VirtualEstate <noreply@${this.domain!}>`);
       
       // Subject and content
       formData.append('subject', options.subject);
@@ -114,10 +119,10 @@ export class MailgunClient {
         });
       }
 
-      const response = await fetch(`${this.baseUrl}/${this.domain}/messages`, {
+      const response = await fetch(`${this.baseUrl}/${this.domain!}/messages`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey!}`).toString('base64')}`,
         },
         body: formData,
       });
@@ -168,6 +173,7 @@ export class MailgunClient {
    * Verify webhook signature for security
    */
   verifyWebhookSignature(body: string, signature: string, timestamp: string): boolean {
+    this.initialize();
     if (!this.webhookSigningKey) {
       console.warn('Webhook signing key not configured');
       return false;
@@ -192,11 +198,12 @@ export class MailgunClient {
    * Get email analytics for a specific period
    */
   async getEmailStats(period: 'day' | 'week' | 'month' = 'week'): Promise<any> {
+    this.initialize();
     try {
-      const response = await fetch(`${this.baseUrl}/${this.domain}/stats/total?event=*&duration=${period}`, {
+      const response = await fetch(`${this.baseUrl}/${this.domain!}/stats/total?event=*&duration=${period}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey!}`).toString('base64')}`,
         },
       });
 
@@ -211,11 +218,12 @@ export class MailgunClient {
    * Validate email address
    */
   async validateEmail(email: string): Promise<{ valid: boolean; reason?: string }> {
+    this.initialize();
     try {
       const response = await fetch(`${this.baseUrl}/address/validate?address=${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey!}`).toString('base64')}`,
         },
       });
 
@@ -235,6 +243,7 @@ export class MailgunClient {
    * Create or update email template
    */
   async createTemplate(name: string, template: EmailTemplate): Promise<boolean> {
+    this.initialize();
     try {
       const formData = new FormData();
       formData.append('name', name);
@@ -242,10 +251,10 @@ export class MailgunClient {
       formData.append('template', template.html);
       if (template.text) formData.append('text', template.text);
 
-      const response = await fetch(`${this.baseUrl}/${this.domain}/templates`, {
+      const response = await fetch(`${this.baseUrl}/${this.domain!}/templates`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey!}`).toString('base64')}`,
         },
         body: formData,
       });
@@ -261,15 +270,16 @@ export class MailgunClient {
    * Add email to suppression list (unsubscribe)
    */
   async suppressEmail(email: string, reason: 'bounce' | 'unsubscribe' | 'complaint' = 'unsubscribe'): Promise<boolean> {
+    this.initialize();
     try {
       const formData = new FormData();
       formData.append('address', email);
       formData.append('reason', reason);
 
-      const response = await fetch(`${this.baseUrl}/${this.domain}/unsubscribes`, {
+      const response = await fetch(`${this.baseUrl}/${this.domain!}/unsubscribes`, {
         method: 'POST',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey!}`).toString('base64')}`,
         },
         body: formData,
       });
@@ -285,11 +295,12 @@ export class MailgunClient {
    * Check if email is suppressed
    */
   async isEmailSuppressed(email: string): Promise<boolean> {
+    this.initialize();
     try {
-      const response = await fetch(`${this.baseUrl}/${this.domain}/unsubscribes/${encodeURIComponent(email)}`, {
+      const response = await fetch(`${this.baseUrl}/${this.domain!}/unsubscribes/${encodeURIComponent(email)}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey}`).toString('base64')}`,
+          'Authorization': `Basic ${Buffer.from(`api:${this.apiKey!}`).toString('base64')}`,
         },
       });
 
