@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { createClient } from '@supabase/supabase-js';
 import { sendCommonEmail } from '@/lib/email/mailgun';
 
-import { createServerSupabaseClient } from '@/lib/supabase/server'
 // Service role client for admin operations
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,10 +71,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // Get user session if available
-    const cookieStore = await cookies();
-    const authSupabase = await createServerSupabaseClient();
-
-    const { data: { session } } = await authSupabase.auth.getSession();
+    const supabase = await createServerSupabaseClient();
+    const { data: { session } } = await supabase.auth.getSession();
 
     // Verify the property exists
     const { data: property, error: propertyError } = await supabase
