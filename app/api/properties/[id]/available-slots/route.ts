@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/config';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function GET(
   request: Request,
@@ -9,6 +9,7 @@ export async function GET(
     const resolvedParams = await params;
     const propertyId = resolvedParams.id;
     const { searchParams } = new URL(request.url);
+    const supabase = await createServerSupabaseClient();
     const date = searchParams.get('date');
     const brokerId = searchParams.get('broker_id');
 

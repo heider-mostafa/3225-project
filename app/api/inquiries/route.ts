@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase/config';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { triggerInquiryWorkflow } from '@/lib/n8n/client';
 
 export async function POST(request: Request) {
@@ -7,6 +7,7 @@ export async function POST(request: Request) {
     const { propertyId, name, email, phone, message } = await request.json();
 
     // Create inquiry in Supabase
+    const supabase = await createServerSupabaseClient();
     const { data: inquiry, error } = await supabase
       .from('inquiries')
       .insert({

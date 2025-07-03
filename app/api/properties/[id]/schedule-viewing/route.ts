@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { triggerInquiryWorkflow } from '@/lib/n8n/client';
-import { supabase } from '@/lib/supabase/config';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
 
 export async function POST(
   request: Request,
@@ -11,6 +11,7 @@ export async function POST(
   try {
     const resolvedParams = await params;
     const body = await request.json();
+    const supabase = await createServerSupabaseClient();
     const { 
       broker_id,
       client_name,
