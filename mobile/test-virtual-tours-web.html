@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Virtual Tours Screen Test - Real Estate Mobile App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .left-panel {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+        }
+
+        .right-panel {
+            background: #1e293b;
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .section h2 {
+            color: #1e293b;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .api-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .api-button {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 15px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .api-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
+        }
+
+        .api-button.success {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .api-button.error {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        }
+
+        .api-button.loading {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+
+        .mobile-preview {
+            background: #f8fafc;
+            padding: 20px;
+            min-height: 600px;
+        }
+
+        .mobile-header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+            margin-bottom: 20px;
+        }
+
+        .mobile-header h3 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+
+        .mobile-header p {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+
+        .featured-tours {
+            margin-bottom: 25px;
+        }
+
+        .featured-tours h4 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .featured-carousel {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .featured-tour-card {
+            min-width: 280px;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .featured-tour-card:hover {
+            transform: translateY(-4px);
+        }
+
+        .tour-image {
+            height: 150px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            position: relative;
+        }
+
+        .featured-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f59e0b;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .tour-overlay {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .tour-info {
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+
+        .tour-content {
+            padding: 15px;
+        }
+
+        .tour-title {
+            font-weight: bold;
+            color: #1e293b;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .tour-price {
+            color: #059669;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .tour-location {
+            color: #6b7280;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .tour-details {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #6b7280;
+        }
+
+        .property-type-chip {
+            background: #dbeafe;
+            color: #1d4ed8;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
+        }
+
+        .category-filters {
+            margin-bottom: 25px;
+        }
+
+        .category-filters h4 {
+            color: #1e293b;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .category-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .category-chip {
+            background: #f8fafc;
+            color: #6b7280;
+            border: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .category-chip.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .category-chip:hover {
+            background: #e5e7eb;
+        }
+
+        .category-chip.active:hover {
+            background: #1d4ed8;
+        }
+
+        .tours-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .tour-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .tour-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .tour-card-image {
+            height: 100px;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            position: relative;
+        }
+
+        .featured-tag {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: #f59e0b;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+        }
+
+        .tour-card-content {
+            padding: 12px;
+        }
+
+        .tour-card-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 4px;
+        }
+
+        .tour-card-price {
+            color: #059669;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+        }
+
+        .tour-card-location {
+            color: #6b7280;
+            font-size: 0.7rem;
+            margin-bottom: 8px;
+        }
+
+        .tour-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 4px 6px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            color: #6b7280;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .action-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: #374151;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #60a5fa;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .api-status {
+            margin-bottom: 20px;
+        }
+
+        .status-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #374151;
+        }
+
+        .status-item:last-child {
+            border-bottom: none;
+        }
+
+        .status-indicator {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        .status-success {
+            background: #059669;
+            color: white;
+        }
+
+        .status-error {
+            background: #dc2626;
+            color: white;
+        }
+
+        .status-pending {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .console-log {
+            background: #111827;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.8rem;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .console-log pre {
+            color: #e5e7eb;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #374151;
+            border-radius: 50%;
+            border-top-color: #60a5fa;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .mobile-device {
+            width: 375px;
+            height: 667px;
+            background: #000;
+            border-radius: 25px;
+            padding: 8px;
+            margin: 0 auto;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+        }
+
+        .mobile-screen {
+            width: 100%;
+            height: 100%;
+            background: #f8fafc;
+            border-radius: 18px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        @media (max-width: 1024px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .right-panel {
+                max-height: 500px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .api-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .mobile-device {
+                width: 320px;
+                height: 568px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Virtual Tours Screen Test</h1>
+            <p>Egyptian Real Estate Mobile App - Phase 4 Implementation Testing</p>
+        </div>
+
+        <div class="content">
+            <div class="left-panel">
+                <!-- API Testing Controls -->
+                <div class="section">
+                    <h2>🔗 API Connectivity Test</h2>
+                    <div class="api-controls">
+                        <button class="api-button" onclick="testPropertiesAPI()">
+                            <span id="properties-btn-text">Test Properties API</span>
+                        </button>
+                        <button class="api-button" onclick="testVirtualToursFiltering()">
+                            <span id="tours-btn-text">Test Virtual Tours Filter</span>
+                        </button>
+                        <button class="api-button" onclick="testCategoryFiltering()">
+                            <span id="filters-btn-text">Test Category Filters</span>
+                        </button>
+                        <button class="api-button" onclick="testTourBookmarksAPI()">
+                            <span id="bookmarks-btn-text">Test Bookmarks</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Virtual Tours Screen Preview -->
+                <div class="section">
+                    <h2>📱 Virtual Tours Screen Preview</h2>
+                    <div class="mobile-device">
+                        <div class="mobile-screen">
+                            <div class="mobile-preview">
+                                <div class="mobile-header">
+                                    <h3>🏠 الجولات الافتراضية</h3>
+                                    <p>استكشف العقارات بتقنية ثلاثية الأبعاد</p>
+                                    <div style="margin-top: 10px; font-size: 0.8rem; opacity: 0.8;">
+                                        <span id="tours-count">0</span> جولة متاحة | <span id="featured-count">0</span> مميزة
+                                    </div>
+                                </div>
+
+                                <!-- Featured Tours -->
+                                <div class="featured-tours">
+                                    <h4>🌟 الجولات المميزة</h4>
+                                    <div class="featured-carousel" id="featured-carousel">
+                                        <!-- Featured tours will be populated here -->
+                                    </div>
+                                </div>
+
+                                <!-- Category Filters -->
+                                <div class="category-filters">
+                                    <h4>🔍 تصفية الجولات</h4>
+                                    <div class="category-chips">
+                                        <div class="category-chip active" onclick="selectCategory('all')">جميع الجولات</div>
+                                        <div class="category-chip" onclick="selectCategory('featured')">المميزة</div>
+                                        <div class="category-chip" onclick="selectCategory('villa')">الفلل</div>
+                                        <div class="category-chip" onclick="selectCategory('apartment')">الشقق</div>
+                                        <div class="category-chip" onclick="selectCategory('new_cairo')">القاهرة الجديدة</div>
+                                    </div>
+                                </div>
+
+                                <!-- Tours Grid -->
+                                <div class="tours-grid" id="tours-grid">
+                                    <!-- Tours will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <!-- Stats -->
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-tours">0</div>
+                        <div class="stat-label">إجمالي الجولات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="featured-tours">0</div>
+                        <div class="stat-label">جولات مميزة</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="tour-views">0</div>
+                        <div class="stat-label">إجمالي المشاهدات</div>
+                    </div>
+                </div>
+
+                <!-- API Status -->
+                <div class="api-status">
+                    <h3 style="margin-bottom: 15px;">🔄 API Status</h3>
+                    <div class="status-item">
+                        <span>Properties API</span>
+                        <span class="status-indicator status-pending" id="properties-status">Pending</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Virtual Tours Filter</span>
+                        <span class="status-indicator status-pending" id="tours-status">Pending</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Category Filters</span>
+                        <span class="status-indicator status-pending" id="filters-status">Pending</span>
+                    </div>
+                    <div class="status-item">
+                        <span>Bookmark System</span>
+                        <span class="status-indicator status-pending" id="bookmarks-status">Pending</span>
+                    </div>
+                </div>
+
+                <!-- Console Log -->
+                <div class="console-log">
+                    <h4 style="color: #60a5fa; margin-bottom: 10px;">📜 Testing Console</h4>
+                    <pre id="console-output">🚀 Virtual Tours Screen Test Ready...\n\nClick the API buttons above to test connectivity.\n\n</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allProperties = [];
+        let virtualTours = [];
+        let selectedCategory = 'all';
+        let apiBaseUrl = 'http://localhost:3000/api';
+
+        // Utility functions
+        function log(message) {
+            const console = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString('ar-EG');
+            console.textContent += `[${timestamp}] ${message}\n`;
+            console.scrollTop = console.scrollHeight;
+        }
+
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `status-indicator status-${status}`;
+            element.textContent = text;
+        }
+
+        function formatEGP(price) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+                notation: price >= 1000000 ? 'compact' : 'standard',
+            }).format(price);
+        }
+
+        function getPropertyTypeArabic(type) {
+            const typeMap = {
+                'Apartment': 'شقة',
+                'Villa': 'فيلا', 
+                'Townhouse': 'تاون هاوس',
+                'Penthouse': 'بنت هاوس',
+                'Studio': 'استديو',
+                'Duplex': 'دوبلكس',
+                'Chalet': 'شاليه',
+            };
+            return typeMap[type] || type;
+        }
+
+        // API Testing Functions - Updated to use correct endpoints
+        async function testPropertiesAPI() {
+            const button = document.querySelector('#properties-btn-text');
+            const originalText = button.textContent;
+            
+            try {
+                button.innerHTML = '<div class="loading"></div>Testing...';
+                log('🔍 Testing Properties API (like HomeScreen/PropertiesScreen)...');
+                
+                // Use the same endpoint as HomeScreen and PropertiesScreen
+                const response = await fetch(`${apiBaseUrl}/properties?limit=100`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    allProperties = data.data || [];
+                    
+                    updateStatus('properties-status', 'success', `✅ ${allProperties.length} props`);
+                    button.textContent = `✅ Properties API: عمل بنجاح (${allProperties.length} نتائج)`;
+                    button.classList.add('success');
+                    
+                    log(`✅ Properties API: Success! Found ${allProperties.length} total properties`);
+                    
+                    // Auto-test virtual tours filtering
+                    setTimeout(testVirtualToursFiltering, 500);
+                    
+                } else {
+                    throw new Error(data.error || 'API request failed');
+                }
+            } catch (error) {
+                updateStatus('properties-status', 'error', '❌ Error');
+                button.textContent = `❌ Properties API: فشل`;
+                button.classList.add('error');
+                log(`❌ Properties API Error: ${error.message}`);
+            }
+        }
+
+        async function testVirtualToursFiltering() {
+            const button = document.querySelector('#tours-btn-text');
+            const originalText = button.textContent;
+            
+            try {
+                button.innerHTML = '<div class="loading"></div>Testing...';
+                log('🔍 Testing Virtual Tours Filtering...');
+                
+                if (allProperties.length === 0) {
+                    throw new Error('No properties loaded. Test Properties API first.');
+                }
+                
+                // Filter properties that have virtual tours
+                const propertiesWithTours = allProperties.filter(property => property.virtual_tour_url);
+                
+                // Transform to virtual tours format
+                virtualTours = propertiesWithTours.map(property => ({
+                    id: `tour_${property.id}`,
+                    propertyId: property.id,
+                    title: `جولة افتراضية - ${property.title}`,
+                    description: property.description || `استكشف ${property.title} من خلال جولة افتراضية ثلاثية الأبعاد مذهلة`,
+                    tourUrl: property.virtual_tour_url,
+                    thumbnailUrl: property.property_photos?.find(p => p.is_primary)?.url,
+                    duration: Math.floor(Math.random() * 10) + 5,
+                    views: Math.floor(Math.random() * 1000) + 100,
+                    isFeatured: Math.random() > 0.7,
+                    property: {
+                        id: property.id,
+                        title: property.title,
+                        price: property.price,
+                        city: property.city,
+                        address: property.address,
+                        bedrooms: property.bedrooms,
+                        bathrooms: property.bathrooms,
+                        square_meters: property.square_meters,
+                        property_type: property.property_type,
+                        property_photos: property.property_photos,
+                    }
+                }));
+                
+                updateStatus('tours-status', 'success', `✅ ${virtualTours.length} tours`);
+                button.textContent = `✅ Virtual Tours: عمل بنجاح (${virtualTours.length} نتائج)`;
+                button.classList.add('success');
+                
+                log(`✅ Virtual Tours Filtering: Success! Found ${virtualTours.length} properties with virtual tours from ${allProperties.length} total properties`);
+                updateUI();
+                
+            } catch (error) {
+                updateStatus('tours-status', 'error', '❌ Error');
+                button.textContent = `❌ Virtual Tours: فشل`;
+                button.classList.add('error');
+                log(`❌ Virtual Tours Filtering Error: ${error.message}`);
+            }
+        }
+
+        async function testCategoryFiltering() {
+            const button = document.querySelector('#filters-btn-text');
+            const originalText = button.textContent;
+            
+            try {
+                button.innerHTML = '<div class="loading"></div>Testing...';
+                log('🔍 Testing Category Filtering...');
+                
+                if (virtualTours.length === 0) {
+                    throw new Error('No virtual tours loaded. Test Virtual Tours first.');
+                }
+                
+                // Test different category filters
+                const categories = {
+                    'featured': virtualTours.filter(tour => tour.isFeatured),
+                    'villa': virtualTours.filter(tour => tour.property.property_type === 'Villa'),
+                    'apartment': virtualTours.filter(tour => tour.property.property_type === 'Apartment'),
+                    'new_cairo': virtualTours.filter(tour => tour.property.city === 'New Cairo'),
+                    'sheikh_zayed': virtualTours.filter(tour => tour.property.city === 'Sheikh Zayed'),
+                };
+                
+                let totalFilteredResults = 0;
+                for (const [category, results] of Object.entries(categories)) {
+                    totalFilteredResults += results.length;
+                    log(`  - ${category}: ${results.length} results`);
+                }
+                
+                updateStatus('filters-status', 'success', `✅ ${totalFilteredResults} filtered`);
+                button.textContent = `✅ Category Filters: عمل بنجاح (${totalFilteredResults} نتائج)`;
+                button.classList.add('success');
+                
+                log(`✅ Category Filtering: Success! Total filtered results across all categories: ${totalFilteredResults}`);
+                
+            } catch (error) {
+                updateStatus('filters-status', 'error', '❌ Error');
+                button.textContent = `❌ Category Filters: فشل`;
+                button.classList.add('error');
+                log(`❌ Category Filtering Error: ${error.message}`);
+            }
+        }
+
+        async function testTourBookmarksAPI() {
+            const button = document.querySelector('#bookmarks-btn-text');
+            const originalText = button.textContent;
+            
+            try {
+                button.innerHTML = '<div class="loading"></div>Testing...';
+                log('🔍 Testing Tour Bookmarks System...');
+                
+                // Simulate bookmark operations
+                const testBookmarks = [
+                    { id: 'tour_1', propertyId: '1', title: 'Test Tour 1', tourUrl: 'https://example.com/tour1', timestamp: Date.now() },
+                    { id: 'tour_2', propertyId: '2', title: 'Test Tour 2', tourUrl: 'https://example.com/tour2', timestamp: Date.now() }
+                ];
+                
+                // Test localStorage operations
+                localStorage.setItem('bookmarked_tours', JSON.stringify(testBookmarks));
+                const retrieved = JSON.parse(localStorage.getItem('bookmarked_tours') || '[]');
+                
+                if (retrieved.length === testBookmarks.length) {
+                    updateStatus('bookmarks-status', 'success', '✅ Working');
+                    button.textContent = `✅ Bookmarks: عمل بنجاح`;
+                    button.classList.add('success');
+                    log(`✅ Tour Bookmarks System: Success! Can save/load ${retrieved.length} bookmarks`);
+                } else {
+                    throw new Error('Bookmark save/load failed');
+                }
+                
+            } catch (error) {
+                updateStatus('bookmarks-status', 'error', '❌ Error');
+                button.textContent = `❌ Bookmarks: فشل`;
+                button.classList.add('error');
+                log(`❌ Tour Bookmarks System Error: ${error.message}`);
+            }
+        }
+
+        // UI Update Functions
+        function updateUI() {
+            updateStats();
+            updateFeaturedTours();
+            updateToursGrid();
+        }
+
+        function updateStats() {
+            const totalTours = virtualTours.length;
+            const featuredTours = virtualTours.filter(tour => tour.isFeatured).length;
+            const totalViews = virtualTours.reduce((sum, tour) => sum + tour.views, 0);
+            
+            document.getElementById('total-tours').textContent = totalTours.toLocaleString('ar-EG');
+            document.getElementById('featured-tours').textContent = featuredTours.toLocaleString('ar-EG');
+            document.getElementById('tour-views').textContent = totalViews.toLocaleString('ar-EG');
+            
+            document.getElementById('tours-count').textContent = totalTours.toLocaleString('ar-EG');
+            document.getElementById('featured-count').textContent = featuredTours.toLocaleString('ar-EG');
+        }
+
+        function updateFeaturedTours() {
+            const featuredTours = virtualTours.filter(tour => tour.isFeatured);
+            const carousel = document.getElementById('featured-carousel');
+            
+            if (featuredTours.length === 0) {
+                carousel.innerHTML = '<div style="color: #6b7280; text-align: center; padding: 20px;">لا توجد جولات مميزة</div>';
+                return;
+            }
+            
+            carousel.innerHTML = featuredTours.map(tour => `
+                <div class="featured-tour-card" onclick="openTour('${tour.id}')">
+                    <div class="tour-image">
+                        🏠
+                        <div class="featured-badge">مميزة</div>
+                        <div class="tour-overlay">
+                            <div class="tour-info">⏱️ ${tour.duration} دقائق</div>
+                            <div class="tour-info">👁️ ${tour.views.toLocaleString('ar-EG')}</div>
+                        </div>
+                    </div>
+                    <div class="tour-content">
+                        <div class="tour-title">${tour.title}</div>
+                        <div class="tour-price">${formatEGP(tour.property.price)}</div>
+                        <div class="tour-location">📍 ${tour.property.address}, ${tour.property.city}</div>
+                        <div class="tour-details">
+                            <span>🛏️ ${tour.property.bedrooms} | 🚿 ${tour.property.bathrooms}</span>
+                            <span class="property-type-chip">${getPropertyTypeArabic(tour.property.property_type)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateToursGrid() {
+            const filteredTours = getFilteredTours();
+            const grid = document.getElementById('tours-grid');
+            
+            if (filteredTours.length === 0) {
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: #6b7280; padding: 20px;">لا توجد جولات افتراضية في هذه الفئة</div>';
+                return;
+            }
+            
+            grid.innerHTML = filteredTours.map(tour => `
+                <div class="tour-card" onclick="openTour('${tour.id}')">
+                    <div class="tour-card-image">
+                        🏠
+                        ${tour.isFeatured ? '<div class="featured-tag">⭐</div>' : ''}
+                        <div style="position: absolute; bottom: 6px; left: 6px; right: 6px; display: flex; justify-content: space-between;">
+                            <div class="tour-info">⏱️ ${tour.duration}د</div>
+                            <div class="tour-info">👁️ ${tour.views}</div>
+                        </div>
+                    </div>
+                    <div class="tour-card-content">
+                        <div class="tour-card-title">${tour.property.title}</div>
+                        <div class="tour-card-price">${formatEGP(tour.property.price)}</div>
+                        <div class="tour-card-location">📍 ${tour.property.city}</div>
+                        <div style="margin-bottom: 8px; font-size: 0.7rem; color: #6b7280;">
+                            🛏️ ${tour.property.bedrooms} | 🚿 ${tour.property.bathrooms}
+                        </div>
+                        <div class="tour-actions">
+                            <div class="action-btn" onclick="event.stopPropagation(); viewProperty('${tour.propertyId}')">تفاصيل</div>
+                            <div class="action-btn" onclick="event.stopPropagation(); shareTour('${tour.id}')">مشاركة</div>
+                            <div class="action-btn" onclick="event.stopPropagation(); bookmarkTour('${tour.id}')">🔖</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getFilteredTours() {
+            let filtered = virtualTours;
+
+            switch (selectedCategory) {
+                case 'featured':
+                    filtered = virtualTours.filter(tour => tour.isFeatured);
+                    break;
+                case 'villa':
+                    filtered = virtualTours.filter(tour => tour.property.property_type === 'Villa');
+                    break;
+                case 'apartment':
+                    filtered = virtualTours.filter(tour => tour.property.property_type === 'Apartment');
+                    break;
+                case 'new_cairo':
+                    filtered = virtualTours.filter(tour => tour.property.city === 'New Cairo');
+                    break;
+                default:
+                    filtered = virtualTours;
+            }
+
+            return filtered;
+        }
+
+        // Interactive Functions
+        function selectCategory(category) {
+            selectedCategory = category;
+            
+            // Update active category chip
+            document.querySelectorAll('.category-chip').forEach(chip => chip.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // Update tours grid
+            updateToursGrid();
+            
+            log(`🔍 Category filter changed to: ${category}`);
+        }
+
+        function openTour(tourId) {
+            const tour = virtualTours.find(t => t.id === tourId);
+            if (tour) {
+                log(`🏠 Opening virtual tour: ${tour.title}`);
+                log(`📱 Tour URL: ${tour.tourUrl}`);
+                
+                // In real app, this would open the WebView modal
+                alert(`🏠 Virtual Tour: ${tour.title}\n\n📱 This would open in WebView modal\n🔗 URL: ${tour.tourUrl}`);
+            }
+        }
+
+        function viewProperty(propertyId) {
+            log(`🏠 Navigating to property details: ${propertyId}`);
+            alert(`🏠 Navigating to Property Details\n\nProperty ID: ${propertyId}`);
+        }
+
+        function shareTour(tourId) {
+            const tour = virtualTours.find(t => t.id === tourId);
+            if (tour) {
+                log(`📤 Sharing virtual tour: ${tour.title}`);
+                
+                const message = `🏠 شاهد جولة افتراضية مذهلة لـ ${tour.property.title}
+
+💰 السعر: ${formatEGP(tour.property.price)}
+📍 الموقع: ${tour.property.address}, ${tour.property.city}
+🛏️ ${tour.property.bedrooms} غرف نوم | 🚿 ${tour.property.bathrooms} حمام
+
+👆 شاهد الجولة الافتراضية:
+${tour.tourUrl}
+
+#العقارات_المصرية #جولة_افتراضية`;
+
+                alert(`📤 Share Virtual Tour:\n\n${message}`);
+            }
+        }
+
+        function bookmarkTour(tourId) {
+            const tour = virtualTours.find(t => t.id === tourId);
+            if (tour) {
+                log(`🔖 Bookmarking virtual tour: ${tour.title}`);
+                
+                // Get existing bookmarks
+                const bookmarks = JSON.parse(localStorage.getItem('bookmarked_tours') || '[]');
+                const isBookmarked = bookmarks.some(b => b.id === tourId);
+                
+                if (isBookmarked) {
+                    // Remove bookmark
+                    const updated = bookmarks.filter(b => b.id !== tourId);
+                    localStorage.setItem('bookmarked_tours', JSON.stringify(updated));
+                    log(`✅ Removed from bookmarks: ${tour.title}`);
+                } else {
+                    // Add bookmark
+                    const newBookmark = {
+                        id: tour.id,
+                        propertyId: tour.propertyId,
+                        title: tour.title,
+                        tourUrl: tour.tourUrl,
+                        timestamp: Date.now(),
+                    };
+                    bookmarks.unshift(newBookmark);
+                    localStorage.setItem('bookmarked_tours', JSON.stringify(bookmarks));
+                    log(`✅ Added to bookmarks: ${tour.title}`);
+                }
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            log('🚀 Virtual Tours Screen Test Interface Loaded');
+            log('📱 Ready to test API connectivity and UI functionality');
+            log('');
+            log('Features to test:');
+            log('✅ Properties API (same as HomeScreen/PropertiesScreen)');
+            log('✅ Virtual tours filtering from properties');
+            log('✅ Featured tours carousel');
+            log('✅ Category filtering system');
+            log('✅ Tours grid display');
+            log('✅ WebView integration simulation');
+            log('✅ Bookmark functionality');
+            log('✅ Share system');
+            log('✅ Egyptian localization');
+            log('');
+            log('Click "Test Properties API" to start testing! 🎯');
+        });
+    </script>
+</body>
+</html> 

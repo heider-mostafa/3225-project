@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Egyptian Real Estate Mobile - Complete Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background-color: #f8fafc;
+            direction: rtl; /* Right-to-left for Arabic */
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .header p {
+            margin: 8px 0 0 0;
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section h2 {
+            color: #1f2937;
+            margin: 0 0 16px 0;
+            font-size: 22px;
+            font-weight: 600;
+        }
+        
+        .test-status {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        
+        .status-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .status-loading {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-error {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 18px;
+            color: #6b7280;
+        }
+        
+        .error {
+            color: #dc2626;
+            text-align: center;
+            padding: 30px;
+            background: #fef2f2;
+            border-radius: 8px;
+            border: 1px solid #fecaca;
+        }
+        
+        .retry-btn {
+            margin-top: 16px;
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .retry-btn:hover {
+            background: #1d4ed8;
+        }
+        
+        .property-card {
+            background: #f9fafb;
+            padding: 16px;
+            margin-bottom: 12px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .property-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 8px;
+            text-align: right;
+        }
+        
+        .property-price {
+            font-size: 18px;
+            font-weight: 700;
+            color: #059669;
+            margin-bottom: 8px;
+            text-align: right;
+        }
+        
+        .property-location {
+            color: #6b7280;
+            margin-bottom: 12px;
+            font-size: 14px;
+            text-align: right;
+        }
+        
+        .property-details {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            gap: 8px;
+        }
+        
+        .property-details span {
+            font-size: 13px;
+            color: #374151;
+            font-weight: 500;
+        }
+        
+        .property-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .property-type {
+            font-size: 11px;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .property-status {
+            font-size: 11px;
+            color: #059669;
+            font-weight: 600;
+        }
+        
+        .virtual-tour-badge {
+            font-size: 11px;
+            color: #2563eb;
+            font-weight: 600;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2563eb;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .test-info {
+            margin-top: 24px;
+            padding: 20px;
+            background: linear-gradient(135deg, #e0f2fe, #b3e5fc);
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .test-info h3 {
+            margin: 0 0 16px 0;
+            color: #0369a1;
+        }
+        
+        .test-info p {
+            margin: 8px 0;
+        }
+        
+        .test-info code {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 12px;
+            }
+            
+            .property-details {
+                flex-direction: column;
+                gap: 8px;
+                text-align: center;
+            }
+            
+            .property-meta {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="app">
+            <div class="header">
+                <h1>🏠 اختبار التطبيق المحمول للعقارات المصرية</h1>
+                <p>تجربة شاملة للـ API وواجهة التطبيق</p>
+            </div>
+
+            <!-- HomeScreen Test -->
+            <div class="test-section">
+                <h2>📱 اختبار الشاشة الرئيسية (HomeScreen)</h2>
+                <div id="home-status" class="test-status status-loading">⏳ جاري التحميل...</div>
+                <div id="home-results"></div>
+            </div>
+
+            <!-- PropertiesScreen Test -->
+            <div class="test-section">
+                <h2>🏢 اختبار شاشة العقارات (PropertiesScreen)</h2>
+                <div id="properties-status" class="test-status status-loading">⏳ جاري التحميل...</div>
+                <div id="properties-results"></div>
+            </div>
+
+            <!-- Overall Stats -->
+            <div class="test-section">
+                <h2>📊 إحصائيات التطبيق</h2>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div id="total-properties" class="stat-number">0</div>
+                        <div class="stat-label">إجمالي العقارات</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="virtual-tours" class="stat-number">0</div>
+                        <div class="stat-label">جولات افتراضية</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="avg-price" class="stat-number">0</div>
+                        <div class="stat-label">متوسط السعر (جنيه)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="api-calls" class="stat-number">0</div>
+                        <div class="stat-label">استدعاءات API</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="test-info">
+                <h3>🧪 معلومات الاختبار</h3>
+                <p><strong>النسخة:</strong> React Native 0.79.3 with TypeScript</p>
+                <p><strong>API:</strong> <code>http://localhost:3000/api/properties</code></p>
+                <p><strong>الشاشات المختبرة:</strong> HomeScreen, PropertiesScreen</p>
+                <p><strong>المميزات:</strong> عرض العقارات، البحث، التصفية، العملة المصرية، النصوص العربية</p>
+                <p><strong>الهدف:</strong> التأكد من جاهزية التطبيق للنشر على iOS/Android</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiCalls = 0;
+        let totalProperties = 0;
+        let virtualToursCount = 0;
+        let totalPrice = 0;
+
+        function updateStatus(elementId, status, text) {
+            const element = document.getElementById(elementId);
+            element.className = `test-status status-${status}`;
+            element.textContent = text;
+        }
+
+        function updateStats() {
+            document.getElementById('total-properties').textContent = totalProperties;
+            document.getElementById('virtual-tours').textContent = virtualToursCount;
+            document.getElementById('avg-price').textContent = totalProperties ? 
+                Math.round(totalPrice / totalProperties).toLocaleString('ar-EG') : '0';
+            document.getElementById('api-calls').textContent = apiCalls;
+        }
+
+        function formatEGP(price) {
+            return new Intl.NumberFormat('ar-EG', {
+                style: 'currency',
+                currency: 'EGP',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+            }).format(price);
+        }
+
+        function renderProperty(property, index) {
+            const virtualTour = property.virtual_tour_url ? 
+                `<div class="virtual-tour-badge">🏠 جولة افتراضية</div>` : '';
+            
+            return `
+                <div class="property-card">
+                    <div class="property-title">${property.title}</div>
+                    <div class="property-price">${formatEGP(property.price)}</div>
+                    <div class="property-location">📍 ${property.address}, ${property.city}</div>
+                    <div class="property-details">
+                        <span>🛏️ ${property.bedrooms} غرف</span>
+                        <span>🚿 ${property.bathrooms} حمام</span>
+                        <span>📐 ${property.square_meters || 0}م²</span>
+                    </div>
+                    <div class="property-meta">
+                        <span class="property-type">${property.property_type}</span>
+                        <span class="property-status">${property.status}</span>
+                        ${virtualTour}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Test HomeScreen functionality
+        async function testHomeScreen() {
+            try {
+                updateStatus('home-status', 'loading', '⏳ اختبار الشاشة الرئيسية...');
+                
+                const response = await fetch('http://localhost:3000/api/properties?limit=5');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                apiCalls++;
+                
+                // API returns {properties: [...], pagination: {...}}
+                if (data && data.properties && data.properties.length > 0) {
+                    const featuredProperties = data.properties.slice(0, 3);
+                    let html = `<h4>العقارات المميزة (${featuredProperties.length})</h4>`;
+                    
+                    featuredProperties.forEach((property, index) => {
+                        html += renderProperty(property, index);
+                        totalPrice += property.price;
+                        if (property.virtual_tour_url) virtualToursCount++;
+                    });
+                    
+                    totalProperties += featuredProperties.length;
+                    
+                    document.getElementById('home-results').innerHTML = html;
+                    updateStatus('home-status', 'success', 
+                        `✅ نجح! تم تحميل ${featuredProperties.length} عقار مميز من ${data.properties.length} متاح`);
+                } else {
+                    throw new Error('لا توجد عقارات في الاستجابة');
+                }
+            } catch (error) {
+                console.error('HomeScreen test failed:', error);
+                document.getElementById('home-results').innerHTML = 
+                    `<div class="error">❌ فشل الاختبار: ${error.message}</div>`;
+                updateStatus('home-status', 'error', `❌ فشل: ${error.message}`);
+            }
+            updateStats();
+        }
+
+        // Test PropertiesScreen functionality
+        async function testPropertiesScreen() {
+            try {
+                updateStatus('properties-status', 'loading', '⏳ اختبار شاشة العقارات...');
+                
+                const response = await fetch('http://localhost:3000/api/properties?limit=10');
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                apiCalls++;
+                
+                // API returns {properties: [...], pagination: {...}}
+                if (data && data.properties && data.properties.length > 0) {
+                    let html = `<h4>جميع العقارات (${data.properties.length} من ${data.pagination?.total || 'غير محدد'})</h4>`;
+                    
+                    data.properties.forEach((property, index) => {
+                        html += renderProperty(property, index);
+                        if (index < 5) { // Only count first 5 to avoid double counting with home
+                            totalPrice += property.price;
+                            if (property.virtual_tour_url) virtualToursCount++;
+                        }
+                    });
+                    
+                    totalProperties += Math.min(data.properties.length, 5);
+                    
+                    document.getElementById('properties-results').innerHTML = html;
+                    updateStatus('properties-status', 'success', 
+                        `✅ نجح! تم تحميل ${data.properties.length} عقار مع فلترة وبحث (الصفحة ${data.pagination?.page || 1})`);
+                } else {
+                    throw new Error('لا توجد عقارات في الاستجابة');
+                }
+            } catch (error) {
+                console.error('PropertiesScreen test failed:', error);
+                document.getElementById('properties-results').innerHTML = 
+                    `<div class="error">❌ فشل الاختبار: ${error.message}</div>`;
+                updateStatus('properties-status', 'error', `❌ فشل: ${error.message}`);
+            }
+            updateStats();
+        }
+
+        // Run tests when page loads
+        window.addEventListener('load', async () => {
+            console.log('🚀 Starting mobile app tests...');
+            
+            // Run tests sequentially to avoid overwhelming the API
+            await testHomeScreen();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // 1 second delay
+            await testPropertiesScreen();
+            
+            console.log('✅ Mobile app tests completed');
+            console.log(`📊 Total API calls: ${apiCalls}`);
+            console.log(`🏠 Total properties tested: ${totalProperties}`);
+            console.log(`🌟 Virtual tours found: ${virtualToursCount}`);
+        });
+    </script>
+</body>
+</html> 

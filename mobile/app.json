@@ -1,0 +1,13 @@
+{
+  "expo": {
+    "name": "Egyptian Real Estate",
+    "slug": "egyptian-real-estate",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android", "web"],
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

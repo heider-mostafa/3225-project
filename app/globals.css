@@ -1,0 +1,325 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 84% 4.9%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 84% 4.9%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 84% 4.9%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 94.1%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out;
+}
+
+/* Tour viewer specific styles */
+.tour-viewer {
+  position: relative;
+  overflow: hidden;
+}
+
+.tour-viewer canvas {
+  display: block;
+  outline: none;
+}
+
+/* AI Assistant styles */
+.chat-modal {
+  backdrop-filter: blur(8px);
+}
+
+.chat-modal.hidden {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Loading spinner */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smooth transitions for all interactive elements */
+button,
+a,
+.card {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Custom scrollbar for chat */
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Line Clamp Utilities */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .space-x-6 > * + * {
+  margin-left: 0;
+  margin-right: 1.5rem;
+}
+
+[dir="rtl"] .space-x-3 > * + * {
+  margin-left: 0;
+  margin-right: 0.75rem;
+}
+
+[dir="rtl"] .space-x-2 > * + * {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+/* RTL specific navbar adjustments */
+[dir="rtl"] .navbar {
+  flex-direction: row-reverse;
+}
+
+/* RTL dropdown menu adjustments */
+[dir="rtl"] .dropdown-content {
+  left: auto;
+  right: 0;
+}
+
+/* RTL text direction for Arabic content */
+[dir="rtl"] .arabic-text {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  text-align: right;
+}
+
+/* Arabic font support using CSS variables */
+.rtl\:font-arabic {
+  font-family: var(--font-cairo), 'Segoe UI', 'Noto Sans Arabic', 'Arial Unicode MS', sans-serif;
+}
+
+[dir="rtl"] .rtl\:font-arabic {
+  font-family: var(--font-cairo), var(--font-amiri), 'Noto Sans Arabic', 'Segoe UI', sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Improved RTL text alignment */
+.rtl\:text-right {
+  text-align: right !important;
+}
+
+.ltr\:text-left {
+  text-align: left !important;
+}
+
+/* RTL specific property details */
+[dir="rtl"] .property-title {
+  text-align: right;
+  font-family: var(--font-cairo), var(--font-amiri), sans-serif;
+}
+
+[dir="rtl"] .property-description {
+  text-align: right;
+  font-family: var(--font-cairo), var(--font-amiri), sans-serif;
+  line-height: 1.8;
+  direction: rtl;
+}
+
+[dir="ltr"] .property-title,
+[dir="ltr"] .property-description {
+  text-align: left;
+  direction: ltr;
+}
+
+/* Ensure proper font rendering for Arabic text */
+[dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
+  font-family: var(--font-cairo), sans-serif;
+}
+
+[dir="rtl"] p, [dir="rtl"] span, [dir="rtl"] div {
+  font-family: var(--font-cairo), sans-serif;
+}
+
+/* Additional RTL fixes - More specific selectors to avoid breaking layouts */
+[dir="rtl"] .navbar .flex,
+[dir="rtl"] .breadcrumb .flex,
+[dir="rtl"] .header-actions .flex {
+  flex-direction: row-reverse;
+}
+
+/* Only apply RTL grid direction to specific elements */
+[dir="rtl"] .rtl-grid {
+  direction: rtl;
+}
+
+[dir="rtl"] input, [dir="rtl"] textarea {
+  text-align: right;
+}
+
+[dir="rtl"] .mr-2 {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+
+[dir="rtl"] .ml-2 {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
+[dir="rtl"] .mr-3 {
+  margin-right: 0;
+  margin-left: 0.75rem;
+}
+
+[dir="rtl"] .ml-3 {
+  margin-left: 0;
+  margin-right: 0.75rem;
+}
+
+/* Language switching transition */
+html {
+  transition: all 0.3s ease-in-out;
+}
+
+body.rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+body.rtl * {
+  direction: rtl;
+}
+
+/* Prevent layout shift during language switching */
+.language-switching {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* Ensure content is visible even if animations fail - Fallback for white page issue */
+[style*="opacity:0"] {
+  animation: fadeInFallback 1s ease-in-out 1.5s forwards !important;
+}
+
+@keyframes fadeInFallback {
+  to {
+    opacity: 1 !important;
+    transform: translateY(0px) !important;
+    transform: translateX(0px) !important;
+    transform: scale(1) !important;
+  }
+}
+
+/* Immediate visibility for critical content */
+.bg-white\/10[style*="opacity:0"],
+.text-white[style*="opacity:0"],
+section[style*="opacity:0"] {
+  animation: fadeInFallback 0.5s ease-in-out 0.5s forwards !important;
+}
