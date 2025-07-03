@@ -873,95 +873,105 @@ export default function HomePage() {
         </div>
 
         {/* Navigation Controls */}
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-30">
+        <div className="absolute top-1/2 left-2 md:left-4 transform -translate-y-1/2 z-30">
           <Button
             variant="outline"
             size="icon"
             onClick={prevTour}
-            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30"
+            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 w-10 h-10 md:w-12 md:h-12"
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </div>
-        <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-30">
+        <div className="absolute top-1/2 right-2 md:right-4 transform -translate-y-1/2 z-30">
           <Button
             variant="outline"
             size="icon"
             onClick={nextTour}
-            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30"
+            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 w-10 h-10 md:w-12 md:h-12"
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </div>
 
         {/* Property Information Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-8 z-30">
+        <div className="absolute bottom-0 left-0 right-0 p-3 md:p-8 z-30">
           <div className="container mx-auto">
             <motion.div
               key={`info-${currentTourIndex}`}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 1, delay: 0.3 }}
-              className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20"
+              className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20"
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-3xl md:text-4xl font-bold text-white">{translatePropertyTitle(currentProperty.title)}</h1>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">{translatePropertyTitle(currentProperty.title)}</h1>
                     {currentProperty.isHot && (
-                      <Badge className="bg-red-500 text-white animate-pulse">
+                      <Badge className="bg-red-500 text-white animate-pulse text-xs">
                         <TrendingUp className="h-3 w-3 mr-1" />
                         HOT
                       </Badge>
                     )}
                   </div>
                   <div className="flex items-center text-white/80 mb-3">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    {translateLocation(currentProperty.location, i18n.language === 'ar')}
+                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <span className="text-sm md:text-base">{translateLocation(currentProperty.location, i18n.language === 'ar')}</span>
                   </div>
-                  <div className="flex items-center gap-4 text-white/80 mb-4">
+                  <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 sm:gap-4 text-white/80 mb-4">
                     <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-1" />
-                      {isMounted ? translateText(currentProperty.beds?.toString() || '0') : (currentProperty.beds?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'غرف نوم' : 'beds'}
+                      <Bed className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm md:text-base">
+                        {isMounted ? translateText(currentProperty.beds?.toString() || '0') : (currentProperty.beds?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'غرف نوم' : 'beds'}
+                      </span>
                     </div>
                     <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-1" />
-                      {isMounted ? translateText(currentProperty.baths?.toString() || '0') : (currentProperty.baths?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'حمامات' : 'baths'}
+                      <Bath className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm md:text-base">
+                        {isMounted ? translateText(currentProperty.baths?.toString() || '0') : (currentProperty.baths?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'حمامات' : 'baths'}
+                      </span>
                     </div>
                     <div className="flex items-center">
-                      <Square className="h-4 w-4 mr-1" />
-                      {isMounted ? translateText(currentProperty.sqm?.toString() || '0') : (currentProperty.sqm?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'م²' : 'sqm'}
+                      <Square className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm md:text-base">
+                        {isMounted ? translateText(currentProperty.sqm?.toString() || '0') : (currentProperty.sqm?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'م²' : 'sqm'}
+                      </span>
                     </div>
                     <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1" />
-                      {isMounted ? translateText(currentProperty.views?.toString() || '0') : (currentProperty.views?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'مشاهدات' : 'views'}
+                      <Eye className="h-4 w-4 mr-1 flex-shrink-0" />
+                      <span className="text-sm md:text-base">
+                        {isMounted ? translateText(currentProperty.views?.toString() || '0') : (currentProperty.views?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'مشاهدات' : 'views'}
+                      </span>
                     </div>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-3xl font-bold text-white mb-4">{formatPrice(currentProperty.price)}</div>
-                  <div className="flex gap-2 mb-4">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                    >
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                    >
-                      <Share2 className="h-4 w-4" />
-                    </Button>
+                <div className="text-left md:text-right">
+                  <div className="text-2xl sm:text-3xl font-bold text-white mb-3 md:mb-4">{formatPrice(currentProperty.price)}</div>
+                  <div className="flex flex-col sm:flex-row md:flex-col gap-3">
+                    <div className="flex gap-2 justify-start md:justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      >
+                        <Heart className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                      >
+                        <Share2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <Link href={`/property/${currentProperty.id}`} className="w-full sm:w-auto">
+                      <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                        <Play className="h-4 w-4 mr-2" />
+                        <span className="text-sm md:text-base">{safeT('properties.startVirtualTour', 'Start Virtual Tour')}</span>
+                      </Button>
+                    </Link>
                   </div>
-                  <Link href={`/property/${currentProperty.id}`}>
-                    <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
-                      <Play className="h-4 w-4 mr-2" />
-                      {safeT('properties.startVirtualTour', 'Start Virtual Tour')}
-                    </Button>
-                  </Link>
                 </div>
               </div>
             </motion.div>
