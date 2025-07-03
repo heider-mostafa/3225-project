@@ -4,7 +4,7 @@
  * Integrates with existing leads system and OpenAI infrastructure
  */
 
-import { supabase } from '@/lib/supabase/config'
+import { createServerSupabaseClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
 // Initialize OpenAI with existing configuration
@@ -139,6 +139,7 @@ export class ContractGenerator {
    * Fetch lead data from database
    */
   private async getLeadData(leadId: string): Promise<LeadData | null> {
+    const supabase = await createServerSupabaseClient()
     const { data, error } = await supabase
       .from('leads')
       .select('*')
@@ -238,6 +239,7 @@ export class ContractGenerator {
     contractType: string,
     riskAssessment: any
   ): Promise<ContractTemplate | null> {
+    const supabase = await createServerSupabaseClient()
     const { data, error } = await supabase
       .from('contract_templates')
       .select('*')
@@ -572,6 +574,7 @@ export class ContractGenerator {
     riskAssessment: any
   ): Promise<string> {
     try {
+      const supabase = await createServerSupabaseClient()
       // Store main contract
       const { data: contract, error: contractError } = await supabase
         .from('lead_contracts')
@@ -636,6 +639,7 @@ export class ContractGenerator {
     autoApproved: boolean,
     requiresManualReview: boolean
   ): Promise<void> {
+    const supabase = await createServerSupabaseClient()
     const newStatus = autoApproved ? 'approved' : (requiresManualReview ? 'pending_review' : 'generated')
     
     await supabase
@@ -657,6 +661,7 @@ export class ContractGenerator {
     autoApproved: boolean,
     requiresManualReview: boolean
   ): Promise<void> {
+    const supabase = await createServerSupabaseClient()
     // This would integrate with your existing WhatsApp/notification system
     // For now, just log the notification
     console.log(`Contract notification: ${leadData.name} - Contract ${contractId} ${autoApproved ? 'auto-approved' : 'pending review'}`)
