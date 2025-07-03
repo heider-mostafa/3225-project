@@ -6,12 +6,20 @@ import { Toaster } from '@/components/ui/toaster'
 import { I18nProvider } from '@/components/i18n-provider'
 import { ErrorBoundary } from '@/components/error-boundary'
 
-// Lazy Supabase client initialization
+// Lazy Supabase client initialization with error handling
 function getSupabaseClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!url || !key) {
+    console.error('Missing Supabase environment variables:', { 
+      url: !!url, 
+      key: !!key 
+    })
+    throw new Error('Supabase configuration is missing')
+  }
+  
+  return createBrowserClient(url, key)
 }
 
 // Create auth context
@@ -37,22 +45,30 @@ export function Providers({ children }: { children: React.ReactNode }) {
       return
     }
 
-    const supabase = getSupabaseClient()
+    try {
+      const supabase = getSupabaseClient()
 
-    // Get initial session
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user)
+      // Get initial session
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        setUser(user)
+        setLoading(false)
+      }).catch((error) => {
+        console.error('Error getting user:', error)
+        setLoading(false)
+      })
+
+      // Listen for auth changes
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        setUser(session?.user ?? null)
+        setLoading(false)
+      })
+
+      return () => {
+        subscription.unsubscribe()
+      }
+    } catch (error) {
+      console.error('Error initializing Supabase client:', error)
       setLoading(false)
-    })
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => {
-      subscription.unsubscribe()
     }
   }, [])
 
