@@ -32,12 +32,15 @@ export interface ConversationAnalysis {
 }
 
 export class ConversationAnalyzer {
-  private openai: OpenAI
+  private openai: OpenAI | null = null
 
-  constructor() {
-    this.openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
+  private getOpenAI(): OpenAI {
+    if (!this.openai) {
+      this.openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      })
+    }
+    return this.openai
   }
 
   async analyzeConversation(transcript: string, leadInfo: any): Promise<ConversationAnalysis> {
@@ -118,7 +121,8 @@ POSITIVE SIGNALS:
 `
 
     try {
-      const response = await this.openai.chat.completions.create({
+      const openaiClient = this.getOpenAI()
+      const response = await openaiClient.chat.completions.create({
         model: 'gpt-4',
         messages: [
           {

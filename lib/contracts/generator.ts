@@ -7,10 +7,17 @@
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
 
-// Initialize OpenAI with existing configuration
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+// Lazy OpenAI initialization to avoid build-time errors
+let openai: OpenAI | null = null
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  }
+  return openai
+}
 
 // Types for contract generation
 export interface ContractGenerationRequest {
@@ -315,7 +322,8 @@ export class ContractGenerator {
     `
 
     try {
-      const response = await openai.chat.completions.create({
+      const openaiClient = getOpenAI()
+      const response = await openaiClient.chat.completions.create({
         model: 'gpt-4',
         messages: [
           {
@@ -389,7 +397,8 @@ export class ContractGenerator {
     `
 
     try {
-      const response = await openai.chat.completions.create({
+      const openaiClient = getOpenAI()
+      const response = await openaiClient.chat.completions.create({
         model: 'gpt-4',
         messages: [
           {

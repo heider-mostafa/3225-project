@@ -4,9 +4,18 @@ import { cookies } from 'next/headers';
 import OpenAI from 'openai';
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
-});
+
+// Lazy OpenAI initialization
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 export async function POST(request: Request) {
   try {
@@ -45,7 +54,8 @@ export async function POST(request: Request) {
     const systemPrompt = buildSystemPrompt(propertyKnowledge, currentRoom, tourContext);
 
     // Make OpenAI API call
-    const completion = await openai.chat.completions.create({
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {

@@ -1,9 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
-})
+// Lazy OpenAI initialization
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    openai = new OpenAI({
+      apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY || process.env.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,7 +63,8 @@ ${context?.tourContext ? '- User is in virtual 3D tour mode' : ''}
 `
 
     // Generate AI response
-    const completion = await openai.chat.completions.create({
+    const openaiClient = getOpenAI();
+    const completion = await openaiClient.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
@@ -78,7 +87,7 @@ ${context?.tourContext ? '- User is in virtual 3D tour mode' : ''}
     const responseText = completion.choices[0]?.message?.content || "I'm sorry, I couldn't process your question."
 
     // Convert text to speech
-    const speech = await openai.audio.speech.create({
+    const speech = await openaiClient.audio.speech.create({
       model: "tts-1",
       voice: "alloy",
       input: responseText,
