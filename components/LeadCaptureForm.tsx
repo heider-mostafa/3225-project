@@ -477,7 +477,7 @@ export function LeadCaptureForm({
                       </Button>
                       <Button 
                         type="submit" 
-                        className="flex-1 h-12 text-base font-medium"
+                        className="flex-1 h-14 text-base font-semibold bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary text-white shadow-lg hover:shadow-xl transition-all duration-300 rounded-lg"
                         disabled={isSubmitting || !watchedValues.timeline}
                       >
                         {isSubmitting ? (
@@ -486,7 +486,10 @@ export function LeadCaptureForm({
                             Processing...
                           </>
                         ) : (
-                          "Get My FREE Tour"
+                          <div className="flex items-center justify-center gap-2 px-2">
+                            <Gift className="h-5 w-5" />
+                            <span className="text-center">Get My FREE Tour</span>
+                          </div>
                         )}
                       </Button>
                     </div>
