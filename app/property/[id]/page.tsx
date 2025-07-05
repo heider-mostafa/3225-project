@@ -410,12 +410,12 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <Link href="/" className="flex items-center space-x-2 text-slate-600 hover:text-slate-800">
             <ArrowLeft className="h-5 w-5" />
             <span>{t('propertyDetails.backToProperties')}</span>
           </Link>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
             <SavePropertyButton propertyId={property.id} />
             <Button
               variant="outline"
@@ -441,7 +441,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
           {/* Left Column - Images and Tour (3/4 width) */}
           <div className="lg:col-span-3">
             {/* Property Header */}
@@ -475,14 +475,14 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 </div>
                 
                 {/* Tour Info - Aligned with 3D Tour column */}
-                <div className="w-64 p-3 bg-slate-50 rounded-lg ml-4">
+                <div className="hidden lg:block w-64 p-3 bg-slate-50 rounded-lg ml-4">
                   <h4 className="font-medium text-slate-800 mb-2">{t('propertyDetails.virtualTour')}</h4>
                   <p className="text-sm text-slate-600 mb-2">{t('propertyDetails.exploreEveryRoom')}</p>
                   <div className="text-xs text-slate-500">{t('propertyDetails.current')}: {currentRoom.replace("-", " ")}</div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-6 text-slate-600 mb-4">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6 text-slate-600 mb-4">
                 <div className="flex items-center">
                   <Bed className="h-5 w-5 mr-2" />
                   {property.bedrooms} {t('propertyDetails.bedrooms')}
@@ -521,9 +521,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             </div>
 
             {/* Image Gallery (3/4) and 3D Tour Preview (1/4) */}
-            <div className="grid grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-8">
               {/* Main Image Gallery - 3/4 width */}
-              <div className="col-span-3">
+              <div className="col-span-1 lg:col-span-3">
                 {/* Main Image */}
                 <div className="relative mb-4">
                   <img
@@ -547,7 +547,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 </div>
 
                 {/* Image Thumbnails */}
-                <div className="grid grid-cols-6 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                   {propertyImages.map((image, index) => (
                     <button
                       key={index}
@@ -567,7 +567,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               </div>
 
               {/* 3D Tour Preview - 1/4 width */}
-              <div className="col-span-1">
+              <div className="col-span-1 lg:col-span-1">
                 <div className="relative group cursor-pointer" onClick={() => setIsFullscreenTour(true)}>
                   <TourViewer 
                     tourId={property.tourId || property.id}
@@ -636,7 +636,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 )}
 
                 {/* Property Specifications Grid */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm mb-6">
                   <div>
                     <span className="font-medium text-slate-800">{t('propertyDetails.propertyType')}</span>
                     <p className="text-slate-600">{formatPropertyType(property.property_type)}</p>
@@ -683,7 +683,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 {((property.monthly_hoa_fee ?? 0) > 0 || (property.annual_property_tax ?? 0) > 0 || (property.insurance_cost ?? 0) > 0) && (
                   <div className="border-t pt-4 mb-6">
                     <h4 className="font-semibold text-slate-800 mb-3">{t('propertyDetails.financialInformation')}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
                       {(property.monthly_hoa_fee ?? 0) > 0 && (
                         <div>
                           <span className="font-medium text-slate-800">{t('propertyDetails.monthlyHOA')}</span>
@@ -710,7 +710,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 {(property.furnished || property.has_pool || property.has_garden || property.has_security || property.has_gym || property.has_elevator) && (
                   <div className="border-t pt-4">
                     <h4 className="font-semibold text-slate-800 mb-3">{t('propertyDetails.premiumAmenities')}</h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                       {property.furnished && (
                         <div className="flex items-center text-sm text-slate-600">
                           <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
@@ -784,7 +784,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   <CardTitle>{t('propertyDetails.features')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {translatedProperty.features.map((feature, index) => (
                     <div key={index} className="flex items-center">
                       <div className="w-2 h-2 bg-blue-600 rounded-full mr-3"></div>
@@ -850,7 +850,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   {(property.distance_to_metro || property.distance_to_airport || property.distance_to_mall || property.distance_to_hospital) && (
                     <div className="mb-6">
                       <h4 className="font-semibold text-slate-800 mb-3">{t('propertyDetails.distanceToKeyLocations')}</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                         {property.distance_to_metro && (
                           <div className="flex items-center">
                             <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
@@ -903,7 +903,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   {(property.heating_type || property.cooling_type || property.water_source || property.internet_speed) && (
                     <div className="border-t pt-4 mb-4">
                       <h4 className="font-semibold text-slate-800 mb-3">{t('propertyDetails.infrastructure')}</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
                                                   {property.heating_type && (
                             <div>
                               <span className="font-medium text-slate-800">{t('propertyDetails.heating')}</span>
@@ -986,7 +986,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   <PlayCircle className="w-6 h-6 mr-3 text-blue-600" />
                   Virtual Tours
                 </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {property.virtual_tour_url && (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-3">3D Virtual Tour</h3>
@@ -1034,7 +1034,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
           {/* Right Column - Property Info and Contact (1/4 width) */}
           <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
+            <div className="lg:sticky lg:top-24 space-y-6">
               {/* Price and Contact */}
               <Card>
                 <CardContent className="p-6">
@@ -1042,7 +1042,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
                   <div className="space-y-4">
                     <Button 
-                      className="w-full bg-blue-600 hover:bg-blue-700" 
+                      className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base" 
                       size="lg"
                       onClick={() => {
                         const calendarElement = document.getElementById('broker-calendar')
@@ -1058,7 +1058,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       {t('propertyDetails.scheduleShowing')}
                     </Button>
                     <a href={`mailto:${primaryBroker?.email || 'info@realestate.com'}?subject=Inquiry about ${property.title}`}>
-                      <Button variant="outline" className="w-full" size="lg">
+                      <Button variant="outline" className="w-full h-12 text-base" size="lg">
                         <Mail className="h-4 w-4 mr-2" />
                         {t('propertyDetails.sendMessage')}
                       </Button>
@@ -1217,7 +1217,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 <CardContent className="p-6">
                   <Button
                     onClick={() => setShowAIAssistant(true)}
-                    className="w-full bg-purple-600 hover:bg-purple-700"
+                    className="w-full bg-purple-600 hover:bg-purple-700 h-12 text-base"
                     size="lg"
                   >
                     <MessageSquare className="h-4 w-4 mr-2" />

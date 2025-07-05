@@ -219,7 +219,7 @@ export function LeadCaptureForm({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
       
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="w-[95vw] max-w-[600px] max-h-[90vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-3">
           <DialogTitle className="text-2xl font-bold text-center">
             Get Your FREE 3D Virtual Tour
@@ -267,7 +267,7 @@ export function LeadCaptureForm({
                           id="name"
                           {...register("name")}
                           placeholder="Enter your full name"
-                          className="mt-1"
+                          className="mt-1 h-12 text-base"
                         />
                         {errors.name && (
                           <p className="text-sm text-red-500 mt-1">{errors.name.message}</p>
@@ -280,7 +280,7 @@ export function LeadCaptureForm({
                           id="whatsapp_number"
                           {...register("whatsapp_number")}
                           placeholder="+20 101 234 5678"
-                          className="mt-1"
+                          className="mt-1 h-12 text-base"
                         />
                         {errors.whatsapp_number && (
                           <p className="text-sm text-red-500 mt-1">{errors.whatsapp_number.message}</p>
@@ -294,7 +294,7 @@ export function LeadCaptureForm({
                           type="email"
                           {...register("email")}
                           placeholder="your.email@example.com"
-                          className="mt-1"
+                          className="mt-1 h-12 text-base"
                         />
                         {errors.email && (
                           <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
@@ -305,7 +305,7 @@ export function LeadCaptureForm({
                     <Button 
                       type="button" 
                       onClick={nextStep}
-                      className="w-full"
+                      className="w-full h-12 text-base font-medium"
                       disabled={!watchedValues.name || !watchedValues.whatsapp_number}
                     >
                       Continue
@@ -321,11 +321,11 @@ export function LeadCaptureForm({
                       Property Details
                     </h3>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="location">Location *</Label>
                         <Select onValueChange={(value) => setValue("location", value)}>
-                          <SelectTrigger className="mt-1">
+                          <SelectTrigger className="mt-1 h-12 text-base">
                             <SelectValue placeholder="Select location" />
                           </SelectTrigger>
                           <SelectContent>
@@ -344,7 +344,7 @@ export function LeadCaptureForm({
                       <div>
                         <Label htmlFor="property_type">Property Type *</Label>
                         <Select onValueChange={(value) => setValue("property_type", value)}>
-                          <SelectTrigger className="mt-1">
+                          <SelectTrigger className="mt-1 h-12 text-base">
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -364,7 +364,7 @@ export function LeadCaptureForm({
                     <div>
                       <Label htmlFor="price_range">Expected Price Range *</Label>
                       <Select onValueChange={(value) => setValue("price_range", value)}>
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 h-12 text-base">
                           <SelectValue placeholder="Select price range" />
                         </SelectTrigger>
                         <SelectContent>
@@ -380,14 +380,14 @@ export function LeadCaptureForm({
                       )}
                     </div>
 
-                    <div className="flex gap-3">
-                      <Button type="button" onClick={prevStep} variant="outline" className="flex-1">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button type="button" onClick={prevStep} variant="outline" className="flex-1 h-12 text-base font-medium">
                         Back
                       </Button>
                       <Button 
                         type="button" 
                         onClick={nextStep}
-                        className="flex-1"
+                        className="flex-1 h-12 text-base font-medium"
                         disabled={!watchedValues.location || !watchedValues.property_type || !watchedValues.price_range}
                       >
                         Continue
@@ -407,7 +407,7 @@ export function LeadCaptureForm({
                     <div>
                       <Label htmlFor="timeline">When are you looking to sell? *</Label>
                       <Select onValueChange={(value) => setValue("timeline", value)}>
-                        <SelectTrigger className="mt-1">
+                        <SelectTrigger className="mt-1 h-12 text-base">
                           <SelectValue placeholder="Select timeline" />
                         </SelectTrigger>
                         <SelectContent>
@@ -471,13 +471,13 @@ export function LeadCaptureForm({
                       </div>
                     )}
 
-                    <div className="flex gap-3">
-                      <Button type="button" onClick={prevStep} variant="outline" className="flex-1">
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button type="button" onClick={prevStep} variant="outline" className="flex-1 h-12 text-base font-medium">
                         Back
                       </Button>
                       <Button 
                         type="submit" 
-                        className="flex-1"
+                        className="flex-1 h-12 text-base font-medium"
                         disabled={isSubmitting || !watchedValues.timeline}
                       >
                         {isSubmitting ? (
@@ -525,7 +525,7 @@ export function LeadCaptureForm({
 
               <Button 
                 onClick={() => handleOpenChange(false)}
-                className="w-full"
+                className="w-full h-12 text-base font-medium"
               >
                 Close
               </Button>
