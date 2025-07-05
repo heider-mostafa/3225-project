@@ -919,7 +919,7 @@ export default function HomePage() {
                     <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
                     <span className="text-sm md:text-base">{translateLocation(currentProperty.location, i18n.language === 'ar')}</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:flex sm:items-center gap-3 sm:gap-4 text-white/80 mb-4">
+                  <div className="hidden sm:grid grid-cols-2 sm:flex sm:items-center gap-3 sm:gap-4 text-white/80 mb-4">
                     <div className="flex items-center">
                       <Bed className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="text-sm md:text-base">
@@ -1257,7 +1257,7 @@ export default function HomePage() {
                     trigger={
                       <Button 
                         size="lg" 
-                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-6 sm:py-7 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
+                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-8 sm:py-7 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
                       >
                         <span className="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                           <div className="flex items-center gap-2">
@@ -1982,7 +1982,7 @@ export default function HomePage() {
                   trigger={
                     <Button 
                       size="lg" 
-                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg sm:text-xl px-6 sm:px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg sm:text-xl px-6 sm:px-8 py-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
                     >
                       <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                         <div className="flex items-center gap-2">
