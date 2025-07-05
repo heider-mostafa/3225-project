@@ -1257,12 +1257,12 @@ export default function HomePage() {
                     trigger={
                       <Button 
                         size="lg" 
-                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-xl px-12 py-7 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105"
+                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-4 sm:py-7 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
                       >
-                        <span className="relative z-10 flex items-center gap-3">
-                          <Gift className="h-7 w-7" />
-                          {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}
-                          <ArrowRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+                        <span className="relative z-10 flex items-center gap-2 sm:gap-3">
+                          <Gift className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
+                          <span className="text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
+                          <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 group-hover:translate-x-1 transition-transform flex-shrink-0" />
                         </span>
                         <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                       </Button>
@@ -1977,10 +1977,10 @@ export default function HomePage() {
                   trigger={
                     <Button 
                       size="lg" 
-                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-xl px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 rounded-full px-6"
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg sm:text-xl px-6 sm:px-8 py-4 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto"
                     >
-                      <Gift className="h-5 w-5 mr-2" />
-                      {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}
+                      <Gift className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+                      <span className="text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                     </Button>
                   }
                   utm_source="homepage"
