@@ -58,6 +58,38 @@
   }
 }
 
+@layer utilities {
+  /* Premium shadow effects */
+  .shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25), 0 25px 25px -5px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Custom gradients for stats */
+  .bg-glass {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  /* Text gradient utility */
+  .text-gradient {
+    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  /* Animation delays */
+  .delay-1000 {
+    animation-delay: 1000ms;
+  }
+  
+  /* Font family utilities */
+  .font-montserrat {
+    font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
+  }
+}
+
 /* Custom animations */
 @keyframes fadeIn {
   from {

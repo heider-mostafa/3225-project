@@ -997,7 +997,19 @@ const resources = {
         propertieslisted: 'Properties Listed',
         happyclients: 'Happy Clients', 
         virtualtours: 'Virtual Tours',
-        citiescovered: 'Cities Covered'
+        citiescovered: 'Cities Covered',
+        // New premium stats section
+        headerBadge: "Egypt's #1 PropTech Platform",
+        headerTitle: "Powering Egypt's Real Estate Future",
+        headerDescription: "Join thousands of property owners and buyers who trust OpenBeit's AI-powered platform for seamless real estate experiences",
+        virtualTourscreated: 'Virtual Tours Created',
+        liveStatsLabel: 'Live Stats',
+        updatedRealtime: 'Updated in real-time',
+        // Descriptions for each stat
+        activeListings: 'Active listings',
+        experiences3d: '3D experiences',
+        satisfiedCustomers: 'Satisfied customers',
+        acrossEgypt: 'Across Egypt'
       },
 
       // Filters
@@ -2086,7 +2098,19 @@ if (resources.ar && resources.ar.translation) {
     propertieslisted: 'العقارات المدرجة',
     happyclients: 'العملاء السعداء',
     virtualtours: 'الجولات الافتراضية', 
-    citiescovered: 'المدن المغطاة'
+    citiescovered: 'المدن المغطاة',
+    // New premium stats section
+    headerBadge: 'منصة العقارات التقنية رقم 1 في مصر',
+    headerTitle: 'نحو مستقبل العقارات في مصر',
+    headerDescription: 'انضم إلى آلاف مالكي العقارات والمشترين الذين يثقون في منصة أوبن بيت المدعومة بالذكاء الاصطناعي للحصول على تجارب عقارية سلسة',
+    virtualTourscreated: 'الجولات الافتراضية المُنشأة',
+    liveStatsLabel: 'إحصائيات مباشرة',
+    updatedRealtime: 'محدثة في الوقت الفعلي',
+    // Descriptions for each stat
+    activeListings: 'إعلانات نشطة',
+    experiences3d: 'تجارب ثلاثية الأبعاد',
+    satisfiedCustomers: 'عملاء راضون',
+    acrossEgypt: 'في جميع أنحاء مصر'
   };
 
   // Features

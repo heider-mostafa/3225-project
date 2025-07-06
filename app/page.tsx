@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { usePropertiesTranslation } from '@/components/PropertyTranslationWrapper'
 import { useNumberTranslation } from '@/lib/useNumberTranslation'
 import { translationService } from '@/lib/translation-service'
+import { AnimatedCounter } from '@/components/ui/animated-counter'
 import {
   Search,
   MapPin,
@@ -44,7 +45,9 @@ import {
   ArrowLeft,
   Clock,
   Sparkles,
-  Camera
+  Camera,
+  Zap,
+  Globe
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -146,11 +149,39 @@ const getTestimonials = (t: any) => [
   },
 ]
 
-const stats = [
-  { label: "Properties Listed", value: "10,000+", icon: MapPin },
-  { label: "Happy Clients", value: "5,000+", icon: Users },
-  { label: "Virtual Tours", value: "25,000+", icon: Play },
-  { label: "Cities Covered", value: "15+", icon: Award },
+const getStatsData = (t: any) => [
+  { 
+    label: t('stats.propertieslisted', 'Properties Listed'),
+    value: 10000, 
+    suffix: "+",
+    icon: Building2,
+    color: "from-blue-600 to-blue-700",
+    description: t('stats.activeListings', 'Active listings')
+  },
+  { 
+    label: t('stats.virtualTourscreated', 'Virtual Tours Created'),
+    value: 25000, 
+    suffix: "+",
+    icon: Play,
+    color: "from-amber-500 to-orange-600", 
+    description: t('stats.experiences3d', '3D experiences')
+  },
+  { 
+    label: t('stats.happyclients', 'Happy Clients'),
+    value: 5000, 
+    suffix: "+",
+    icon: Users,
+    color: "from-emerald-500 to-green-600",
+    description: t('stats.satisfiedCustomers', 'Satisfied customers')
+  },
+  { 
+    label: t('stats.citiescovered', 'Cities Covered'),
+    value: 15, 
+    suffix: "+",
+    icon: Globe,
+    color: "from-purple-600 to-indigo-700",
+    description: t('stats.acrossEgypt', 'Across Egypt')
+  },
 ]
 
 const quickFilters = [
@@ -531,7 +562,7 @@ export default function HomePage() {
 
   const currentProperty = featuredProperties.length > 0 ? featuredProperties[currentTourIndex] : {
     id: 'demo',
-    title: 'Welcome to VirtualEstate',
+    title: 'Welcome to OpenBeit',
     description: 'Discover amazing properties with our AI-powered platform',
     price: 250000,
     bedrooms: 2,
@@ -1400,26 +1431,127 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
+      {/* Premium Stats Section */}
+      <section className="relative py-20 overflow-hidden">
+        {/* Premium Background with Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)]"></div>
+        
+        {/* Animated Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        </div>
+
+        <div className="relative container mx-auto px-4">
+          {/* Section Header */}
+          <div className="text-center mb-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="inline-flex items-center space-x-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 rounded-full px-6 py-2 mb-6"
+            >
+              <Zap className="w-4 h-4 text-amber-400" />
+              <span className="text-amber-400 font-medium">{isMounted ? t('stats.headerBadge', "Egypt's #1 PropTech Platform") : "Egypt's #1 PropTech Platform"}</span>
+            </motion.div>
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-4xl md:text-5xl font-black text-white mb-4 font-montserrat"
+            >
+{isMounted ? t('stats.headerTitle', "Powering Egypt's Real Estate Future") : "Powering Egypt's Real Estate Future"}
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed"
+            >
+{isMounted ? t('stats.headerDescription', "Join thousands of property owners and buyers who trust OpenBeit's AI-powered platform for seamless real estate experiences") : "Join thousands of property owners and buyers who trust OpenBeit's AI-powered platform for seamless real estate experiences"}
+            </motion.p>
+          </div>
+
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {getStatsData(t).map((stat, index) => (
               <motion.div
                 key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="text-center"
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ 
+                  duration: 0.7, 
+                  delay: index * 0.15,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                whileHover={{ 
+                  scale: 1.05, 
+                  y: -5,
+                  transition: { duration: 0.3 }
+                }}
+                className="group relative"
               >
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <stat.icon className="h-8 w-8" />
+                {/* Glass Card */}
+                <div className="relative bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8 h-full overflow-hidden transition-all duration-500 group-hover:bg-white/10 group-hover:border-white/20">
+                  {/* Gradient Overlay on Hover */}
+                  <div className={`absolute inset-0 bg-gradient-to-br ${stat.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl`}></div>
+                  
+                  {/* Icon Container */}
+                  <div className="relative mb-6">
+                    <div className={`w-16 h-16 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-2xl group-hover:shadow-3xl transition-all duration-500 group-hover:scale-110`}>
+                      <stat.icon className="w-8 h-8 text-white" />
+                    </div>
+                    {/* Glow Effect */}
+                    <div className={`absolute inset-0 w-16 h-16 bg-gradient-to-br ${stat.color} rounded-xl blur-lg opacity-50 group-hover:opacity-75 transition-opacity duration-500`}></div>
+                  </div>
+
+                  {/* Animated Counter */}
+                  <div className="relative">
+                    <AnimatedCounter
+                      value={stat.value}
+                      suffix={stat.suffix}
+                      duration={2.5}
+                      className="text-4xl md:text-5xl font-black text-white mb-2 font-montserrat group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-200 group-hover:bg-clip-text transition-all duration-500"
+                    />
+                    <h3 className="text-lg font-bold text-white mb-2 group-hover:text-amber-200 transition-colors duration-300">
+                      {stat.label}
+                    </h3>
+                    <p className="text-sm text-slate-400 group-hover:text-slate-300 transition-colors duration-300">
+                      {stat.description}
+                    </p>
+                  </div>
+
+                  {/* Decorative Elements */}
+                  <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-xl group-hover:from-white/10 transition-all duration-500"></div>
+                  <div className="absolute top-4 right-4 w-2 h-2 bg-amber-400 rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500"></div>
                 </div>
-                <div className="text-3xl font-bold mb-2">{isMounted ? translateText(stat.value) : stat.value}</div>
-                <div className="text-white/80">{t(`stats.${stat.label.toLowerCase().replace(/\s+/g, '').replace(/,/g, '')}`, stat.label)}</div>
               </motion.div>
             ))}
           </div>
+
+          {/* Bottom CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, delay: 0.6 }}
+            className="text-center mt-16"
+          >
+            <div className="inline-flex items-center space-x-4 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl px-8 py-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
+                <span className="text-slate-300 font-medium">{isMounted ? t('stats.liveStatsLabel', 'Live Stats') : 'Live Stats'}</span>
+              </div>
+              <div className="w-px h-6 bg-white/20"></div>
+              <span className="text-white font-semibold">{isMounted ? t('stats.updatedRealtime', 'Updated in real-time') : 'Updated in real-time'}</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
@@ -1725,7 +1857,7 @@ export default function HomePage() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-800 mb-4">{t('testimonials.title', 'What Our Clients Say')}</h2>
             <p className="text-slate-600 max-w-2xl mx-auto">
-              {t('testimonials.description', 'Hear from satisfied customers who found their dream properties through VirtualEstate')}
+              {t('testimonials.description', 'Hear from satisfied customers who found their dream properties through OpenBeit')}
             </p>
           </div>
 
@@ -2015,8 +2147,12 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
-                <span className="text-xl font-bold">VirtualEstate</span>
+                <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white">
+                  <rect x="12" y="8" width="28" height="48" stroke="currentColor" strokeWidth="4"/>
+                  <polygon points="12,8 36,20 36,52 12,56" fill="currentColor"/>
+                  <circle cx="28" cy="32" r="2.5" fill="black"/>
+                </svg>
+                <span className="text-2xl font-black font-montserrat tracking-tight">OpenBeit</span>
               </div>
               <p className="text-slate-400 mb-4">
                 Revolutionizing real estate with immersive virtual tours and AI assistance.
@@ -2091,7 +2227,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2024 VirtualEstate. All rights reserved.</p>
+            <p>&copy; 2024 OpenBeit. All rights reserved.</p>
           </div>
         </div>
       </footer>

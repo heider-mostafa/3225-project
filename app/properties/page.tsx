@@ -124,13 +124,13 @@ export default function PropertiesPage() {
       const hasSecurity = searchParams.get('has_security') === 'true'
       const hasGym = searchParams.get('has_gym') === 'true'
       
-      // Build amenities array
+      // Build amenities array using the correct database column names
       const amenities: string[] = []
-      if (hasPool) amenities.push('swimming_pool')
-      if (hasGarden) amenities.push('garden')
-      if (hasParking) amenities.push('parking')
-      if (hasSecurity) amenities.push('security')
-      if (hasGym) amenities.push('gym')
+      if (hasPool) amenities.push('has_pool')
+      if (hasGarden) amenities.push('has_garden')
+      if (hasParking) amenities.push('has_parking')
+      if (hasSecurity) amenities.push('has_security')
+      if (hasGym) amenities.push('has_gym')
       
       // Build cities array - handle both single city and multiple city[] params
       const cities: string[] = []
@@ -351,8 +351,8 @@ export default function PropertiesPage() {
       if (filters.compound) params.append('compound', filters.compound)
       filters.amenities.forEach(amenity => params.append(amenity, 'true'))
       
-      if (filters.bedrooms.length > 0) params.append('bedrooms', filters.bedrooms[0])
-      if (filters.bathrooms.length > 0) params.append('bathrooms', filters.bathrooms[0])
+      filters.bedrooms.forEach(bedroom => params.append('bedrooms', bedroom))
+      filters.bathrooms.forEach(bathroom => params.append('bathrooms', bathroom))
       
       Object.entries(filters.maxDistances).forEach(([key, value]) => {
         if (value) params.append(`maxDistanceTo${key.charAt(0).toUpperCase() + key.slice(1)}`, value.toString())
@@ -361,10 +361,14 @@ export default function PropertiesPage() {
       params.append('sortBy', filters.sortBy)
       params.append('sortOrder', filters.sortOrder)
 
+      console.log('Search URL:', `/api/properties/search?${params.toString()}`)
+      console.log('Search filters:', filters)
+      
       const response = await fetch(`/api/properties/search?${params.toString()}`)
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Search response:', data)
         setProperties(data.properties || [])
         
         // Reset pagination for search results
@@ -375,7 +379,9 @@ export default function PropertiesPage() {
         // Log search activity
         await logSearchActivity(filters.searchQuery, filters, data.properties?.length || 0)
       } else {
-        console.error('Search failed')
+        console.error('Search failed:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('Error details:', errorText)
       }
     } catch (error) {
       console.error('Error during advanced search:', error)

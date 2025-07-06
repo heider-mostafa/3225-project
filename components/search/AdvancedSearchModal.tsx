@@ -47,7 +47,8 @@ const getPropertyTypes = (t: any) => [
   { value: 'villa', label: t('search.villa'), icon: Home, emoji: '🏘️' },
   { value: 'penthouse', label: t('search.penthouse'), icon: Star, emoji: '⭐' },
   { value: 'townhouse', label: t('search.townhouse'), icon: Home, emoji: '🏘️' },
-  { value: 'condo', label: t('search.condominium'), icon: Building, emoji: '🏗️' },
+  { value: 'studio', label: t('search.studio'), icon: Building, emoji: '🏠' },
+  { value: 'commercial', label: t('search.commercial'), icon: Building, emoji: '🏢' },
 ]
 
 const getAmenities = (t: any) => [
@@ -76,21 +77,21 @@ const getCommonFeatures = (t: any) => [
 ]
 
 const egyptianCities = [
-  { value: 'cairo', label: 'Cairo', emoji: '🌟' },
-  { value: 'giza', label: 'Giza', emoji: '🗿' },
-  { value: 'alexandria', label: 'Alexandria', emoji: '🏖️' },
-  { value: 'new_cairo', label: 'New Cairo', emoji: '🏙️' },
-  { value: 'new_administrative_capital', label: 'New Administrative Capital', emoji: '🏢' },
-  { value: 'maadi', label: 'Maadi', emoji: '🌳' },
-  { value: 'zamalek', label: 'Zamalek', emoji: '🏝️' },
-  { value: 'heliopolis', label: 'Heliopolis', emoji: '✈️' },
-  { value: 'mohandessin', label: 'Mohandessin', emoji: '🏗️' },
-  { value: 'sheikh_zayed', label: 'Sheikh Zayed', emoji: '🏘️' },
-  { value: '6th_of_october', label: '6th of October', emoji: '🌆' },
-  { value: 'marina', label: 'Marina', emoji: '⛵' },
-  { value: 'new_alamein', label: 'New Alamein', emoji: '🏖️' },
-  { value: 'hurghada', label: 'Hurghada', emoji: '🤿' },
-  { value: 'sharm_el_sheikh', label: 'Sharm El Sheikh', emoji: '🐠' },
+  { value: 'New Cairo', label: 'New Cairo', emoji: '🏙️' },
+  { value: 'Sheikh Zayed', label: 'Sheikh Zayed', emoji: '🏘️' },
+  { value: 'Zamalek', label: 'Zamalek', emoji: '🏝️' },
+  { value: '6th of October', label: '6th of October', emoji: '🌆' },
+  { value: 'Marina', label: 'Marina', emoji: '⛵' },
+  { value: 'New Administrative Capital', label: 'New Administrative Capital', emoji: '🏢' },
+  { value: 'Sidi Bishr', label: 'Sidi Bishr', emoji: '🏖️' },
+  { value: 'Maadi', label: 'Maadi', emoji: '🌳' },
+  { value: 'Downtown', label: 'Downtown', emoji: '🏙️' },
+  { value: 'Degla', label: 'Degla', emoji: '🏡' },
+  { value: 'Cairo', label: 'Cairo', emoji: '🌟' },
+  { value: 'Giza', label: 'Giza', emoji: '🗿' },
+  { value: 'Alexandria', label: 'Alexandria', emoji: '🏖️' },
+  { value: 'Heliopolis', label: 'Heliopolis', emoji: '✈️' },
+  { value: 'Mohandessin', label: 'Mohandessin', emoji: '🏗️' },
 ]
 
 const distanceOptions = [

@@ -24,6 +24,11 @@ export async function GET(request: Request) {
     const compound = searchParams.get('compound');
     const furnished = searchParams.get('furnished');
     
+    console.log('Search API params:', {
+      search_query, minPrice, maxPrice, propertyTypes, bedrooms, bathrooms,
+      cities, state, compound, furnished
+    });
+    
     // Amenity filters (using our new database schema)
     const amenityFilters = [
       'has_pool', 'has_garden', 'has_security', 'has_parking', 
@@ -117,12 +122,19 @@ export async function GET(request: Request) {
       // Apply filters
       if (minPrice) regularQuery = regularQuery.gte('price', minPrice);
       if (maxPrice) regularQuery = regularQuery.lte('price', maxPrice);
-      if (propertyTypes.length > 0) regularQuery = regularQuery.in('property_type', propertyTypes);
+      if (propertyTypes.length > 0) {
+        // Use case-insensitive matching for property types
+        const typeFilter = propertyTypes.map(type => `property_type.ilike.${type}`).join(',');
+        regularQuery = regularQuery.or(typeFilter);
+      }
       if (bedrooms.length > 0) regularQuery = regularQuery.in('bedrooms', bedrooms.map(b => parseInt(b)));
       if (bathrooms.length > 0) regularQuery = regularQuery.in('bathrooms', bathrooms.map(b => parseInt(b)));
       if (minSqm) regularQuery = regularQuery.gte('square_meters', minSqm);
       if (maxSqm) regularQuery = regularQuery.lte('square_meters', maxSqm);
-      if (cities.length > 0) regularQuery = regularQuery.in('city', cities);
+      if (cities.length > 0) {
+        // Use exact matching for cities (they should already be properly formatted)
+        regularQuery = regularQuery.in('city', cities);
+      }
       if (state) regularQuery = regularQuery.eq('state', state);
       if (compound) regularQuery = regularQuery.eq('compound', compound);
       if (furnished) regularQuery = regularQuery.eq('furnished', furnished === 'true');
@@ -146,12 +158,18 @@ export async function GET(request: Request) {
       const to = from + pageSize - 1;
       regularQuery = regularQuery.range(from, to);
 
+      console.log('About to execute query with filters:', {
+        cities, propertyTypes, bedrooms, bathrooms, minPrice, maxPrice
+      });
+
       const { data, error, count: totalCount } = await regularQuery;
 
       if (error) {
-        console.error('Error fetching properties:', error);
+        console.error('Supabase query error:', error);
         return NextResponse.json({ error: 'Failed to fetch properties' }, { status: 500 });
       }
+
+      console.log('Query results:', { count: totalCount, propertiesFound: data?.length });
 
       properties = data || [];
       count = totalCount || 0;

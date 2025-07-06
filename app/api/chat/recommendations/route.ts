@@ -7,17 +7,21 @@ export async function POST(request: Request) {
     const cookieStore = cookies();
     const supabase = createRouteHandlerClient({ cookies: () => cookieStore });
 
-    const { query, userId, maxResults = 3 } = await request.json();
+    const { query, message, userId, maxResults = 3, isPropertySearch = false } = await request.json();
 
-    if (!query) {
+    // Handle both query and message parameters for flexibility
+    const searchQuery = query || message;
+    
+    if (!searchQuery) {
       return NextResponse.json(
-        { error: 'Query is required' },
+        { error: 'Query or message is required' },
         { status: 400 }
       );
     }
 
     // Parse search criteria from natural language query
-    const searchCriteria = parseSearchQuery(query);
+    const searchCriteria = parseSearchQuery(searchQuery);
+    console.log('Parsed search criteria:', searchCriteria);
     
     // Build database query based on parsed criteria
     let dbQuery = supabase
@@ -41,7 +45,7 @@ export async function POST(request: Request) {
           order_index
         )
       `)
-      .eq('status', 'For Sale') // Only show available properties
+      .in('status', ['for_sale', 'for_rent', 'For Sale', 'available', 'active']) // Include all possible status values
       .limit(maxResults);
 
     // Apply filters based on search criteria
@@ -54,6 +58,7 @@ export async function POST(request: Request) {
     }
     
     if (searchCriteria.propertyType) {
+      // Use case-insensitive matching for property types
       dbQuery = dbQuery.ilike('property_type', `%${searchCriteria.propertyType}%`);
     }
     
@@ -116,10 +121,10 @@ export async function POST(request: Request) {
     })) || [];
 
     // Generate AI response text
-    const responseText = generateRecommendationResponse(query, recommendations, searchCriteria);
+    const responseText = generateRecommendationResponse(searchQuery, recommendations, searchCriteria);
 
     return NextResponse.json({
-      query,
+      query: searchQuery,
       recommendations,
       responseText,
       count: recommendations.length,
@@ -156,15 +161,19 @@ function parseSearchQuery(query: string): any {
 
   // Extract property type
   if (lowerQuery.includes('apartment') || lowerQuery.includes('flat')) {
-    criteria.propertyType = 'Apartment';
+    criteria.propertyType = 'apartment';
   } else if (lowerQuery.includes('villa')) {
-    criteria.propertyType = 'Villa';
+    criteria.propertyType = 'villa';
   } else if (lowerQuery.includes('house')) {
-    criteria.propertyType = 'House';
+    criteria.propertyType = 'apartment'; // Map house to apartment as closest match
   } else if (lowerQuery.includes('penthouse')) {
-    criteria.propertyType = 'Penthouse';
+    criteria.propertyType = 'penthouse';
   } else if (lowerQuery.includes('studio')) {
-    criteria.propertyType = 'Studio';
+    criteria.propertyType = 'studio';
+  } else if (lowerQuery.includes('townhouse')) {
+    criteria.propertyType = 'townhouse';
+  } else if (lowerQuery.includes('commercial') || lowerQuery.includes('office') || lowerQuery.includes('retail')) {
+    criteria.propertyType = 'commercial';
   }
 
   // Extract price range
@@ -177,12 +186,22 @@ function parseSearchQuery(query: string): any {
     criteria.maxPrice = parseInt(price);
   }
 
-  // Extract cities
-  if (lowerQuery.includes('cairo')) criteria.city = 'Cairo';
-  if (lowerQuery.includes('giza')) criteria.city = 'Giza';
-  if (lowerQuery.includes('alexandria')) criteria.city = 'Alexandria';
-  if (lowerQuery.includes('sheikh zayed')) criteria.city = 'Sheikh Zayed';
+  // Extract cities (order matters - check more specific names first)
   if (lowerQuery.includes('new cairo')) criteria.city = 'New Cairo';
+  else if (lowerQuery.includes('sheikh zayed')) criteria.city = 'Sheikh Zayed';
+  else if (lowerQuery.includes('new administrative capital')) criteria.city = 'New Administrative Capital';
+  else if (lowerQuery.includes('6th of october')) criteria.city = '6th of October';
+  else if (lowerQuery.includes('sidi bishr')) criteria.city = 'Sidi Bishr';
+  else if (lowerQuery.includes('zamalek')) criteria.city = 'Zamalek';
+  else if (lowerQuery.includes('marina')) criteria.city = 'Marina';
+  else if (lowerQuery.includes('maadi')) criteria.city = 'Maadi';
+  else if (lowerQuery.includes('downtown')) criteria.city = 'Downtown';
+  else if (lowerQuery.includes('degla')) criteria.city = 'Degla';
+  else if (lowerQuery.includes('heliopolis')) criteria.city = 'Heliopolis';
+  else if (lowerQuery.includes('mohandessin')) criteria.city = 'Mohandessin';
+  else if (lowerQuery.includes('alexandria')) criteria.city = 'Alexandria';
+  else if (lowerQuery.includes('cairo')) criteria.city = 'Cairo';
+  else if (lowerQuery.includes('giza')) criteria.city = 'Giza';
 
   // Extract amenities
   if (lowerQuery.includes('pool')) criteria.hasPool = true;

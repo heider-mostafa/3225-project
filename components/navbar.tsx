@@ -50,9 +50,13 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg"></div>
-            <span className="text-xl font-bold text-slate-800">VirtualEstate</span>
+          <Link href="/" className="flex items-center space-x-3">
+            <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+              <rect x="12" y="8" width="28" height="48" stroke="currentColor" strokeWidth="4"/>
+              <polygon points="12,8 36,20 36,52 12,56" fill="currentColor"/>
+              <circle cx="28" cy="32" r="2.5" fill="white"/>
+            </svg>
+            <span className="text-2xl font-black text-slate-800 font-montserrat tracking-tight">OpenBeit</span>
           </Link>
 
           {/* Desktop Navigation */}

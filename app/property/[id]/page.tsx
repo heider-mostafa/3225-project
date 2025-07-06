@@ -455,7 +455,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       </Badge>
                     </div>
                   )}
-                  <h1 className="text-3xl font-bold text-slate-800 mb-2 rtl:text-right ltr:text-left property-title" dir="auto">{translatedProperty?.title}</h1>
+                  <h1 className="text-3xl font-bold text-slate-800 mb-2 rtl:text-right ltr:text-left property-title">{translatedProperty?.title}</h1>
                   <div className="flex items-center text-slate-600 mb-4">
                     <MapPin className="h-5 w-5 mr-2" />
                     <span>{translatedProperty?.address}</span>
