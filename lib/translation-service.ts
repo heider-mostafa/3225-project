@@ -487,7 +487,7 @@ export function useBatchTranslation(texts: string[]) {
     }
 
     translateTexts()
-  }, [texts, currentLang])
+  }, [JSON.stringify(texts), currentLang])
 
   // Listen for language changes
   React.useEffect(() => {

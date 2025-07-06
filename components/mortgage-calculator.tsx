@@ -333,25 +333,27 @@ ${t('mortgageCalculator.appCredit')}`
   }
 
   return (
-    <div className={`bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200 ${className}`}>
-      {/* Header */}
-      <div className="bg-gradient-to-r from-slate-700 to-slate-800 text-white p-6">
+    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden ${className}`}>
+      {/* Modern Clean Header */}
+      <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200 p-6">
         <div className="flex items-center space-x-3 rtl:space-x-reverse">
-          <Calculator className="w-8 h-8" />
+          <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+            <Calculator className="w-6 h-6 text-white" />
+          </div>
           <div>
-            <h2 className="text-2xl font-bold">🏦 {t('mortgageCalculator.title')}</h2>
-            <p className="text-slate-100">{t('mortgageCalculator.subtitle')}</p>
+            <h2 className="text-3xl font-black text-slate-800 font-montserrat">{t('mortgageCalculator.title')}</h2>
+            <p className="text-slate-600 font-medium">{t('mortgageCalculator.subtitle')}</p>
           </div>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-slate-200">
+      {/* Modern Tabs */}
+      <div className="flex border-b border-slate-200 bg-slate-50">
         <button
-          className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+          className={`flex-1 py-4 px-6 text-center font-semibold transition-all duration-300 ${
             activeTab === 'calculator'
-              ? 'bg-slate-50 text-slate-700 border-b-2 border-slate-600'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+              ? 'bg-white text-blue-600 border-b-2 border-blue-500 shadow-sm'
+              : 'text-slate-600 hover:text-blue-600 hover:bg-white hover:shadow-sm'
           }`}
           onClick={() => setActiveTab('calculator')}
         >
@@ -359,10 +361,10 @@ ${t('mortgageCalculator.appCredit')}`
           {t('mortgageCalculator.loanCalculator')}
         </button>
         <button
-          className={`flex-1 py-4 px-6 text-center font-medium transition-colors ${
+          className={`flex-1 py-4 px-6 text-center font-semibold transition-all duration-300 ${
             activeTab === 'affordability'
-              ? 'bg-slate-50 text-slate-700 border-b-2 border-slate-600'
-              : 'text-slate-600 hover:text-slate-800 hover:bg-slate-50'
+              ? 'bg-white text-blue-600 border-b-2 border-blue-500 shadow-sm'
+              : 'text-slate-600 hover:text-blue-600 hover:bg-white hover:shadow-sm'
           }`}
           onClick={() => setActiveTab('affordability')}
         >
@@ -374,101 +376,118 @@ ${t('mortgageCalculator.appCredit')}`
       <div className="p-6">
         {activeTab === 'calculator' ? (
           <>
-            {/* Calculator Form */}
+            {/* Modern Property & Loan Inputs */}
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                <Building2 className="w-5 h-5 mr-2 text-slate-600" />
-                📝 {t('mortgageCalculator.propertyLoanDetails')}
-              </h3>
+              <div className="flex items-center mb-6">
+                <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                  <Building2 className="w-5 h-5 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 font-montserrat">{t('mortgageCalculator.propertyLoanDetails')}</h3>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
                     {t('mortgageCalculator.propertyPrice')}
                   </label>
-                  <input
-                    type="number"
-                    value={propertyPrice}
-                    onChange={(e) => setPropertyPrice(e.target.value)}
-                    placeholder={t('mortgageCalculator.propertyPricePlaceholder')}
-                    className={`w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent hover:border-slate-400 transition-colors ${isRTL ? 'text-right' : 'text-left'}`}
-                  />
+                  <div className="relative">
+                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="number"
+                      value={propertyPrice}
+                      onChange={(e) => setPropertyPrice(e.target.value)}
+                      placeholder={t('mortgageCalculator.propertyPricePlaceholder')}
+                      className={`w-full pl-10 pr-4 py-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-400 transition-all duration-300 text-lg font-medium ${isRTL ? 'text-right' : 'text-left'}`}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
                     {t('mortgageCalculator.downPaymentPercent')}
                   </label>
-                  <input
-                    type="number"
-                    value={downPaymentPercent}
-                    onChange={(e) => setDownPaymentPercent(e.target.value)}
-                    placeholder={t('mortgageCalculator.downPaymentPlaceholder')}
-                    className={`w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent hover:border-slate-400 transition-colors ${isRTL ? 'text-right' : 'text-left'}`}
-                  />
+                  <div className="relative">
+                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-medium">%</span>
+                    <input
+                      type="number"
+                      value={downPaymentPercent}
+                      onChange={(e) => setDownPaymentPercent(e.target.value)}
+                      placeholder={t('mortgageCalculator.downPaymentPlaceholder')}
+                      className={`w-full px-4 pr-8 py-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-400 transition-all duration-300 text-lg font-medium ${isRTL ? 'text-right' : 'text-left'}`}
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-slate-700">
                     {t('mortgageCalculator.loanTerm')}
                   </label>
-                  <input
-                    type="number"
-                    value={termYears}
-                    onChange={(e) => setTermYears(e.target.value)}
-                    placeholder={t('mortgageCalculator.loanTermPlaceholder')}
-                    className={`w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent hover:border-slate-400 transition-colors ${isRTL ? 'text-right' : 'text-left'}`}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t('mortgageCalculator.selectBank')}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => setShowBankSelector(!showBankSelector)}
-                    className={`w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent hover:border-slate-400 transition-colors ${isRTL ? 'text-right' : 'text-left'} flex items-center justify-between`}
-                  >
-                    <span className="text-slate-700">{selectedBank ? selectedBank.nameAr : t('mortgageCalculator.selectBank')}</span>
-                    <ChevronDown className="w-5 h-5 text-slate-500" />
-                  </button>
+                  <div className="relative">
+                    <Calendar className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      type="number"
+                      value={termYears}
+                      onChange={(e) => setTermYears(e.target.value)}
+                      placeholder={t('mortgageCalculator.loanTermPlaceholder')}
+                      className={`w-full pl-10 pr-4 py-4 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-400 transition-all duration-300 text-lg font-medium ${isRTL ? 'text-right' : 'text-left'}`}
+                    />
+                    <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-medium">years</span>
+                  </div>
                 </div>
               </div>
 
-              {/* Bank Selector */}
-              {showBankSelector && (
-                <div className="mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {/* Bank Selection Grid - NO DROPDOWN */}
+              <div className="mb-8">
+                <div className="flex items-center mb-6">
+                  <div className="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center mr-3">
+                    <CreditCard className="w-5 h-5 text-amber-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-800 font-montserrat">{t('mortgageCalculator.selectBank')}</h3>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {egyptianBanks.map((bank) => (
                     <div
                       key={bank.id}
-                      onClick={() => {
-                        setSelectedBank(bank)
-                        setShowBankSelector(false)
-                      }}
-                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                      onClick={() => setSelectedBank(bank)}
+                      className={`relative p-6 border-2 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-lg ${
                         selectedBank?.id === bank.id
-                          ? 'border-slate-500 bg-slate-50 ring-2 ring-slate-200'
-                          : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
+                          ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-md'
+                          : 'border-slate-200 hover:border-blue-300 hover:shadow-md'
                       }`}
                     >
-                      <div className="text-right">
-                        <h4 className="font-semibold text-slate-800">{bank.nameAr}</h4>
-                        <p className="text-sm text-slate-600 mb-2">{bank.name}</p>
-                        <div className="space-y-1">
-                          <p className="text-sm text-slate-600">
-                            <span className="font-medium">{t('mortgageCalculator.interestRate')}:</span> {bank.interestRate}%
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            <span className="font-medium">{t('mortgageCalculator.maxLoanAmount')}:</span> {formatEGP(bank.maxLoanAmount)}
-                          </p>
-                          <p className="text-sm text-slate-600">
-                            <span className="font-medium">{t('mortgageCalculator.minDownPayment')}:</span> {bank.minDownPayment}%
-                          </p>
+                      {/* Selection Indicator */}
+                      {selectedBank?.id === bank.id && (
+                        <div className="absolute top-3 right-3 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                          <div className="w-3 h-3 bg-white rounded-full"></div>
                         </div>
-                        <div className="mt-2">
-                          {bank.features.map((feature, index) => (
-                            <span key={index} className="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full mr-1 mb-1">
+                      )}
+                      
+                      <div className={`${isRTL ? 'text-right' : 'text-left'}`}>
+                        <h4 className="font-bold text-lg text-slate-800 mb-1">{isRTL ? bank.nameAr : bank.name}</h4>
+                        <p className="text-sm text-slate-600 mb-4">{isRTL ? bank.name : bank.nameAr}</p>
+                        
+                        <div className="space-y-3">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-600">Interest Rate:</span>
+                            <span className="text-lg font-bold text-blue-600">{bank.interestRate}%</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-600">Max Amount:</span>
+                            <span className="text-sm font-semibold text-slate-800">{formatEGP(bank.maxLoanAmount)}</span>
+                          </div>
+                          
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-medium text-slate-600">Min Down:</span>
+                            <span className="text-sm font-semibold text-emerald-600">{bank.minDownPayment}%</span>
+                          </div>
+                        </div>
+
+                        {/* Bank Features */}
+                        <div className="mt-4 flex flex-wrap gap-1">
+                          {bank.features.slice(0, 2).map((feature, index) => (
+                            <span key={index} className="inline-block text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">
                               {feature}
                             </span>
                           ))}
@@ -477,89 +496,115 @@ ${t('mortgageCalculator.appCredit')}`
                     </div>
                   ))}
                 </div>
-              )}
+              </div>
 
               <button
                 onClick={calculateMortgage}
-                className="w-full bg-slate-700 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-slate-800 transition-colors flex items-center justify-center space-x-2 rtl:space-x-reverse"
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-5 px-8 rounded-xl font-bold text-lg hover:from-blue-700 hover:to-blue-800 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-3 rtl:space-x-reverse shadow-lg hover:shadow-xl"
               >
-                <Calculator className="w-5 h-5" />
+                <Calculator className="w-6 h-6" />
                 <span>{t('mortgageCalculator.calculatePayment')}</span>
               </button>
             </div>
 
-            {/* Results */}
+            {/* Premium Results Section */}
             {calculation && (
               <div className="border-t border-slate-200 pt-8">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-                  <DollarSign className="w-5 h-5 mr-2 text-slate-600" />
-                  💰 {t('mortgageCalculator.resultsTitle')}
-                </h3>
-                
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="bg-slate-50 p-4 rounded-lg text-center border border-slate-200">
-                    <div className="text-2xl font-bold text-slate-800 mb-1">
-                      {formatEGP(calculation.monthlyPayment)}
-                    </div>
-                    <div className="text-sm text-slate-600">{t('mortgageCalculator.monthlyPayment')}</div>
+                <div className="flex items-center mb-8">
+                  <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                    <TrendingUp className="w-5 h-5 text-emerald-600" />
                   </div>
-                  <div className="bg-slate-100 p-4 rounded-lg text-center border border-slate-300">
+                  <h3 className="text-xl font-bold text-slate-800 font-montserrat">{t('mortgageCalculator.resultsTitle')}</h3>
+                </div>
+                
+                {/* Main Payment Display */}
+                <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-8 mb-6 text-center">
+                  <p className="text-sm font-semibold text-blue-600 mb-2">{t('mortgageCalculator.monthlyPayment')}</p>
+                  <div className="text-5xl font-black text-blue-700 mb-2 font-montserrat">
+                    {formatEGP(calculation.monthlyPayment)}
+                  </div>
+                  <p className="text-sm text-blue-600 font-medium">per month for {calculation.termYears} years</p>
+                </div>
+
+                {/* Secondary Details Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition-shadow duration-300">
+                    <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <DollarSign className="w-6 h-6 text-amber-600" />
+                    </div>
                     <div className="text-2xl font-bold text-slate-800 mb-1">
                       {formatEGP(calculation.downPayment)}
                     </div>
-                    <div className="text-sm text-slate-600">{t('mortgageCalculator.downPaymentRequired')}</div>
+                    <div className="text-sm text-slate-600 font-medium">{t('mortgageCalculator.downPaymentRequired')}</div>
                   </div>
-                  <div className="bg-slate-200 p-4 rounded-lg text-center border border-slate-400">
-                    <div className="text-2xl font-bold text-slate-900 mb-1">
+                  
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition-shadow duration-300">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <CreditCard className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="text-2xl font-bold text-slate-800 mb-1">
                       {formatEGP(calculation.loanAmount)}
                     </div>
-                    <div className="text-sm text-slate-600">{t('mortgageCalculator.loanAmount')}</div>
+                    <div className="text-sm text-slate-600 font-medium">{t('mortgageCalculator.loanAmount')}</div>
                   </div>
-                  <div className="bg-slate-100 p-4 rounded-lg text-center border border-slate-300">
+                  
+                  <div className="bg-white border border-slate-200 rounded-xl p-6 text-center hover:shadow-md transition-shadow duration-300">
+                    <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <TrendingUp className="w-6 h-6 text-red-600" />
+                    </div>
                     <div className="text-2xl font-bold text-slate-800 mb-1">
                       {formatEGP(calculation.totalInterest)}
                     </div>
-                    <div className="text-sm text-slate-600">{t('mortgageCalculator.totalInterest')}</div>
+                    <div className="text-sm text-slate-600 font-medium">{t('mortgageCalculator.totalInterest')}</div>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-3 mb-6">
+                {/* Modern Action Buttons */}
+                <div className="flex flex-wrap gap-3 mb-8">
                   <button
                     onClick={() => setShowPaymentSchedule(true)}
-                    className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
+                    className="flex items-center space-x-2 rtl:space-x-reverse px-6 py-3 bg-white text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-300 border border-slate-200 hover:border-slate-300 hover:shadow-md"
                   >
-                    <BarChart3 className="w-4 h-4" />
-                    <span>📊 {t('mortgageCalculator.paymentSchedule')}</span>
+                    <BarChart3 className="w-5 h-5" />
+                    <span className="font-medium">{t('mortgageCalculator.paymentSchedule')}</span>
                   </button>
                   <button
                     onClick={shareCalculation}
-                    className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
+                    className="flex items-center space-x-2 rtl:space-x-reverse px-6 py-3 bg-white text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-300 border border-slate-200 hover:border-slate-300 hover:shadow-md"
                   >
-                    <Share className="w-4 h-4" />
-                    <span>📤 {t('mortgageCalculator.shareCalculation')}</span>
+                    <Share className="w-5 h-5" />
+                    <span className="font-medium">{t('mortgageCalculator.shareCalculation')}</span>
                   </button>
                   <button
                     onClick={saveCalculation}
-                    className="flex items-center space-x-2 rtl:space-x-reverse px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
+                    className="flex items-center space-x-2 rtl:space-x-reverse px-6 py-3 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg"
                   >
-                    <Save className="w-4 h-4" />
-                    <span>💾 {t('mortgageCalculator.saveCalculation')}</span>
+                    <Save className="w-5 h-5" />
+                    <span className="font-medium">{t('mortgageCalculator.saveCalculation')}</span>
                   </button>
                 </div>
 
-                {/* Bank Details */}
-                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                  <h4 className="font-semibold text-slate-800 mb-2">{t('mortgageCalculator.selectedBankDetails')}</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="font-medium text-slate-700">{t('mortgageCalculator.bankName')}:</span> <span className="text-slate-600">{calculation.bankName}</span>
+                {/* Selected Bank Details */}
+                <div className="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl p-6 border border-slate-200">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                      <CreditCard className="w-5 h-5 text-blue-600" />
                     </div>
-                    <div>
-                      <span className="font-medium text-slate-700">{t('mortgageCalculator.interestRate')}:</span> <span className="text-slate-600">{calculation.interestRate}%</span>
+                    <h4 className="font-bold text-slate-800 text-lg">{t('mortgageCalculator.selectedBankDetails')}</h4>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-600 mb-1">{t('mortgageCalculator.bankName')}</p>
+                      <p className="font-bold text-slate-800">{calculation.bankName}</p>
                     </div>
-                    <div>
-                      <span className="font-medium text-slate-700">{t('mortgageCalculator.termYears')}:</span> <span className="text-slate-600">{calculation.termYears} {t('propertyDetails.years')}</span>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-600 mb-1">{t('mortgageCalculator.interestRate')}</p>
+                      <p className="font-bold text-blue-600 text-lg">{calculation.interestRate}%</p>
+                    </div>
+                    <div className="bg-white rounded-lg p-4 border border-slate-200">
+                      <p className="text-sm font-medium text-slate-600 mb-1">{t('mortgageCalculator.termYears')}</p>
+                      <p className="font-bold text-slate-800">{calculation.termYears} {t('propertyDetails.years')}</p>
                     </div>
                   </div>
                 </div>
@@ -567,31 +612,37 @@ ${t('mortgageCalculator.appCredit')}`
             )}
           </>
         ) : (
-          /* Affordability Calculator */
+          /* Modern Affordability Calculator */
           <div>
-            <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center">
-              <PiggyBank className="w-5 h-5 mr-2 text-slate-600" />
-              💡 {t('mortgageCalculator.affordabilityTitle')}
-            </h3>
+            <div className="flex items-center mb-8">
+              <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center mr-3">
+                <PiggyBank className="w-5 h-5 text-emerald-600" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 font-montserrat">{t('mortgageCalculator.affordabilityTitle')}</h3>
+            </div>
             
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+            <div className="mb-8">
+              <label className="block text-sm font-semibold text-slate-700 mb-3">
                 {t('mortgageCalculator.monthlyIncome')}
               </label>
-              <input
-                type="number"
-                value={monthlyIncome}
-                onChange={(e) => setMonthlyIncome(e.target.value)}
-                placeholder={t('mortgageCalculator.monthlyIncomePlaceholder')}
-                className={`w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-500 focus:border-transparent hover:border-slate-400 transition-colors ${isRTL ? 'text-right' : 'text-left'}`}
-              />
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="number"
+                  value={monthlyIncome}
+                  onChange={(e) => setMonthlyIncome(e.target.value)}
+                  placeholder={t('mortgageCalculator.monthlyIncomePlaceholder')}
+                  className={`w-full pl-10 pr-4 py-5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-slate-400 transition-all duration-300 text-lg font-medium ${isRTL ? 'text-right' : 'text-left'}`}
+                />
+                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 font-medium">EGP</span>
+              </div>
             </div>
 
             <button
               onClick={calculateAffordability}
-              className="w-full bg-slate-700 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:bg-slate-800 transition-colors flex items-center justify-center space-x-2 rtl:space-x-reverse mb-6"
+              className="w-full bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-5 px-8 rounded-xl font-bold text-lg hover:from-emerald-700 hover:to-emerald-800 transform hover:scale-[1.02] transition-all duration-300 flex items-center justify-center space-x-3 rtl:space-x-reverse shadow-lg hover:shadow-xl mb-8"
             >
-              <TrendingUp className="w-5 h-5" />
+              <TrendingUp className="w-6 h-6" />
               <span>{t('mortgageCalculator.calculateAffordability')}</span>
             </button>
 
