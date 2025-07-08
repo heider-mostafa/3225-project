@@ -6,6 +6,8 @@
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import OpenAI from 'openai'
+import { pdfGenerator } from './pdf-generator'
+import { createUnifiedContract, generateUnifiedContractHTML, UnifiedContractData } from './unified-template'
 
 // Lazy OpenAI initialization to avoid build-time errors
 let openai: OpenAI | null = null
@@ -22,7 +24,7 @@ function getOpenAI(): OpenAI {
 // Types for contract generation
 export interface ContractGenerationRequest {
   leadId: string
-  contractType: 'exclusive_listing' | 'sale_agreement' | 'marketing_authorization' | 'commission_agreement'
+  contractType: 'exclusive_listing' | 'sale_agreement' | 'marketing_authorization' | 'commission_agreement' | 'standard'
   expedited?: boolean
   manualReview?: boolean
   customVariables?: Record<string, any>
@@ -40,6 +42,22 @@ export interface ContractGenerationResult {
   errors?: string[]
   warnings?: string[]
   generationTimeMs: number
+}
+
+export interface ContractPreviewResult {
+  success: boolean
+  leadData: LeadData
+  contractData: any
+  template: ContractTemplate
+  aiReview: {
+    confidenceScore: number
+    riskFactors: string[]
+    recommendations: string[]
+    warnings: string[]
+    complianceCheck: any
+  }
+  htmlContent: string
+  errors?: string[]
 }
 
 export interface LeadData {
@@ -77,6 +95,100 @@ export class ContractGenerator {
   private startTime: number = 0
 
   /**
+   * Generate contract preview without saving to database
+   */
+  async generateContractPreview(request: ContractGenerationRequest): Promise<ContractPreviewResult> {
+    this.startTime = Date.now()
+
+    try {
+      // 1. Validate and fetch lead data
+      const leadData = await this.getLeadData(request.leadId)
+      if (!leadData) {
+        return {
+          success: false,
+          errors: ['Lead not found'],
+          leadData: {} as LeadData,
+          contractData: {},
+          template: {} as ContractTemplate,
+          aiReview: {
+            confidenceScore: 0,
+            riskFactors: [],
+            recommendations: [],
+            warnings: [],
+            complianceCheck: {}
+          },
+          htmlContent: ''
+        }
+      }
+
+      // 2. Perform legal risk assessment
+      const riskAssessment = await this.assessLegalRisk(leadData)
+
+      // 3. Create unified contract template
+      const unifiedTemplate = {
+        id: 'unified-standard',
+        name: 'VirtualEstate Standard Agreement',
+        template_type: request.contractType || 'standard',
+        property_type: 'all',
+        description: 'Comprehensive property service agreement covering all contract types',
+        success_rate: 95
+      }
+
+      // 4. Generate unified contract data
+      let contractData
+      try {
+        contractData = createUnifiedContract(leadData, {
+          contract_type: request.contractType || 'standard',
+          ...request.customVariables
+        })
+        console.log('Contract data generated successfully:', contractData.contract_id)
+      } catch (contractError) {
+        console.error('Error creating unified contract:', contractError)
+        throw new Error(`Failed to create contract data: ${contractError instanceof Error ? contractError.message : 'Unknown error'}`)
+      }
+
+      // 5. Perform AI legal review
+      const aiReview = await this.performAILegalReview(contractData, unifiedTemplate, leadData)
+
+      // 6. Generate HTML content for preview
+      const htmlContent = generateUnifiedContractHTML(contractData)
+
+      return {
+        success: true,
+        leadData,
+        contractData,
+        template: unifiedTemplate,
+        aiReview,
+        htmlContent
+      }
+
+    } catch (error) {
+      console.error('Contract preview generation failed:', error)
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        leadId: request.leadId,
+        contractType: request.contractType
+      })
+      return {
+        success: false,
+        errors: [error instanceof Error ? error.message : 'Unknown error occurred'],
+        leadData: {} as LeadData,
+        contractData: {},
+        template: {} as ContractTemplate,
+        aiReview: {
+          confidenceScore: 0,
+          riskFactors: [],
+          recommendations: [],
+          warnings: [],
+          complianceCheck: {}
+        },
+        htmlContent: ''
+      }
+    }
+  }
+
+  /**
    * Main contract generation method
    */
   async generateContract(request: ContractGenerationRequest): Promise<ContractGenerationResult> {
@@ -92,23 +204,37 @@ export class ContractGenerator {
       // 2. Perform legal risk assessment
       const riskAssessment = await this.assessLegalRisk(leadData)
 
-      // 3. Select optimal template
-      const template = await this.selectOptimalTemplate(leadData, request.contractType, riskAssessment)
-      if (!template) {
-        return this.createErrorResult('No suitable template found', riskAssessment.riskScore)
+      // 3. Create unified contract template
+      const unifiedTemplate = {
+        id: 'unified-standard',
+        name: 'VirtualEstate Standard Agreement',
+        template_type: request.contractType || 'standard',
+        property_type: 'all',
+        description: 'Comprehensive property service agreement covering all contract types',
+        success_rate: 95
       }
 
-      // 4. Generate contract content using AI
-      const contractData = await this.generateContractContent(leadData, template, request.customVariables)
+      // 4. Generate unified contract data
+      let contractData
+      try {
+        contractData = createUnifiedContract(leadData, {
+          contract_type: request.contractType || 'standard',
+          ...request.customVariables
+        })
+        console.log('Contract data generated successfully for generation:', contractData.contract_id)
+      } catch (contractError) {
+        console.error('Error creating unified contract for generation:', contractError)
+        throw new Error(`Failed to create contract data: ${contractError instanceof Error ? contractError.message : 'Unknown error'}`)
+      }
 
       // 5. Perform AI legal review
-      const aiReview = await this.performAILegalReview(contractData, template, leadData)
+      const aiReview = await this.performAILegalReview(contractData, unifiedTemplate, leadData)
 
       // 6. Generate PDF document
-      const documentUrl = await this.generatePDFDocument(contractData, template)
+      const documentUrl = await this.generatePDFDocument(contractData, unifiedTemplate)
 
       // 7. Store contract in database
-      const contractId = await this.storeContract(leadData, template, contractData, aiReview, documentUrl, riskAssessment)
+      const contractId = await this.storeContract(leadData, unifiedTemplate, contractData, aiReview, documentUrl, riskAssessment)
 
       // 8. Determine if auto-approval is possible
       const autoApproved = this.shouldAutoApprove(aiReview, riskAssessment, request.expedited)
@@ -146,19 +272,39 @@ export class ContractGenerator {
    * Fetch lead data from database
    */
   private async getLeadData(leadId: string): Promise<LeadData | null> {
-    const supabase = await createServerSupabaseClient()
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*')
-      .eq('id', leadId)
-      .single()
+    try {
+      console.log('Fetching lead data for ID:', leadId)
+      const supabase = await createServerSupabaseClient()
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('id', leadId)
+        .single()
 
-    if (error || !data) {
-      console.error('Failed to fetch lead data:', error)
+      if (error) {
+        console.error('Database error fetching lead:', error)
+        return null
+      }
+
+      if (!data) {
+        console.error('No lead found with ID:', leadId)
+        return null
+      }
+
+      console.log('Lead data fetched successfully:', {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        location: data.location,
+        property_type: data.property_type,
+        price_range: data.price_range
+      })
+
+      return data as LeadData
+    } catch (error) {
+      console.error('Exception in getLeadData:', error)
       return null
     }
-
-    return data as LeadData
   }
 
   /**
@@ -435,38 +581,75 @@ export class ContractGenerator {
   /**
    * Generate PDF document from contract data
    */
-  private async generatePDFDocument(contractData: any, template: ContractTemplate): Promise<string> {
+  private async generatePDFDocument(contractData: any, template: any): Promise<string> {
     try {
-      // Create PDF content using HTML template
-      const htmlContent = this.generateHTMLContract(contractData, template)
+      // Generate unique filename
+      const fileName = `contract_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
-      // For now, we'll create a simple text-based PDF representation
-      // In production, you would use a service like Puppeteer, jsPDF, or an external PDF API
-      const fileName = `contract_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.pdf`
+      // Generate HTML content for unified contract
+      const htmlContent = generateUnifiedContractHTML(contractData)
       
-      // Create a downloadable contract data structure
-      const pdfData = {
+      // Generate and upload PDF using our PDF generator
+      const { url } = await pdfGenerator.generateAndUploadPDF(
+        htmlContent,
         fileName,
-        content: htmlContent,
-        contractType: template.template_type,
-        generatedAt: new Date().toISOString(),
-        contractData: contractData
-      }
+        {
+          format: 'A4',
+          orientation: 'portrait',
+          printBackground: true,
+          displayHeaderFooter: true
+        }
+      )
       
-      // In a real implementation, you would:
-      // 1. Generate actual PDF using Puppeteer or similar
-      // 2. Upload to Supabase Storage
-      // 3. Return the public URL
-      
-      // For demo purposes, we'll create a data URL that can be downloaded
-      const jsonContent = JSON.stringify(pdfData, null, 2)
-      const base64Content = Buffer.from(jsonContent).toString('base64')
-      
-      return `data:application/json;base64,${base64Content}`
+      return url
     } catch (error) {
       console.error('PDF generation failed:', error)
-      // Return a fallback URL
-      return `data:text/plain;base64,${Buffer.from('Contract generation failed').toString('base64')}`
+      
+      // Fallback: return a data URL with the HTML content
+      const htmlContent = generateUnifiedContractHTML(contractData)
+      const base64Content = Buffer.from(htmlContent).toString('base64')
+      return `data:text/html;base64,${base64Content}`
+    }
+  }
+
+  /**
+   * Generate PDF from HTML content (for preview downloads)
+   */
+  async generatePDFFromHTML(htmlContent: string, fileName?: string): Promise<string> {
+    try {
+      const pdfBuffer = await pdfGenerator.generatePDFFromHTML(htmlContent, {
+        format: 'A4',
+        orientation: 'portrait',
+        printBackground: true,
+        displayHeaderFooter: true
+      })
+
+      if (fileName) {
+        // Upload to storage and return URL
+        const supabase = await createServerSupabaseClient()
+        const filePath = `contracts/previews/${fileName}.pdf`
+        
+        const { data, error } = await supabase.storage
+          .from('documents')
+          .upload(filePath, pdfBuffer, {
+            contentType: 'application/pdf',
+            cacheControl: '3600'
+          })
+
+        if (!error) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('documents')
+            .getPublicUrl(filePath)
+          return publicUrl
+        }
+      }
+
+      // Return as data URL for immediate download
+      const base64Content = pdfBuffer.toString('base64')
+      return `data:application/pdf;base64,${base64Content}`
+    } catch (error) {
+      console.error('PDF generation from HTML failed:', error)
+      throw error
     }
   }
 

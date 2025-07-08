@@ -45,6 +45,7 @@ import {
 } from 'lucide-react'
 import { isCurrentUserAdmin, logAdminActivity } from '@/lib/auth/admin-client'
 import { supabase } from '@/lib/supabase/config'
+import ContractPreview from '@/components/ContractPreview'
 
 // Enhanced Lead interface with contract automation
 interface Lead {
@@ -161,6 +162,11 @@ export default function AdminLeadsAndContracts() {
   const [leadCallLogs, setLeadCallLogs] = useState<any[]>([])
   const [leadCallSchedules, setLeadCallSchedules] = useState<any[]>([])
   const [loadingCallData, setLoadingCallData] = useState(false)
+  
+  // Contract Preview State
+  const [showContractPreview, setShowContractPreview] = useState(false)
+  const [contractPreviewData, setContractPreviewData] = useState<any>(null)
+  const [contractPreviewLoading, setContractPreviewLoading] = useState(false)
 
   useEffect(() => {
     const checkAdminAndLoad = async () => {
@@ -602,7 +608,46 @@ export default function AdminLeadsAndContracts() {
     setShowContractModal(true)
   }
 
-  const generateContract = async (leadId: string, contractType: string = 'exclusive_listing', expedited = false) => {
+  const generateContractPreview = async (leadId: string, contractType: string = 'standard', expedited = false) => {
+    setContractPreviewLoading(true)
+    
+    try {
+      const response = await fetch('/api/admin/contracts/preview', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          leadId,
+          contractType,
+          expedited,
+          manualReview: false
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setContractPreviewData(result.data)
+        setShowContractPreview(true)
+        setShowContractModal(false)
+      } else {
+        // Handle specific error cases
+        if (result.error?.includes('templates not found') || result.error?.includes('tables not found')) {
+          alert(`Contract preview failed: ${result.error}\n\nPlease contact support to initialize the contract system.`)
+        } else {
+          alert(`Contract preview failed: ${result.error}`)
+        }
+      }
+    } catch (error) {
+      console.error('Error generating contract preview:', error)
+      alert('Failed to generate contract preview. Please check your internet connection and try again.')
+    } finally {
+      setContractPreviewLoading(false)
+    }
+  }
+
+  const generateContract = async (leadId: string, contractType: string = 'standard', expedited = false) => {
     setContractGenerationLoading(leadId)
     
     try {
@@ -655,6 +700,92 @@ export default function AdminLeadsAndContracts() {
     }
   }
 
+  const handleContractPreviewConfirm = async (editedData: any) => {
+    if (!contractPreviewData) return
+    
+    setContractPreviewLoading(true)
+    
+    try {
+      const response = await fetch('/api/admin/contracts/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          leadId: contractPreviewData.leadData.id,
+          contractType: contractPreviewData.template.template_type,
+          customVariables: editedData,
+          expedited: false,
+          manualReview: false
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setShowContractPreview(false)
+        setContractPreviewData(null)
+        
+        // Refresh leads data
+        await loadLeads()
+        await loadMetrics()
+        
+        // Show success message with download option
+        const downloadUrl = result.data.downloadUrl
+        const contractId = result.data.contractId
+        const autoApproved = result.data.autoApproved
+        
+        const message = `Contract generated successfully! ${autoApproved ? 'Auto-approved and ready to send.' : 'Pending review.'}\n\nWould you like to download the contract now?`
+        
+        if (confirm(message)) {
+          window.open(downloadUrl, '_blank')
+        }
+      } else {
+        alert(`Contract generation failed: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error generating final contract:', error)
+      alert('Failed to generate contract. Please try again.')
+    } finally {
+      setContractPreviewLoading(false)
+    }
+  }
+
+  const handleContractPreviewDownload = async (format: 'pdf' | 'html') => {
+    if (!contractPreviewData) return
+    
+    try {
+      const response = await fetch('/api/admin/contracts/preview-download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          htmlContent: contractPreviewData.htmlContent,
+          format,
+          fileName: `contract_preview_${contractPreviewData.leadData.name}_${Date.now()}`
+        })
+      })
+
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `contract_preview.${format}`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        window.URL.revokeObjectURL(url)
+      } else {
+        throw new Error('Download failed')
+      }
+    } catch (error) {
+      console.error('Error downloading preview:', error)
+      alert('Failed to download preview. Please try again.')
+    }
+  }
+
   const downloadContract = async (contractId: string, format: 'pdf' | 'json' = 'pdf') => {
     try {
       const url = `/api/admin/contracts/${contractId}/download?format=${format}`
@@ -688,7 +819,7 @@ export default function AdminLeadsAndContracts() {
         },
         body: JSON.stringify({
           leadIds: selectedLeadIds,
-          contractType: 'exclusive_listing',
+          contractType: 'standard',
           batchSize: 5
         })
       })
@@ -1211,22 +1342,22 @@ export default function AdminLeadsAndContracts() {
                         
                         {lead.contract_status === 'pending' && lead.status === 'completed' && (
                           <button
-                            onClick={() => generateContract(lead.id)}
-                            disabled={contractGenerationLoading === lead.id}
+                            onClick={() => generateContractPreview(lead.id)}
+                            disabled={contractGenerationLoading === lead.id || contractPreviewLoading}
                             className="text-green-600 hover:text-green-800 p-1 disabled:opacity-50"
-                            title="Generate Contract"
+                            title="Preview & Generate Contract"
                           >
-                            {contractGenerationLoading === lead.id ? (
+                            {(contractGenerationLoading === lead.id || contractPreviewLoading) ? (
                               <RefreshCw className="w-4 h-4 animate-spin" />
                             ) : (
-                              <FileText className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                             )}
                           </button>
                         )}
                         
                         {lead.contract_status === 'pending' && lead.status === 'completed' && lead.expedited_contract && (
                           <button
-                            onClick={() => generateContract(lead.id, 'exclusive_listing', true)}
+                            onClick={() => generateContract(lead.id, 'standard', true)}
                             disabled={contractGenerationLoading === lead.id}
                             className="text-purple-600 hover:text-purple-800 p-1 disabled:opacity-50"
                             title="Generate Expedited Contract"
@@ -1439,15 +1570,16 @@ export default function AdminLeadsAndContracts() {
                             <button
                               onClick={() => {
                                 setSelectedContractType(template.template_type)
-                                generateContract(selectedLead.id, template.template_type)
+                                generateContractPreview(selectedLead.id, template.template_type)
                               }}
-                              disabled={contractGenerationLoading === selectedLead.id}
+                              disabled={contractGenerationLoading === selectedLead.id || contractPreviewLoading}
                               className="ml-2 text-indigo-600 hover:text-indigo-800 disabled:opacity-50"
+                              title="Preview Contract"
                             >
-                              {contractGenerationLoading === selectedLead.id ? (
+                              {(contractGenerationLoading === selectedLead.id || contractPreviewLoading) ? (
                                 <RefreshCw className="w-4 h-4 animate-spin" />
                               ) : (
-                                <Plus className="w-4 h-4" />
+                                <Eye className="w-4 h-4" />
                               )}
                             </button>
                           </div>
@@ -1489,7 +1621,7 @@ export default function AdminLeadsAndContracts() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Contract Generation Options</h3>
+              <h3 className="text-lg font-semibold text-gray-900">Generate Contract</h3>
               <button
                 onClick={() => setShowContractModal(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -1500,58 +1632,27 @@ export default function AdminLeadsAndContracts() {
             
             <div className="p-6">
               <div className="mb-6">
-                <h4 className="text-md font-medium text-gray-900 mb-2">Available Contract Templates</h4>
-                <p className="text-sm text-gray-600">Select the most appropriate contract type for this client based on their status and requirements.</p>
+                <h4 className="text-md font-medium text-gray-900 mb-2">VirtualEstate Standard Agreement</h4>
+                <p className="text-sm text-gray-600">Generate a comprehensive property service agreement that covers all contract types including listing authorization, marketing rights, commission terms, and legal compliance.</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {contractTemplates.map((template) => {
-                  const isRecommended = getRecommendedTemplates(selectedLead).some(t => t.id === template.id)
-                  return (
-                    <div 
-                      key={template.id} 
-                      className={`relative p-4 border rounded-lg cursor-pointer transition-colors ${
-                        selectedContractType === template.template_type 
-                          ? 'border-blue-500 bg-blue-50' 
-                          : 'border-gray-200 hover:border-gray-300'
-                      } ${isRecommended ? 'ring-2 ring-green-200' : ''}`}
-                      onClick={() => setSelectedContractType(template.template_type)}
-                    >
-                      {isRecommended && (
-                        <div className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-1 rounded-full">
-                          Recommended
-                        </div>
-                      )}
-                      <div className="flex items-start space-x-3">
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          selectedContractType === template.template_type ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'
-                        }`}>
-                          <FileText className="w-4 h-4" />
-                        </div>
-                        <div className="flex-1">
-                          <h5 className="font-medium text-gray-900">{template.name}</h5>
-                          <p className="text-sm text-gray-600 mt-1">{template.description}</p>
-                          <div className="flex items-center space-x-3 mt-3">
-                            <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                              {template.success_rate}% Success Rate
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              For: {template.recommended_for.join(', ')} leads
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+              {/* Lead Summary */}
+              <div className="bg-gray-50 p-4 rounded-lg mb-6">
+                <h5 className="font-medium text-gray-900 mb-2">Client Information</h5>
+                <div className="grid grid-cols-1 gap-2 text-sm text-gray-600">
+                  <div><strong>Name:</strong> {selectedLead.name}</div>
+                  <div><strong>Email:</strong> {selectedLead.email}</div>
+                  <div><strong>Phone:</strong> {selectedLead.whatsapp_number}</div>
+                  <div><strong>Location:</strong> {selectedLead.location}</div>
+                  <div><strong>Property Type:</strong> {selectedLead.property_type}</div>
+                  <div><strong>Price Range:</strong> {selectedLead.price_range}</div>
+                </div>
               </div>
             </div>
 
             <div className="flex justify-between items-center p-6 border-t border-gray-200 bg-gray-50">
               <div className="text-sm text-gray-600">
-                {selectedContractType && (
-                  <>Selected: {contractTemplates.find(t => t.template_type === selectedContractType)?.name}</>
-                )}
+                Ready to generate contract for {selectedLead.name}
               </div>
               <div className="flex space-x-3">
                 <button
@@ -1561,23 +1662,37 @@ export default function AdminLeadsAndContracts() {
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    if (selectedContractType) {
-                      generateContract(selectedLead.id, selectedContractType)
-                    }
-                  }}
-                  disabled={!selectedContractType || contractGenerationLoading === selectedLead.id}
-                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center"
+                  onClick={() => generateContract(selectedLead.id, 'standard')}
+                  disabled={contractGenerationLoading === selectedLead.id || contractPreviewLoading}
+                  className="bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center"
+                  title="Generate contract directly"
                 >
-                  {contractGenerationLoading === selectedLead.id ? (
+                  {(contractGenerationLoading === selectedLead.id) ? (
                     <>
                       <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Generate Contract
+                      <FileText className="w-4 h-4 mr-2" />
+                      Generate
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => generateContractPreview(selectedLead.id, 'standard')}
+                  disabled={contractGenerationLoading === selectedLead.id || contractPreviewLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors disabled:opacity-50 flex items-center"
+                >
+                  {(contractGenerationLoading === selectedLead.id || contractPreviewLoading) ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                      Loading...
+                    </>
+                  ) : (
+                    <>
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
                     </>
                   )}
                 </button>
@@ -2152,6 +2267,19 @@ export default function AdminLeadsAndContracts() {
           </div>
         </div>
       )}
+
+      {/* Contract Preview Modal */}
+      <ContractPreview
+        isOpen={showContractPreview}
+        onClose={() => {
+          setShowContractPreview(false)
+          setContractPreviewData(null)
+        }}
+        data={contractPreviewData}
+        onConfirm={handleContractPreviewConfirm}
+        onDownloadPreview={handleContractPreviewDownload}
+        loading={contractPreviewLoading}
+      />
     </div>
   )
 }

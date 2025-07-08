@@ -12,7 +12,7 @@ import { z } from 'zod'
 // Request validation schema
 const bulkGenerateSchema = z.object({
   leadIds: z.array(z.string().uuid()).min(1).max(50), // Limit to 50 leads per batch
-  contractType: z.enum(['exclusive_listing', 'sale_agreement', 'marketing_authorization', 'commission_agreement']),
+  contractType: z.enum(['exclusive_listing', 'sale_agreement', 'marketing_authorization', 'commission_agreement', 'standard']).default('standard'),
   expedited: z.boolean().optional().default(false),
   manualReview: z.boolean().optional().default(false),
   batchSize: z.number().min(1).max(10).optional().default(5), // Process in batches of 5

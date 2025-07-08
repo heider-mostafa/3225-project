@@ -99,7 +99,7 @@ export function PropertyCard({ property, initialSaved = false }: PropertyCardPro
             </div>
             <SavePropertyButton propertyId={property.id} initialSaved={initialSaved} />
           </div>
-          <div className="hidden lg:flex items-center gap-4 text-sm text-slate-600 mb-4">
+          <div className="hidden min-[480px]:flex items-center gap-4 text-sm text-slate-600 mb-4">
             <div className="flex items-center">
               <Bed className="h-4 w-4 mr-1" />
               {property.bedrooms || 0}
@@ -127,7 +127,7 @@ export function PropertyCard({ property, initialSaved = false }: PropertyCardPro
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold text-slate-800">{formatPrice(property.price)}</span>
             {property.views && (
-              <div className="hidden lg:flex items-center text-xs text-slate-500">
+              <div className="hidden min-[480px]:flex items-center text-xs text-slate-500">
                 <Eye className="h-3 w-3 mr-1" />
                 {property.views}
               </div>

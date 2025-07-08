@@ -16,7 +16,8 @@ import {
   Activity,
   UserCheck,
   Camera,
-  FileText
+  FileText,
+  Gavel
 } from 'lucide-react'
 import { useAuth } from '@/components/providers'
 import { getCurrentUserRole, type UserRole } from '@/lib/auth/admin-client'
@@ -33,6 +34,12 @@ const sidebarItems = [
     name: 'Properties',
     href: '/admin/properties',
     icon: Building2,
+    permission: 'properties:read'
+  },
+  {
+    name: 'Auctions',
+    href: '/admin/auctions',
+    icon: Gavel,
     permission: 'properties:read'
   },
   {

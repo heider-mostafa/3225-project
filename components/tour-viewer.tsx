@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Video, MessageCircle, Play, Mic, MicOff, Volume2, Globe, X, ChevronDown, Phone } from "lucide-react"
 import { UnifiedPropertyAgent } from "@/lib/heygen/UnifiedPropertyAgent"
+import { translationService } from '@/lib/translation-service'
 import type * as THREE from "three"
 
 interface TourViewerProps {
@@ -122,6 +123,7 @@ export function TourViewer({
   const [isRecording, setIsRecording] = useState(false)
   const [isResponding, setIsResponding] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState('en')
+  const [isLanguageInitialized, setIsLanguageInitialized] = useState(false)
   const [voiceLevel, setVoiceLevel] = useState(0)
   const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected')
   const [connectionError, setConnectionError] = useState<string>('')
@@ -240,6 +242,55 @@ export function TourViewer({
     fullscreen,
     hasTourUrl: !!tourUrl
   })
+
+  // Initialize language from translation service
+  useEffect(() => {
+    if (!isLanguageInitialized) {
+      try {
+        // Get current language from translation service
+        const currentLang = translationService.getCurrentLanguage();
+        console.log('🌍 Tour viewer: Detected language from translation service:', currentLang);
+        
+        // Find the language in our supported languages array
+        const detectedLang = languages.find(lang => lang.code === currentLang);
+        if (detectedLang) {
+          setSelectedLanguage(currentLang);
+          console.log('🌍 Tour viewer: Set initial language to:', currentLang, detectedLang.name);
+        }
+        
+        setIsLanguageInitialized(true);
+      } catch (error) {
+        console.error('Failed to initialize language in tour viewer:', error);
+        setIsLanguageInitialized(true); // Still mark as initialized to prevent retries
+      }
+    }
+  }, [isLanguageInitialized]);
+
+  // Listen for global language changes
+  useEffect(() => {
+    const handleGlobalLanguageChange = (event: CustomEvent<string>) => {
+      const newLang = event.detail;
+      console.log('🌍 Tour viewer: Global language changed to:', newLang);
+      
+      // Find the language in our supported languages array
+      const detectedLang = languages.find(lang => lang.code === newLang);
+      if (detectedLang) {
+        setSelectedLanguage(newLang);
+        
+        // If we're connected to the AI, update the language immediately
+        if (isConnected && dataChannelRef.current) {
+          handleLanguageChange(newLang);
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('languageChange', handleGlobalLanguageChange as EventListener);
+      return () => {
+        window.removeEventListener('languageChange', handleGlobalLanguageChange as EventListener);
+      };
+    }
+  }, [isConnected]);
 
   useEffect(() => {
     // Simulate loading time
@@ -640,20 +691,38 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
           setReconnectAttempts(0) // Reset reconnection counter on successful connection
           setFallbackMode(false) // Reset fallback mode on successful connection
           
-          // Send initial session configuration
+          // Get language-specific configuration
+          const currentLangObj = languages.find(l => l.code === selectedLanguage) || languages.find(l => l.code === 'en');
+          
+          // Send initial session configuration with detected language
           const sessionConfig = {
             type: 'session.update',
             session: {
               modalities: ['text', 'audio'],
               instructions: `You are an elite AI real estate specialist helping with property ${propertyId}. Your goal is to create genuine interest and guide prospects toward scheduling viewings.
 
+CURRENT LANGUAGE: ${currentLangObj?.name} (${selectedLanguage})
+CULTURAL STYLE: ${currentLangObj?.salesStyle}
+
 CULTURAL CONTEXT:
-- For Arabic users: Use warm Egyptian dialect and focus on family values
-- For English users: Maintain professional tone while incorporating Egyptian market insights
-- For other languages: Adapt to cultural preferences while maintaining Egyptian market focus
+${currentLangObj?.culturalNotes}
+
+${selectedLanguage === 'ar' ? `
+🇪🇬 EGYPTIAN ARABIC SPECIFICS:
+- Use warm Egyptian dialect: "إزيك؟" "كده حلو" "ده جميل قوي"
+- Family focus: "مناسب للعيلة الكريمة" "الأولاد هيفرحوا"
+- Investment angle: "استثمار ممتاز" "فلوسك في أمان"
+- Prestige mention: "منطقة محترمة" "مستوى راقي"
+- Religious comfort: "إن شاء الله" "ربنا يوفقك"
+- Genuine warmth: "عايز خيرك" "حبيبي ده أحسن عقار"
+
+GREETING: Start with "أهلاً وسهلاً! مرحباً بيك في جولة العقار الراقي ده. إزيك؟ هل ده أول مرة تشوف العقار؟"
+` : `
+INITIAL GREETING: Start with a warm, culturally-appropriate greeting in ${currentLangObj?.name} and immediately ask about their interest in the property.
+`}
 
 INITIAL ENGAGEMENT STRATEGY:
-1. Start with a warm, culturally-appropriate greeting
+1. Start with a warm greeting in their language
 2. Ask about their timeline and family situation
 3. Identify their priorities and preferences
 4. Guide them through the property features
@@ -673,12 +742,13 @@ RESPONSE FRAMEWORK:
 4. Bridge to next logical step
 5. Ask qualifying questions
 
-Remember: This is a high-end property in Egypt. Focus on prestige, family values, and investment potential.`,
-              voice: 'alloy',
+Remember: This is a high-end property in Egypt. Focus on prestige, family values, and investment potential. Communicate in ${currentLangObj?.name} with ${currentLangObj?.salesStyle} approach.`,
+              voice: selectedLanguage === 'ar' ? 'nova' : selectedLanguage === 'fr' ? 'alloy' : selectedLanguage === 'es' ? 'shimmer' : selectedLanguage === 'de' ? 'onyx' : 'alloy',
               input_audio_format: 'pcm16',
               output_audio_format: 'pcm16',
               input_audio_transcription: { 
-                model: 'whisper-1'
+                model: 'whisper-1',
+                language: selectedLanguage === 'ar' ? 'ar' : selectedLanguage === 'fr' ? 'fr' : selectedLanguage === 'es' ? 'es' : selectedLanguage === 'de' ? 'de' : 'en'
               },
               turn_detection: {
                 type: 'server_vad',
@@ -693,6 +763,45 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
           
           console.log('📤 Sending session configuration via data channel...')
           dataChannel.send(JSON.stringify(sessionConfig))
+          
+          // Send initial greeting in the detected language after a brief delay
+          setTimeout(() => {
+            if (dataChannel.readyState === 'open') {
+              const greetingMessage = {
+                type: 'conversation.item.create',
+                item: {
+                  type: 'message',
+                  role: 'assistant',
+                  content: [
+                    {
+                      type: 'text',
+                      text: selectedLanguage === 'ar' ? 
+                        `أهلاً وسهلاً! مرحباً بيك في جولة العقار الراقي ده. إزيك؟ هل ده أول مرة تشوف العقار؟` :
+                        selectedLanguage === 'fr' ?
+                        `Bienvenue dans cette visite virtuelle d'une magnifique propriété! Comment allez-vous? Est-ce la première fois que vous visitez cette propriété?` :
+                        selectedLanguage === 'es' ?
+                        `¡Bienvenido a este recorrido virtual de una hermosa propiedad! ¿Cómo está? ¿Es la primera vez que visita esta propiedad?` :
+                        selectedLanguage === 'de' ?
+                        `Willkommen zu dieser virtuellen Tour durch eine wunderschöne Immobilie! Wie geht es Ihnen? Ist dies Ihr erster Besuch dieser Immobilie?` :
+                        `Welcome to this virtual tour of a beautiful property! How are you today? Is this your first time viewing this property?`
+                    }
+                  ]
+                }
+              }
+              
+              console.log(`🎤 Sending initial greeting in ${currentLangObj?.name}`)
+              dataChannel.send(JSON.stringify(greetingMessage))
+              
+              // Trigger response generation to make the AI speak the greeting
+              const responseCommand = {
+                type: 'response.create',
+                response: {
+                  modalities: ['audio']
+                }
+              }
+              dataChannel.send(JSON.stringify(responseCommand))
+            }
+          }, 1000) // Wait 1 second for session to be fully established
         })
         
         // Start the WebRTC session using SDP (Session Description Protocol)
@@ -1280,6 +1389,15 @@ Use the sales context and objection handlers to craft a compelling response that
   const handleLanguageChange = (langCode: string) => {
     console.log(`🌍 Language changing from ${selectedLanguage} to: ${langCode}`)
     setSelectedLanguage(langCode)
+    
+    // Update global translation service
+    translationService.saveCurrentLanguage(langCode)
+    
+    // Trigger global language change event for other components
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('languageChange', { detail: langCode });
+      window.dispatchEvent(event);
+    }
     
     // Update session language if connected with cultural context
     if (dataChannelRef.current && isConnected) {

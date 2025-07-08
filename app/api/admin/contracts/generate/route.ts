@@ -12,9 +12,9 @@ import { z } from 'zod'
 // Request validation schema
 const generateContractSchema = z.object({
   leadId: z.string().uuid('Invalid lead ID format'),
-  contractType: z.enum(['exclusive_listing', 'sale_agreement', 'marketing_authorization', 'commission_agreement'], {
+  contractType: z.enum(['exclusive_listing', 'sale_agreement', 'marketing_authorization', 'commission_agreement', 'standard'], {
     errorMap: () => ({ message: 'Invalid contract type' })
-  }),
+  }).default('standard'),
   expedited: z.boolean().optional().default(false),
   manualReview: z.boolean().optional().default(false),
   customVariables: z.record(z.any()).optional()

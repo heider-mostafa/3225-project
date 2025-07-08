@@ -11,6 +11,7 @@ import { heygenManager } from '@/lib/heygen/HeygenAgentManager'
 import type { AgentType } from '@/lib/heygen/HeygenAgentManager';
 import Link from "next/link";
 import Image from "next/image";
+import { translationService } from '@/lib/translation-service';
 
 const LANGUAGES = [
   { code: "en", label: "English", flag: "🇺🇸" },
@@ -29,6 +30,50 @@ const SUGGESTIONS = [
   "What are the latest listings?",
   "Do you have pet-friendly properties?",
 ];
+
+// Translation mapping for suggestions
+const SUGGESTION_TRANSLATIONS: { [key: string]: { [lang: string]: string } } = {
+  "Show me houses under $1M": {
+    ar: "أرني منازل تحت مليون دولار",
+    fr: "Montrez-moi des maisons sous 1M$",
+    es: "Muéstrame casas menores a $1M"
+  },
+  "Any 3-bedroom homes in Sheikh Zayed?": {
+    ar: "أي منازل 3 غرف نوم في الشيخ زايد؟",
+    fr: "Des maisons 3 chambres à Sheikh Zayed?",
+    es: "¿Casas de 3 habitaciones en Sheikh Zayed?"
+  },
+  "What are the best areas for families?": {
+    ar: "ما هي أفضل المناطق للعائلات؟",
+    fr: "Quelles sont les meilleures zones pour les familles?",
+    es: "¿Cuáles son las mejores áreas para familias?"
+  },
+  "How do I book a virtual tour?": {
+    ar: "كيف يمكنني حجز جولة افتراضية؟",
+    fr: "Comment réserver une visite virtuelle?",
+    es: "¿Cómo reservo un tour virtual?"
+  },
+  "Can I get mortgage advice?": {
+    ar: "هل يمكنني الحصول على نصائح الرهن العقاري؟",
+    fr: "Puis-je obtenir des conseils hypothécaires?",
+    es: "¿Puedo obtener asesoramiento hipotecario?"
+  },
+  "How does this app work?": {
+    ar: "كيف يعمل هذا التطبيق؟",
+    fr: "Comment fonctionne cette application?",
+    es: "¿Cómo funciona esta aplicación?"
+  },
+  "What are the latest listings?": {
+    ar: "ما هي آخر القوائم؟",
+    fr: "Quelles sont les dernières annonces?",
+    es: "¿Cuáles son las últimas propiedades?"
+  },
+  "Do you have pet-friendly properties?": {
+    ar: "هل لديكم عقارات مناسبة للحيوانات الأليفة؟",
+    fr: "Avez-vous des propriétés acceptant les animaux?",
+    es: "¿Tienen propiedades que admiten mascotas?"
+  }
+};
 
 interface Message {
   role: "user" | "assistant";
@@ -143,25 +188,185 @@ const PropertyChatCard = ({ property }: { property: PropertyRecommendation }) =>
 };
 
 export function ChatBot({ propertyId, agentType }: { propertyId: string; agentType: AgentType }) {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      role: "assistant",
-      content: "Welcome! I'm here to help you with any questions about finding your next home or using our platform.",
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [langOpen, setLangOpen] = useState(false);
   const [selectedLang, setSelectedLang] = useState(LANGUAGES[0]);
   const [soundOn, setSoundOn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
+  // Audio states
+  const [isListening, setIsListening] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [speechRecognition, setSpeechRecognition] = useState<SpeechRecognition | null>(null);
+
+  // Initialize with language-aware greeting
+  useEffect(() => {
+    if (!isInitialized) {
+      const initializeChatBot = async () => {
+        try {
+          // Get current language from translation service
+          const currentLang = translationService.getCurrentLanguage();
+          
+          // Find the language in our LANGUAGES array
+          const detectedLang = LANGUAGES.find(lang => lang.code === currentLang) || LANGUAGES[0];
+          setSelectedLang(detectedLang);
+          
+          // Set the greeting message based on detected language
+          const englishGreeting = "Welcome! I'm here to help you with any questions about finding your next home or using our platform.";
+          let greetingMessage = englishGreeting;
+          
+          // Translate greeting if not English
+          if (currentLang !== 'en') {
+            try {
+              greetingMessage = await translationService.translateText(englishGreeting, currentLang, 'en');
+            } catch (error) {
+              console.error('Failed to translate greeting:', error);
+              greetingMessage = englishGreeting; // Fallback to English
+            }
+          }
+          
+          // Set initial message
+          setMessages([{
+            role: "assistant",
+            content: greetingMessage,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          }]);
+          
+          setIsInitialized(true);
+        } catch (error) {
+          console.error('Failed to initialize ChatBot:', error);
+          // Fallback to English greeting
+          setMessages([{
+            role: "assistant",
+            content: "Welcome! I'm here to help you with any questions about finding your next home or using our platform.",
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          }]);
+          setIsInitialized(true);
+        }
+      };
+      
+      initializeChatBot();
+    }
+  }, [isInitialized]);
+
+  // Listen for language changes and update greeting accordingly
+  useEffect(() => {
+    const handleLanguageChange = async (event: CustomEvent<string>) => {
+      const newLang = event.detail;
+      const detectedLang = LANGUAGES.find(lang => lang.code === newLang) || LANGUAGES[0];
+      setSelectedLang(detectedLang);
+      
+      // Update greeting message if it's the first message
+      if (messages.length === 1 && messages[0].role === "assistant") {
+        const englishGreeting = "Welcome! I'm here to help you with any questions about finding your next home or using our platform.";
+        let greetingMessage = englishGreeting;
+        
+        if (newLang !== 'en') {
+          try {
+            greetingMessage = await translationService.translateText(englishGreeting, newLang, 'en');
+          } catch (error) {
+            console.error('Failed to translate greeting:', error);
+            greetingMessage = englishGreeting;
+          }
+        }
+        
+        setMessages([{
+          role: "assistant",
+          content: greetingMessage,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        }]);
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('languageChange', handleLanguageChange as EventListener);
+      return () => {
+        window.removeEventListener('languageChange', handleLanguageChange as EventListener);
+      };
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'webkitSpeechRecognition' in window) {
+      const recognition = new (window as any).webkitSpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = selectedLang.code === 'ar' ? 'ar-EG' : 
+                        selectedLang.code === 'fr' ? 'fr-FR' : 
+                        selectedLang.code === 'es' ? 'es-ES' : 'en-US';
+      
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+      
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+      
+      setSpeechRecognition(recognition);
+    }
+  }, [selectedLang]);
+
+  // Handle microphone click
+  const handleMicrophoneClick = async () => {
+    if (!speechRecognition) {
+      alert('Speech recognition not supported in this browser');
+      return;
+    }
+
+    if (isListening) {
+      speechRecognition.stop();
+      setIsListening(false);
+    } else {
+      try {
+        // Request microphone permission
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        speechRecognition.start();
+        setIsListening(true);
+      } catch (error) {
+        console.error('Microphone access denied:', error);
+        alert('Please allow microphone access to use voice input');
+      }
+    }
+  };
+
+  // Text-to-speech for responses
+  const speakResponse = (text: string) => {
+    if (!soundOn || !('speechSynthesis' in window)) return;
+    
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = selectedLang.code === 'ar' ? 'ar-EG' : 
+                     selectedLang.code === 'fr' ? 'fr-FR' : 
+                     selectedLang.code === 'es' ? 'es-ES' : 'en-US';
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    
+    speechSynthesis.speak(utterance);
+  };
+
+  // Get translated suggestion
+  const getTranslatedSuggestion = (suggestion: string) => {
+    if (selectedLang.code === 'en') return suggestion;
+    return SUGGESTION_TRANSLATIONS[suggestion]?.[selectedLang.code] || suggestion;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,15 +400,17 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
         if (response.ok) {
           const data = await response.json();
           
-          setMessages((prev) => [
-            ...prev,
-            {
-              role: "assistant",
-              content: data.responseText || "Here are some properties I found for you:",
-              properties: data.recommendations || [],
-              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-            },
-          ]);
+          const assistantMessage = {
+            role: "assistant" as const,
+            content: data.responseText || "Here are some properties I found for you:",
+            properties: data.recommendations || [],
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          };
+          
+          setMessages((prev) => [...prev, assistantMessage]);
+          
+          // Speak the response if sound is enabled
+          speakResponse(assistantMessage.content);
         } else {
           throw new Error('Failed to get property recommendations');
         }
@@ -229,26 +436,30 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
 
         const data = await response.json();
         
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: "assistant",
-            content: data.response,
-            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-          },
-        ]);
+        const assistantMessage = {
+          role: "assistant" as const,
+          content: data.response,
+          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        };
+        
+        setMessages((prev) => [...prev, assistantMessage]);
+        
+        // Speak the response if sound is enabled
+        speakResponse(assistantMessage.content);
       }
 
     } catch (error) {
       console.error('Error getting AI response:', error);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: "I'm sorry, I'm having trouble connecting right now. Please try asking your question again or contact our support team for assistance.",
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
+      const errorMessage = {
+        role: "assistant" as const,
+        content: "I'm sorry, I'm having trouble connecting right now. Please try asking your question again or contact our support team for assistance.",
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      
+      setMessages((prev) => [...prev, errorMessage]);
+      
+      // Speak the error message if sound is enabled
+      speakResponse(errorMessage.content);
     } finally {
       setIsLoading(false);
     }
@@ -293,6 +504,13 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
                     onClick={() => {
                       setSelectedLang(lang);
                       setLangOpen(false);
+                      // Update translation service language
+                      translationService.saveCurrentLanguage(lang.code);
+                      // Trigger language change event
+                      if (typeof window !== 'undefined') {
+                        const event = new CustomEvent('languageChange', { detail: lang.code });
+                        window.dispatchEvent(event);
+                      }
                     }}
                   >
                     <span className="mr-2 text-lg">{lang.flag}</span>
@@ -395,7 +613,7 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
               onClick={() => handleSuggestion(suggestion)}
               type="button"
             >
-              {suggestion}
+              {getTranslatedSuggestion(suggestion)}
             </button>
           ))}
         </div>
@@ -404,8 +622,16 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-4 border-t bg-slate-50 rounded-b-2xl">
         <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" size="icon" className="rounded-full">
-            <Mic className="h-5 w-5 text-slate-400" />
+          <Button 
+            type="button" 
+            variant={isListening ? "default" : "ghost"} 
+            size="icon" 
+            className={`rounded-full ${isListening ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : ''}`}
+            onClick={handleMicrophoneClick}
+            disabled={isLoading}
+            title={isListening ? 'Stop listening' : 'Start voice input'}
+          >
+            <Mic className={`h-5 w-5 ${isListening ? 'text-white' : 'text-slate-400'}`} />
           </Button>
           <Input
             value={input}

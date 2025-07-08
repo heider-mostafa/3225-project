@@ -71,6 +71,7 @@ export default function PropertiesPage() {
   const [hasMoreData, setHasMoreData] = useState(true)
   const [currentPage, setCurrentPage] = useState(1)
   const [pagination, setPagination] = useState<PaginationInfo | null>(null)
+  const [searchResultsTotal, setSearchResultsTotal] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
   const [priceRange, setPriceRange] = useState([0, 500000])
@@ -331,6 +332,7 @@ export default function PropertiesPage() {
     setCurrentPage(1)
     setHasMoreData(true)
     setPagination(null)
+    setSearchResultsTotal(null)
     loadProperties(true)
   }
 
@@ -370,6 +372,7 @@ export default function PropertiesPage() {
         const data = await response.json()
         console.log('Search response:', data)
         setProperties(data.properties || [])
+        setSearchResultsTotal(data.total || data.properties?.length || 0)
         
         // Reset pagination for search results
         setCurrentPage(1)
@@ -778,6 +781,7 @@ export default function PropertiesPage() {
                   onClick={() => {
                     setCurrentFilters({})
                     setSearchQuery('')
+                    setSearchResultsTotal(null)
                     resetAndLoadProperties()
                   }}
                     className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 rounded-lg"
@@ -794,7 +798,23 @@ export default function PropertiesPage() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <p className="text-slate-600">
-              {isSearching ? t('properties.searching', 'Searching...') : t('properties.showingResults', 'Showing {{count}} of {{total}} properties', { count: sortedProperties.length, total: properties.length })}
+              {isSearching ? (
+                t('properties.searching', 'Searching...')
+              ) : searchResultsTotal !== null ? (
+                t('properties.showingResults', 'Showing {{count}} of {{total}} properties', { 
+                  count: sortedProperties.length, 
+                  total: searchResultsTotal 
+                })
+              ) : pagination ? (
+                t('properties.showingResults', 'Showing {{count}} of {{total}} properties', { 
+                  count: sortedProperties.length, 
+                  total: pagination.total 
+                })
+              ) : (
+                t('properties.showingProperties', 'Showing {{count}} properties', { 
+                  count: sortedProperties.length 
+                })
+              )}
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -1059,6 +1079,7 @@ export default function PropertiesPage() {
                 setStatus("all")
                 setPriceRange([0, 500000])
                 setCurrentFilters({})
+                setSearchResultsTotal(null)
                 resetAndLoadProperties()
               }}
             >

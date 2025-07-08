@@ -436,7 +436,7 @@ export default function HomePage() {
 
     const interval = setInterval(() => {
       setCurrentTourIndex((prev) => (prev + 1) % featuredProperties.length)
-    }, 8000)
+    }, 12000)
 
     return () => clearInterval(interval)
   }, [isAutoRotating, isInteracting, featuredProperties.length])

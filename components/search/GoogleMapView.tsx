@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { MapPin, Filter, X, RotateCcw, ZoomIn, ZoomOut, Navigation, Move, Layers, Palette, Eye } from 'lucide-react'
+import { MapPin, Filter, X, RotateCcw, ZoomIn, ZoomOut, Navigation, Move, Layers, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -302,8 +302,7 @@ export default function GoogleMapView({
   const [priceRange, setPriceRange] = useState([0, 10000000])
   
   // New state for enhanced styling
-  const [currentTheme, setCurrentTheme] = useState<keyof typeof MAP_THEMES>('default')
-  const [showThemeSelector, setShowThemeSelector] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState<keyof typeof MAP_THEMES>('vintage')
   const [shouldFitBounds, setShouldFitBounds] = useState(true) // Only fit bounds on initial load
   const [markerStyle, setMarkerStyle] = useState<'standard' | 'enhanced' | 'luxury'>('luxury')
   const [error, setError] = useState<string | null>(null)
@@ -672,18 +671,6 @@ export default function GoogleMapView({
     }
   }
 
-  // Change map theme
-  const changeTheme = (themeName: keyof typeof MAP_THEMES) => {
-    setCurrentTheme(themeName)
-    if (mapInstanceRef.current) {
-      const theme = MAP_THEMES[themeName]
-      mapInstanceRef.current.setOptions({
-        styles: theme.styles,
-        mapTypeId: theme.mapTypeId || 'roadmap'
-      })
-    }
-    setShowThemeSelector(false)
-  }
 
   return (
     <div className={`relative bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden ${className}`}>
@@ -724,39 +711,6 @@ export default function GoogleMapView({
               </Button>
             </div>
             
-            {/* Theme Selector */}
-            <div className="relative">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowThemeSelector(!showThemeSelector)}
-                className="bg-white"
-                title="Map Theme"
-              >
-                <Palette className="w-4 h-4 mr-2" />
-                {MAP_THEMES[currentTheme].icon}
-              </Button>
-              
-              {showThemeSelector && (
-                <div className="absolute right-0 top-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 p-2 w-40 z-50">
-                  <div className="space-y-1">
-                    {Object.entries(MAP_THEMES).map(([key, theme]) => (
-                      <button
-                        key={key}
-                        onClick={() => changeTheme(key as keyof typeof MAP_THEMES)}
-                        className={`w-full text-left px-3 py-2 rounded text-sm hover:bg-gray-100 flex items-center gap-2 ${
-                          currentTheme === key ? 'bg-blue-50 text-blue-700' : ''
-                        }`}
-                      >
-                        <span>{theme.icon}</span>
-                        <span>{theme.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-            
             <Button
               variant={showFilters ? "default" : "outline"}
               size="sm"
@@ -786,9 +740,8 @@ export default function GoogleMapView({
               <Move className="w-4 h-4" />
               <span>Click and drag to pan • Scroll to zoom</span>
             </div>
-            <div className="text-xs text-gray-500 mt-1 flex items-center justify-between">
+            <div className="text-xs text-gray-500 mt-1">
               <span>Powered by Google Maps • {filteredProperties.length} properties</span>
-              <span className="ml-4 text-blue-600 font-medium">{MAP_THEMES[currentTheme].name}</span>
             </div>
           </div>
           
@@ -811,26 +764,6 @@ export default function GoogleMapView({
                   <span className="text-xs text-gray-600">{label} ({count})</span>
                 </div>
               ))}
-            </div>
-            
-            {/* Map Styling Options */}
-            <div className="mt-3 pt-3 border-t border-gray-200">
-              <div className="flex items-center space-x-3 flex-wrap gap-2">
-                <span className="text-xs text-gray-600">Map Style:</span>
-                {Object.entries(MAP_THEMES).map(([key, theme]) => (
-                  <button
-                    key={key}
-                    onClick={() => changeTheme(key as keyof typeof MAP_THEMES)}
-                    className={`text-xs px-2 py-1 rounded transition-colors flex items-center gap-1 ${
-                      currentTheme === key ? 'bg-blue-100 text-blue-700 ring-1 ring-blue-300' : 'hover:bg-gray-100 text-gray-600'
-                    }`}
-                    title={`Switch to ${theme.name} theme`}
-                  >
-                    <span>{theme.icon}</span>
-                    <span>{theme.name}</span>
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         </>
