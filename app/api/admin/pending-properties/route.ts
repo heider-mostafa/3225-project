@@ -33,6 +33,12 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    console.log('Fetched pending properties:', pendingProperties?.map(p => ({ 
+      id: p.id, 
+      status: p.status, 
+      admin_notes: p.admin_notes 
+    })))
+
     return NextResponse.json({
       success: true,
       pending_properties: pendingProperties || []
@@ -148,6 +154,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create the main property
+    console.log('Creating property with data:', property_data)
     const { data: newProperty, error: propertyError } = await supabase
       .from('properties')
       .insert({
@@ -160,8 +167,9 @@ export async function POST(request: NextRequest) {
 
     if (propertyError || !newProperty) {
       console.error('Error creating property:', propertyError)
+      console.error('Property data that failed:', property_data)
       return NextResponse.json(
-        { error: 'Failed to create property' },
+        { error: 'Failed to create property', details: propertyError?.message },
         { status: 500 }
       )
     }
@@ -187,13 +195,25 @@ export async function POST(request: NextRequest) {
     }
 
     // Update pending property status to approved
-    await supabase
+    const updateData = {
+      status: 'approved',
+      admin_notes: `Property created successfully. Property ID: ${newProperty.id}. Created at: ${new Date().toISOString()}`,
+      updated_at: new Date().toISOString()
+    }
+    
+    console.log('Updating pending property with data:', updateData)
+    
+    const { error: pendingUpdateError } = await supabase
       .from('pending_properties')
-      .update({
-        status: 'approved',
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', pending_property_id)
+
+    if (pendingUpdateError) {
+      console.error('Error updating pending property status:', pendingUpdateError)
+      // Don't fail the whole operation, just log the error
+    } else {
+      console.log('Successfully updated pending property status to approved')
+    }
 
     // Update lead status to completed
     if (pendingProperty.lead) {

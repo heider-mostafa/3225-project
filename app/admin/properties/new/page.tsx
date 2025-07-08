@@ -1,6 +1,6 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { 
   Building2, 
   MapPin, 
@@ -121,8 +121,10 @@ interface PropertyFormData {
 
 export default function NewProperty() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('basic')
+  const [pendingPropertyId, setPendingPropertyId] = useState<string | null>(null)
   const [formData, setFormData] = useState<PropertyFormData>({
     // Basic Information
     title: '',
@@ -209,6 +211,51 @@ export default function NewProperty() {
     // Admin
     internal_notes: ''
   })
+
+  // Check for URL parameters from pending property
+  useEffect(() => {
+    const fromPending = searchParams.get('fromPending')
+    if (fromPending) {
+      setPendingPropertyId(fromPending)
+      
+      // Pre-populate form with URL parameters
+      const urlData: Partial<PropertyFormData> = {}
+      
+      // Basic info
+      if (searchParams.get('title')) urlData.title = searchParams.get('title')!
+      if (searchParams.get('description')) urlData.description = searchParams.get('description')!
+      if (searchParams.get('marketing_headline')) urlData.marketing_headline = searchParams.get('marketing_headline')!
+      if (searchParams.get('property_type')) urlData.property_type = searchParams.get('property_type')!
+      if (searchParams.get('property_condition')) urlData.property_condition = searchParams.get('property_condition')!
+      
+      // Location
+      if (searchParams.get('address')) urlData.address = searchParams.get('address')!
+      if (searchParams.get('city')) urlData.city = searchParams.get('city')!
+      if (searchParams.get('state')) urlData.state = searchParams.get('state')!
+      
+      // Price
+      if (searchParams.get('price')) urlData.price = parseInt(searchParams.get('price')!) || 0
+      
+      // Add photographer notes to internal notes
+      const photographerNotes = searchParams.get('photographer_notes')
+      const bestFeatures = searchParams.get('best_features')
+      const recommendedShots = searchParams.get('recommended_shots')
+      const shootingChallenges = searchParams.get('shooting_challenges')
+      
+      let internalNotesText = ''
+      if (photographerNotes) internalNotesText += `Photographer Notes: ${photographerNotes}\n\n`
+      if (bestFeatures) internalNotesText += `Best Features: ${bestFeatures}\n\n`
+      if (recommendedShots) internalNotesText += `Recommended Shots: ${recommendedShots}\n\n`
+      if (shootingChallenges) internalNotesText += `Shooting Challenges: ${shootingChallenges}\n\n`
+      
+      if (internalNotesText) {
+        urlData.internal_notes = `=== FROM PENDING PROPERTY ===\n${internalNotesText}=== END PENDING PROPERTY DATA ===`
+      }
+      
+      // Update form data
+      setFormData(prev => ({ ...prev, ...urlData }))
+    }
+  }, [searchParams])
 
   const propertyTypes = [
     { value: 'apartment', label: 'Apartment' },
@@ -347,28 +394,56 @@ export default function NewProperty() {
 
       console.log('Creating new property with sanitized data:', sanitizedData)
 
-      const response = await fetch('/api/properties', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(sanitizedData),
-      })
+      let response
+      
+      if (pendingPropertyId) {
+        // Create property from pending property
+        response = await fetch('/api/admin/pending-properties', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pending_property_id: pendingPropertyId,
+            property_data: sanitizedData,
+            admin_notes: `Property created from pending submission ${pendingPropertyId}`
+          }),
+        })
+      } else {
+        // Create regular new property
+        response = await fetch('/api/properties', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(sanitizedData),
+        })
+      }
 
       if (response.ok) {
-        const property = await response.json()
+        const result = await response.json()
+        const property = pendingPropertyId ? { id: result.property_id, ...sanitizedData } : result
         
         await logAdminActivity(
           'property_create',
           'property',
           property.id,
-          { title: property.title, type: property.property_type }
+          { 
+            title: property.title, 
+            type: property.property_type,
+            source: pendingPropertyId ? 'pending_property' : 'manual'
+          }
         )
 
-        router.push('/admin/properties')
+        // Redirect back to pending properties tab if this was created from a pending property
+        if (pendingPropertyId) {
+          router.push('/admin/properties?tab=pending&refresh=true')
+        } else {
+          router.push('/admin/properties')
+        }
       } else {
         const error = await response.json()
-        alert('Failed to create property: ' + (error.error || 'Unknown error'))
+        alert('Failed to create property: ' + (error.error || error.details || 'Unknown error'))
       }
     } catch (error) {
       console.error('Error creating property:', error)
@@ -408,6 +483,22 @@ export default function NewProperty() {
           <span className="text-sm text-gray-500">Available after property creation</span>
         </div>
       </div>
+
+      {/* Pending Property Banner */}
+      {pendingPropertyId && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex items-center space-x-3">
+            <Camera className="w-5 h-5 text-blue-600" />
+            <div>
+              <h3 className="font-medium text-blue-900">Creating Property from Photographer Submission</h3>
+              <p className="text-sm text-blue-700">
+                This form has been pre-populated with data from pending property ID: {pendingPropertyId}. 
+                Please review and complete all required fields before saving. Photos will be automatically transferred when you save.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">

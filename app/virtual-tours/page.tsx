@@ -273,8 +273,8 @@ export default function VirtualToursPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {sortedTours.map((tour) => (
-              <Link key={tour.id} href={`/property/${tour.id}`} className="block">
-                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300">
+              <Card key={tour.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
+                onClick={() => window.location.href = `/property/${tour.id}`}>
                   <div className="relative">
                     {previewTour === tour.id ? (
                       <div className="h-64">
@@ -416,7 +416,6 @@ export default function VirtualToursPage() {
                     </div>
                   </CardContent>
                 </Card>
-              </Link>
             ))}
           </div>
         )}

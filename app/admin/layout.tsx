@@ -17,7 +17,8 @@ import {
   UserCheck,
   Camera,
   FileText,
-  Gavel
+  Gavel,
+  Clock
 } from 'lucide-react'
 import { useAuth } from '@/components/providers'
 import { getCurrentUserRole, type UserRole } from '@/lib/auth/admin-client'

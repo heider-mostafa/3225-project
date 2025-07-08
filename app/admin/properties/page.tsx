@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { 
   Plus, 
@@ -17,7 +18,12 @@ import {
   TrendingUp,
   Camera,
   SlidersHorizontal,
-  X
+  X,
+  Clock,
+  Check,
+  User,
+  MessageSquare,
+  Settings
 } from 'lucide-react'
 import { isCurrentUserAdmin, logAdminActivity } from '@/lib/auth/admin-client'
 import { supabase } from '@/lib/supabase/config'
@@ -65,6 +71,41 @@ interface Property {
   }>
 }
 
+interface PendingProperty {
+  id: string
+  status: 'photos_uploaded' | 'under_review' | 'approved' | 'rejected'
+  photographer_notes: string
+  recommended_shots: string
+  property_condition: string
+  best_features: string
+  shooting_challenges: string
+  admin_feedback: string
+  admin_notes: string
+  created_at: string
+  updated_at: string
+  photographer: {
+    id: string
+    name: string
+    email: string
+    phone: string
+  }
+  lead: {
+    id: string
+    name: string
+    location: string
+    property_type: string
+    whatsapp_number: string
+    price_range: string
+  }
+  photos: Array<{
+    id: string
+    photo_url: string
+    is_primary: boolean
+    order_index: number
+    photographer_caption: string
+  }>
+}
+
 interface AdminFilters {
   searchTerm: string
   priceRange: [number, number]
@@ -83,10 +124,17 @@ interface AdminFilters {
 export default function AdminProperties() {
   const [properties, setProperties] = useState<Property[]>([])
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
+  const [pendingProperties, setPendingProperties] = useState<PendingProperty[]>([])
   const [loading, setLoading] = useState(true)
+  const [pendingLoading, setPendingLoading] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [showBasicFilters, setShowBasicFilters] = useState(false)
+  const [activeTab, setActiveTab] = useState<'properties' | 'pending'>('properties')
+  const [selectedPendingProperty, setSelectedPendingProperty] = useState<PendingProperty | null>(null)
+  const [adminFeedback, setAdminFeedback] = useState('')
+  const [adminNotes, setAdminNotes] = useState('')
+  const [updatingStatus, setUpdatingStatus] = useState(false)
 
   // Filter states
   const [filters, setFilters] = useState<AdminFilters>({
@@ -135,10 +183,31 @@ export default function AdminProperties() {
       }
       
       await loadProperties()
+      if (activeTab === 'pending') {
+        await loadPendingProperties()
+      }
     }
 
     checkAdminAndLoad()
   }, [])
+
+  useEffect(() => {
+    if (activeTab === 'pending') {
+      loadPendingProperties() // Always refresh when switching to pending tab
+    }
+  }, [activeTab])
+
+  // Auto-refresh pending properties when page becomes visible (user returns from new property form)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && activeTab === 'pending') {
+        loadPendingProperties()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [activeTab])
 
   useEffect(() => {
     applyFilters()
@@ -168,6 +237,148 @@ export default function AdminProperties() {
       console.error('Error loading properties:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadPendingProperties = async () => {
+    setPendingLoading(true)
+    try {
+      const response = await fetch('/api/admin/pending-properties')
+      if (response.ok) {
+        const data = await response.json()
+        setPendingProperties(data.pending_properties || [])
+      } else {
+        console.error('Failed to load pending properties')
+      }
+    } catch (error) {
+      console.error('Error loading pending properties:', error)
+    } finally {
+      setPendingLoading(false)
+    }
+  }
+
+  const updatePendingPropertyStatus = async (propertyId: string, newStatus: string) => {
+    setUpdatingStatus(true)
+    try {
+      const response = await fetch(`/api/admin/pending-properties`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: propertyId,
+          status: newStatus,
+          admin_feedback: adminFeedback,
+          admin_notes: adminNotes
+        })
+      })
+
+      if (response.ok) {
+        await loadPendingProperties()
+        setSelectedPendingProperty(null)
+        setAdminFeedback('')
+        setAdminNotes('')
+      } else {
+        const error = await response.json()
+        alert('Failed to update status: ' + error.error)
+      }
+    } catch (error) {
+      console.error('Error updating status:', error)
+      alert('Failed to update status')
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
+
+  const convertToProperty = (pendingProperty: PendingProperty) => {
+    // Open the property details form with pre-populated data
+    setPropertyFormData(pendingProperty)
+    setShowPropertyForm(true)
+  }
+
+  const handlePropertyFormSubmit = async (propertyData: any) => {
+    if (!propertyFormData) return
+
+    setUpdatingStatus(true)
+    try {
+      const response = await fetch(`/api/admin/pending-properties`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pending_property_id: propertyFormData.id,
+          property_data: propertyData,
+          admin_notes: adminNotes
+        })
+      })
+
+      if (response.ok) {
+        await loadPendingProperties()
+        await loadProperties() // Refresh properties list
+        setShowPropertyForm(false)
+        setPropertyFormData(null)
+        setSelectedPendingProperty(null)
+        setAdminNotes('')
+        alert('Property successfully created and published!')
+      } else {
+        const error = await response.json()
+        alert('Failed to create property: ' + (error.details || error.error))
+      }
+    } catch (error) {
+      console.error('Error creating property:', error)
+      alert('Failed to create property')
+    } finally {
+      setUpdatingStatus(false)
+    }
+  }
+
+  const createPropertyAndEdit = (pendingProperty: PendingProperty) => {
+    // Redirect to new property form with pending property data as URL parameters
+    const searchParams = new URLSearchParams({
+      fromPending: pendingProperty.id,
+      title: `${pendingProperty.lead?.property_type || 'Property'} in ${pendingProperty.lead?.location || 'Unknown Location'}`,
+      description: `Beautiful ${pendingProperty.lead?.property_type || 'property'} located in ${pendingProperty.lead?.location || 'prime location'}. ${pendingProperty.best_features || ''}`,
+      marketing_headline: `Premium ${pendingProperty.lead?.property_type || 'Property'} - ${pendingProperty.lead?.location || 'Great Location'}`,
+      address: pendingProperty.lead?.location || '',
+      city: pendingProperty.lead?.location?.split(',')[0]?.trim() || '',
+      state: pendingProperty.lead?.location?.split(',')[1]?.trim() || 'Egypt',
+      property_type: pendingProperty.lead?.property_type || 'apartment',
+      price: (parseInt(pendingProperty.lead?.price_range?.replace(/[^0-9]/g, '') || '500000')).toString(),
+      property_condition: pendingProperty.property_condition || 'good',
+      photographer_notes: pendingProperty.photographer_notes || '',
+      best_features: pendingProperty.best_features || '',
+      recommended_shots: pendingProperty.recommended_shots || '',
+      shooting_challenges: pendingProperty.shooting_challenges || ''
+    })
+    
+    // Close the modal first
+    setSelectedPendingProperty(null)
+    
+    // Redirect to new property form with pre-populated data
+    window.location.href = `/admin/properties/new?${searchParams.toString()}`
+  }
+
+  const getInitialPropertyData = (pendingProperty: PendingProperty) => {
+    return {
+      title: `${pendingProperty.lead?.property_type || 'Property'} in ${pendingProperty.lead?.location || 'Unknown Location'}`,
+      description: `Beautiful ${pendingProperty.lead?.property_type || 'property'} located in ${pendingProperty.lead?.location || 'prime location'}. ${pendingProperty.best_features || ''}`,
+      marketing_headline: `Premium ${pendingProperty.lead?.property_type || 'Property'} - ${pendingProperty.lead?.location || 'Great Location'}`,
+      address: pendingProperty.lead?.location || 'Address to be updated',
+      city: pendingProperty.lead?.location?.split(',')[0]?.trim() || 'Cairo',
+      state: pendingProperty.lead?.location?.split(',')[1]?.trim() || 'Egypt',
+      property_type: pendingProperty.lead?.property_type || 'apartment',
+      price: parseInt(pendingProperty.lead?.price_range?.replace(/[^0-9]/g, '') || '500000'),
+      bedrooms: 2, // Default - admin can edit
+      bathrooms: 2, // Default - admin can edit
+      square_meters: 100, // Default - admin can edit
+      status: 'available',
+      property_condition: pendingProperty.property_condition || 'good',
+      neighborhood: '',
+      compound: '',
+      furnished: false,
+      has_pool: false,
+      has_garden: false,
+      has_security: false,
+      has_parking: false,
+      has_gym: false,
+      has_elevator: false
     }
   }
 
@@ -429,7 +640,7 @@ export default function AdminProperties() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Properties Management</h1>
-          <p className="text-gray-600">Manage and monitor all properties in the system</p>
+          <p className="text-gray-600">Manage properties and review photographer submissions</p>
         </div>
         <Link
           href="/admin/properties/new"
@@ -440,8 +651,50 @@ export default function AdminProperties() {
         </Link>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+      {/* Tabs */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8 px-6">
+            <button
+              onClick={() => setActiveTab('properties')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'properties'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Building2 className="w-4 h-4" />
+                <span>Published Properties ({properties.length})</span>
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('pending')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'pending'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4" />
+                <span>Pending Review ({pendingProperties.length})</span>
+                {pendingProperties.filter(p => p.status === 'photos_uploaded').length > 0 && (
+                  <Badge className="bg-red-100 text-red-800 text-xs">
+                    {pendingProperties.filter(p => p.status === 'photos_uploaded').length} new
+                  </Badge>
+                )}
+              </div>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Content based on active tab */}
+      {activeTab === 'properties' ? (
+        <>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -1002,6 +1255,355 @@ export default function AdminProperties() {
           </div>
         </div>
       )}
+        </>
+      ) : (
+        /* Pending Properties Content */
+        <div className="space-y-6">
+          {/* Pending Properties Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Awaiting Review</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pendingProperties.filter(p => p.status === 'photos_uploaded').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Eye className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Under Review</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pendingProperties.filter(p => p.status === 'under_review').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Check className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Approved</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pendingProperties.filter(p => p.status === 'approved').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <X className="w-5 h-5 text-red-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Rejected</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {pendingProperties.filter(p => p.status === 'rejected').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Pending Properties List */}
+          {pendingLoading ? (
+            <div className="flex items-center justify-center min-h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            </div>
+          ) : pendingProperties.length === 0 ? (
+            <div className="text-center py-12 bg-white rounded-lg shadow-sm border">
+              <Camera className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No pending properties found</p>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {pendingProperties.map((property) => (
+                <div key={property.id} className="bg-white rounded-lg shadow-sm border overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {property.lead?.name || 'Unknown'}'s {property.lead?.property_type || 'Property'}
+                          </h3>
+                          <Badge className={`${
+                            property.status === 'photos_uploaded' ? 'bg-blue-100 text-blue-800' :
+                            property.status === 'under_review' ? 'bg-yellow-100 text-yellow-800' :
+                            property.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {property.status.replace('_', ' ')}
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="w-4 h-4" />
+                            <span>{property.lead?.location || 'Unknown location'}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <User className="w-4 h-4" />
+                            <span>{property.photographer?.name || 'Unknown photographer'}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="w-4 h-4" />
+                            <span>{new Date(property.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Camera className="w-4 h-4" />
+                            <span>{property.photos?.length || 0} photos</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex space-x-2">
+                        {property.status === 'approved' ? (
+                          <div className="text-sm text-green-600 font-medium">
+                            ✅ Property Created Successfully
+                            {property.admin_notes && property.admin_notes.includes('Property ID:') && (
+                              <div className="text-xs text-gray-500 mt-1">
+                                {property.admin_notes.split('Property ID:')[1]?.split('.')[0] && (
+                                  <span>Property ID: {property.admin_notes.split('Property ID:')[1].split('.')[0].trim()}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        ) : property.status === 'rejected' ? (
+                          <div className="text-sm text-red-600 font-medium">
+                            ❌ Submission Rejected
+                          </div>
+                        ) : (
+                          <>
+                            <Button
+                              onClick={() => setSelectedPendingProperty(property)}
+                              variant="outline"
+                              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                            >
+                              Review
+                            </Button>
+                            <Button
+                              onClick={() => convertToProperty(property)}
+                              disabled={updatingStatus}
+                              variant="outline"
+                              className="border-green-300 text-green-700 hover:bg-green-50"
+                            >
+                              Quick Create
+                            </Button>
+                            <Button
+                              onClick={() => createPropertyAndEdit(property)}
+                              disabled={updatingStatus}
+                              className="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                              {updatingStatus ? 'Creating...' : 'Create & Edit'}
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Photo Preview */}
+                    <div className="flex space-x-2 overflow-x-auto pb-2">
+                      {property.photos?.slice(0, 5).map((photo) => (
+                        <img
+                          key={photo.id}
+                          src={photo.photo_url}
+                          alt="Property"
+                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                        />
+                      )) || <div className="text-sm text-gray-500">No photos available</div>}
+                      {(property.photos?.length || 0) > 5 && (
+                        <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm text-gray-500">+{(property.photos?.length || 0) - 5}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Review Modal for Pending Properties */}
+      {selectedPendingProperty && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Review Property - {selectedPendingProperty.lead?.name || 'Unknown'}
+                </h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setSelectedPendingProperty(null)}
+                  className="text-gray-500"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Photos Grid */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-3">
+                  Photos ({selectedPendingProperty.photos?.length || 0})
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {selectedPendingProperty.photos?.map((photo) => (
+                    <div key={photo.id} className="relative">
+                      <img
+                        src={photo.photo_url}
+                        alt="Property"
+                        className="w-full h-32 object-cover rounded-lg"
+                      />
+                      {photo.is_primary && (
+                        <Badge className="absolute top-2 left-2 bg-blue-600 text-white">
+                          Primary
+                        </Badge>
+                      )}
+                      {photo.photographer_caption && (
+                        <p className="text-xs text-gray-600 mt-1 truncate">
+                          {photo.photographer_caption}
+                        </p>
+                      )}
+                    </div>
+                  )) || <div className="text-gray-500">No photos available</div>}
+                </div>
+              </div>
+
+              {/* Photographer Notes */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Property Condition</h4>
+                  <p className="text-sm text-gray-600">{selectedPendingProperty.property_condition || 'Not specified'}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Best Features</h4>
+                  <p className="text-sm text-gray-600">{selectedPendingProperty.best_features || 'Not specified'}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Recommended Shots</h4>
+                  <p className="text-sm text-gray-600">{selectedPendingProperty.recommended_shots || 'Not specified'}</p>
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Challenges</h4>
+                  <p className="text-sm text-gray-600">{selectedPendingProperty.shooting_challenges || 'Not specified'}</p>
+                </div>
+              </div>
+
+              {selectedPendingProperty.photographer_notes && (
+                <div>
+                  <h4 className="font-medium text-gray-900 mb-2">Photographer Notes</h4>
+                  <p className="text-sm text-gray-600">{selectedPendingProperty.photographer_notes}</p>
+                </div>
+              )}
+
+              {/* Admin Actions */}
+              <div className="border-t pt-6">
+                <h4 className="font-medium text-gray-900 mb-3">Admin Review</h4>
+                
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Admin Feedback
+                    </label>
+                    <textarea
+                      value={adminFeedback}
+                      onChange={(e) => setAdminFeedback(e.target.value)}
+                      placeholder="Provide feedback to the photographer..."
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Internal Notes
+                    </label>
+                    <textarea
+                      value={adminNotes}
+                      onChange={(e) => setAdminNotes(e.target.value)}
+                      placeholder="Internal admin notes..."
+                      rows={2}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Buttons with Help Text */}
+                <div className="border-t pt-4">
+                  <div className="mb-4">
+                    <h4 className="font-medium text-gray-900 mb-2">Create Property</h4>
+                    <p className="text-sm text-gray-600 mb-4">
+                      Choose how to create the property listing from this submission:
+                    </p>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      onClick={() => convertToProperty(selectedPendingProperty)}
+                      disabled={updatingStatus}
+                      variant="outline"
+                      className="border-green-300 text-green-700 hover:bg-green-50"
+                    >
+                      <Check className="w-4 h-4 mr-2" />
+                      Quick Create
+                    </Button>
+                    
+                    <Button
+                      onClick={() => createPropertyAndEdit(selectedPendingProperty)}
+                      disabled={updatingStatus}
+                      className="bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      <Settings className="w-4 h-4 mr-2" />
+                      {updatingStatus ? 'Creating...' : 'Create & Edit Details'}
+                    </Button>
+                  </div>
+                  
+                  <div className="mt-3 text-xs text-gray-500">
+                    <p><strong>Quick Create:</strong> Creates property with basic details using simple form</p>
+                    <p><strong>Create & Edit Details:</strong> Creates property then opens full edit form with 9 tabs for comprehensive details</p>
+                  </div>
+                </div>
+
+                {/* Status Actions */}
+                <div className="border-t pt-4">
+                  <h4 className="font-medium text-gray-900 mb-3">Status Actions</h4>
+                  <div className="flex flex-wrap gap-3">
+                    <Button
+                      onClick={() => updatePendingPropertyStatus(selectedPendingProperty.id, 'under_review')}
+                      disabled={updatingStatus}
+                      variant="outline"
+                      className="border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                    >
+                      <Clock className="w-4 h-4 mr-2" />
+                      Mark Under Review
+                    </Button>
+                    
+                    <Button
+                      onClick={() => updatePendingPropertyStatus(selectedPendingProperty.id, 'rejected')}
+                      disabled={updatingStatus}
+                      variant="outline"
+                      className="border-red-300 text-red-700 hover:bg-red-50"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Reject
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 } 
