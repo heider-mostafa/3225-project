@@ -488,8 +488,16 @@ export default function HomePage() {
           console.log('🎯 Sample property virtual tour URL:', properties[0]?.virtual_tour_url)
           
           // Featured Properties: Recently added properties with good photos
+          // Add property IDs you want to exclude from hero section here:
+          const excludedFromHero = [
+            // Add property IDs here, e.g.:
+            // 'property-id-to-exclude-1',
+            // 'property-id-to-exclude-2'
+          ]
+          
           const featured = properties
             .filter((p: any) => p.property_photos && p.property_photos.length > 0)
+            .filter((p: any) => !excludedFromHero.includes(p.id))
             .map((p: any) => ({
               ...p,
               location: `${p.city}, ${p.state}`,

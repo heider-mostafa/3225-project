@@ -234,6 +234,72 @@ export function TourViewer({
     },
   ]
 
+  // Fallback render function for invalid URLs or errors
+  const renderFallbackTour = () => {
+    console.log('🔄 Rendering fallback 3D mock tour')
+    return (
+      <div className={`relative bg-slate-900 rounded-lg overflow-hidden ${className}`}>
+        <Canvas camera={{ position: [5, 5, 5], fov: 60 }}>
+          <ambientLight intensity={0.5} />
+          <pointLight position={[10, 10, 10]} />
+          <Environment preset="apartment" />
+
+          <RoomHotspots onRoomChange={handleRoomChange} />
+
+          <OrbitControls
+            enablePan={true}
+            enableZoom={true}
+            enableRotate={true}
+            autoRotate={autoRotate}
+            autoRotateSpeed={1}
+          />
+        </Canvas>
+
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white text-sm">Loading virtual tour...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Room navigation menu */}
+        {!hideRoomMenu && (
+          <div className="absolute bottom-4 left-4 right-4 z-40">
+            <div className="bg-white/10 backdrop-blur-md rounded-lg p-3">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-white font-medium text-sm">Navigate Rooms</h3>
+                <Badge variant="secondary" className="text-xs">
+                  3D Interactive
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {roomNavigation.map((room) => (
+                  <Button
+                    key={room.id}
+                    variant={currentRoom === room.id ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleRoomChange(room.id)}
+                    className={`text-xs ${
+                      currentRoom === room.id
+                        ? "bg-white text-slate-900"
+                        : "bg-white/20 text-white border-white/30 hover:bg-white/30"
+                    }`}
+                  >
+                    <room.icon className="w-3 h-3 mr-1" />
+                    {room.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   // Debug logging
   console.log('🎬 TourViewer props:', {
     tourId,
@@ -1603,24 +1669,32 @@ ${selectedLang?.code === 'ar' ? `
   if (tourUrl) {
     console.log('🖼️ Rendering iframe with tourUrl:', tourUrl)
     
+    // Validate URL before processing
+    try {
+      new URL(tourUrl) // This will throw if URL is invalid
+    } catch (error) {
+      console.error('❌ Invalid tour URL provided:', tourUrl, error)
+      // Fall back to 3D mock tour for invalid URLs
+      return renderFallbackTour()
+    }
+    
     // Enhance the Realsee URL to start directly in 3D model view
     const enhancedModelUrl = (() => {
-      if (tourUrl.includes('realsee.ai')) {
-        const separator = tourUrl.includes('?') ? '&' : '?'
-        
-        // Strategy 1: Dollhouse view parameters (most common for 3D model view)
-        const dollhouseParams = `view=dollhouse&autoplay=1&start=dollhouse&scene=3d&mode=dollhouse`
-        
-        // Strategy 2: Alternative 3D view parameters
-        // const alternativeParams = `tab=3d&section=model&view=3d&autoStart=true`
-        
-        // Strategy 3: Model-specific parameters
-        // const modelParams = `mode=model&hideUI=true&autoRotate=true&immersive=true`
-        
-        console.log('🎯 Using dollhouse view parameters for 3D model start')
-        return `${tourUrl}${separator}${dollhouseParams}`
+      try {
+        if (tourUrl.includes('realsee.ai')) {
+          const separator = tourUrl.includes('?') ? '&' : '?'
+          
+          // Strategy 1: Dollhouse view parameters (most common for 3D model view)
+          const dollhouseParams = `view=dollhouse&autoplay=1&start=dollhouse&scene=3d&mode=dollhouse`
+          
+          console.log('🎯 Using dollhouse view parameters for 3D model start')
+          return `${tourUrl}${separator}${dollhouseParams}`
+        }
+        return tourUrl // For non-Realsee URLs, use as-is
+      } catch (error) {
+        console.error('❌ Error processing tour URL:', error)
+        return tourUrl // Return original URL if processing fails
       }
-      return tourUrl // For non-Realsee URLs, use as-is
     })()
     
     console.log('🎯 Enhanced model URL:', enhancedModelUrl)
@@ -1630,50 +1704,62 @@ ${selectedLang?.code === 'ar' ? `
         {/* 3D Model iframe - fully interactive and responsive */}
         <iframe
           ref={(iframe) => {
-            // Fallback approach: Use JavaScript injection to switch to 3D view
-            if (iframe && tourUrl.includes('realsee.ai')) {
+            if (iframe) {
+              // Add error handler for iframe
+              iframe.onerror = () => {
+                console.error('❌ Failed to load iframe tour URL:', enhancedModelUrl)
+                setIsLoading(false)
+              }
+              
+              // Add load handler
               iframe.onload = () => {
-                try {
-                  // Wait a bit for the tour to fully load, then try to switch to 3D view
-                  setTimeout(() => {
-                    const injectionScript = `
-                      // Try multiple methods to switch to 3D/dollhouse view
-                      if (window.switchToDollhouse) window.switchToDollhouse();
-                      if (window.switchTo3D) window.switchTo3D();
-                      if (window.setView) window.setView('dollhouse');
-                      if (window.setMode) window.setMode('3d');
+                console.log('✅ Iframe loaded successfully')
+                setIsLoading(false)
+                
+                // Fallback approach: Use JavaScript injection to switch to 3D view
+                if (tourUrl.includes('realsee.ai')) {
+                  try {
+                    // Wait a bit for the tour to fully load, then try to switch to 3D view
+                    setTimeout(() => {
+                      const injectionScript = `
+                        // Try multiple methods to switch to 3D/dollhouse view
+                        if (window.switchToDollhouse) window.switchToDollhouse();
+                        if (window.switchTo3D) window.switchTo3D();
+                        if (window.setView) window.setView('dollhouse');
+                        if (window.setMode) window.setMode('3d');
+                        
+                        // Try to find and click dollhouse/3D button
+                        const dollhouseBtn = document.querySelector('[data-view="dollhouse"], .dollhouse-btn, .view-3d, [aria-label*="3D"], [title*="dollhouse"]');
+                        if (dollhouseBtn) dollhouseBtn.click();
+                        
+                        // Alternative: Look for buttons with 3D-related text
+                        const buttons = document.querySelectorAll('button, .btn, [role="button"]');
+                        buttons.forEach(btn => {
+                          const text = btn.textContent?.toLowerCase() || '';
+                          if (text.includes('dollhouse') || text.includes('3d') || text.includes('model')) {
+                            btn.click();
+                          }
+                        });
+                      `;
                       
-                      // Try to find and click dollhouse/3D button
-                      const dollhouseBtn = document.querySelector('[data-view="dollhouse"], .dollhouse-btn, .view-3d, [aria-label*="3D"], [title*="dollhouse"]');
-                      if (dollhouseBtn) dollhouseBtn.click();
-                      
-                      // Alternative: Look for buttons with 3D-related text
-                      const buttons = document.querySelectorAll('button, .btn, [role="button"]');
-                      buttons.forEach(btn => {
-                        const text = btn.textContent?.toLowerCase() || '';
-                        if (text.includes('dollhouse') || text.includes('3d') || text.includes('model')) {
-                          btn.click();
+                      // Only inject if we can access the iframe content (same-origin)
+                      try {
+                        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                        if (doc) {
+                          const script = doc.createElement('script');
+                          script.textContent = injectionScript;
+                          doc.head?.appendChild(script);
+                          console.log('🎯 Injected 3D view switch script');
                         }
-                      });
-                    `;
-                    
-                    // Only inject if we can access the iframe content (same-origin)
-                    try {
-                      const doc = iframe.contentDocument || iframe.contentWindow?.document;
-                      if (doc) {
-                        const script = doc.createElement('script');
-                        script.textContent = injectionScript;
-                        doc.head?.appendChild(script);
-                        console.log('🎯 Injected 3D view switch script');
+                      } catch (e) {
+                        console.log('🔒 Cross-origin iframe - cannot inject script (this is normal for external tours)');
                       }
-                    } catch (e) {
-                      console.log('🔒 Cross-origin iframe - cannot inject script (this is normal for external tours)');
-                    }
-                  }, 3000); // Wait 3 seconds for tour to load
-                } catch (error) {
-                  console.log('⚠️ Could not inject 3D view script:', error);
+                    }, 3000); // Wait 3 seconds for tour to load
+                  } catch (error) {
+                    console.log('⚠️ Could not inject 3D view script:', error);
+                  }
                 }
-              };
+              }
             }
           }}
           src={enhancedModelUrl}
@@ -1687,6 +1773,16 @@ ${selectedLang?.code === 'ar' ? `
             zIndex: 1
           }}
         />
+
+        {/* Loading overlay for iframe */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-50">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+              <p className="text-white text-sm">Loading virtual tour...</p>
+            </div>
+          </div>
+        )}
 
         {/* Minimal corner indicators - positioned to not interfere with interaction */}
         {!fullscreen && (
