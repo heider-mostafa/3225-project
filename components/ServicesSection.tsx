@@ -352,9 +352,30 @@ export function ServicesSection() {
   return (
     <section 
       id="services-section" 
-      className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-slate-50 via-white to-slate-50 overflow-hidden"
+      className="py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-blue-50 via-slate-50 to-blue-50 overflow-hidden relative"
     >
-      <div className="container mx-auto px-4 sm:px-6">
+      {/* Modern SaaS-style grid background */}
+      <div className="absolute inset-0">
+        {/* Grid pattern */}
+        <div className="absolute inset-0 opacity-[0.08]" style={{
+          backgroundImage: `
+            linear-gradient(rgba(0, 0, 0, 0.8) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(0, 0, 0, 0.8) 1px, transparent 1px)
+          `,
+          backgroundSize: '40px 40px'
+        }}></div>
+        
+        {/* Subtle gradient overlay */}
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-r from-blue-200 to-transparent rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-l from-blue-200 to-transparent rounded-full blur-3xl"></div>
+        </div>
+        
+        {/* Subtle radial gradient for focus */}
+        <div className="absolute inset-0 bg-radial-gradient from-transparent via-transparent to-blue-50/30"></div>
+      </div>
+      
+      <div className="container mx-auto px-4 sm:px-6 relative z-10">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

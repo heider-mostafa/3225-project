@@ -361,6 +361,9 @@ export default function HomePage() {
   const [fullscreenTourUrl, setFullscreenTourUrl] = useState<string>('')
   const [fullscreenPropertyId, setFullscreenPropertyId] = useState<string>('')
   
+  // Top Areas slider state
+  const [currentAreaIndex, setCurrentAreaIndex] = useState(0)
+  
   // Add missing state declarations
   const [interactionCount, setInteractionCount] = useState(0)
   const [showFloatingCTA, setShowFloatingCTA] = useState(false)
@@ -765,6 +768,19 @@ export default function HomePage() {
     }
   }
 
+  // Top Areas slider navigation
+  const nextArea = () => {
+    setCurrentAreaIndex((prev) => (prev + 1) % topAreas.length)
+  }
+
+  const prevArea = () => {
+    setCurrentAreaIndex((prev) => (prev - 1 + topAreas.length) % topAreas.length)
+  }
+
+  const goToArea = (index: number) => {
+    setCurrentAreaIndex(index)
+  }
+
   // Add fullscreen event listener
   useEffect(() => {
     const handleFullscreenTour = (event: CustomEvent) => {
@@ -936,8 +952,9 @@ export default function HomePage() {
               transition={{ duration: 1, delay: 0.3 }}
               className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20"
             >
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex-1">
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
+                  <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">{translatePropertyTitle(currentProperty.title)}</h1>
                     {currentProperty.isHot && (
@@ -951,7 +968,7 @@ export default function HomePage() {
                     <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
                     <span className="text-sm md:text-base">{translateLocation(currentProperty.location, i18n.language === 'ar')}</span>
                   </div>
-                  <div className="hidden sm:grid grid-cols-2 sm:flex sm:items-center gap-3 sm:gap-4 text-white/80 mb-4">
+                  <div className="hidden sm:flex sm:items-center gap-3 sm:gap-4 text-white/80">
                     <div className="flex items-center">
                       <Bed className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="text-sm md:text-base">
@@ -973,36 +990,37 @@ export default function HomePage() {
                     <div className="flex items-center">
                       <Eye className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.views?.toString() || '0') : (currentProperty.views?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'مشاهدات' : 'views'}
+                        {isMounted ? translateText(currentProperty.views?.toString() || '0') : (currentProperty.views?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'مشาهدات' : 'views'}
                       </span>
                     </div>
                   </div>
-                </div>
-                <div className="text-left md:text-right">
-                  <div className="text-2xl sm:text-3xl font-bold text-white mb-3 md:mb-4">{formatPrice(currentProperty.price)}</div>
-                  <div className="flex flex-col sm:flex-row md:flex-col gap-3">
-                    <div className="flex gap-2 justify-start md:justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                      >
-                        <Heart className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                      >
-                        <Share2 className="h-4 w-4" />
-                      </Button>
+                  </div>
+                  <div className="flex flex-col md:items-end gap-3">
+                    <div className="text-2xl sm:text-3xl font-bold text-white">{formatPrice(currentProperty.price)}</div>
+                    <div className="flex flex-col sm:flex-row md:flex-col gap-3">
+                      <div className="flex gap-2 justify-start md:justify-end">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                        >
+                          <Heart className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="bg-white/20 border-white/30 text-white hover:bg-white/30"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Link href={`/property/${currentProperty.id}`} className="w-full sm:w-auto">
+                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                          <Play className="h-4 w-4 mr-2" />
+                          <span className="text-sm md:text-base">{safeT('properties.startVirtualTour', 'Start Virtual Tour')}</span>
+                        </Button>
+                      </Link>
                     </div>
-                    <Link href={`/property/${currentProperty.id}`} className="w-full sm:w-auto">
-                      <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                        <Play className="h-4 w-4 mr-2" />
-                        <span className="text-sm md:text-base">{safeT('properties.startVirtualTour', 'Start Virtual Tour')}</span>
-                      </Button>
-                    </Link>
                   </div>
                 </div>
               </div>
@@ -1441,7 +1459,7 @@ export default function HomePage() {
         {/* Animated Background Pattern */}
         <div className="absolute inset-0 opacity-5">
           <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-r from-amber-400 to-orange-500 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-r from-blue-400 to-blue-600 rounded-full blur-3xl animate-pulse delay-1000"></div>
         </div>
 
         <div className="relative container mx-auto px-4">
@@ -1717,7 +1735,7 @@ export default function HomePage() {
 
       {/* Recommendations Section (conditional) */}
       {selectedQuickFilter && selectedCategory && (
-        <section className="py-12 bg-gradient-to-r from-blue-50 to-purple-50">
+        <section className="py-12 bg-gradient-to-r from-blue-50 to-blue-100">
           <div className="container mx-auto px-4">
             <h2 className="text-2xl font-bold text-slate-800 mb-8 text-center flex flex-col items-center gap-2">
               AI Recommendations for <span className="text-blue-600">{selectedCategory}</span> with <span className="text-blue-600">{quickFilters.find(f => f.value === selectedQuickFilter)?.label}</span>
@@ -1870,7 +1888,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -50 }}
                 transition={{ duration: 0.5 }}
-                className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-8 relative"
+                className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl p-8 relative"
               >
                 <Quote className="h-12 w-12 text-blue-600 mb-6" />
                 <p className="text-lg text-slate-700 mb-6 leading-relaxed">"{testimonials[currentTestimonial].text}"</p>
@@ -1937,7 +1955,8 @@ export default function HomePage() {
               </Button>
             </Link>
           </div>
-          <div className="flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
+          {/* Desktop: Horizontal scrolling cards */}
+          <div className="hidden sm:flex gap-6 overflow-x-auto pb-4 hide-scrollbar">
             {topAreas.map((area) => (
               <Card className="min-w-[380px] h-[480px] overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col" key={area.name}>
                 <div className="relative">
@@ -1979,14 +1998,112 @@ export default function HomePage() {
               </Card>
             ))}
           </div>
+
+          {/* Mobile: Single card slider */}
+          <div className="sm:hidden relative">
+            <div className="overflow-hidden">
+              <div 
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{ transform: `translateX(-${currentAreaIndex * 100}%)` }}
+              >
+                {topAreas.map((area) => (
+                  <div className="w-full flex-shrink-0 px-2" key={area.name}>
+                    <Card className="h-[480px] overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col">
+                      <div className="relative">
+                        <img 
+                          src={area.image} 
+                          alt={area.name} 
+                          className="w-full h-72 object-cover group-hover:scale-105 transition-transform duration-300" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                        <div className="absolute top-4 right-4">
+                          <Badge className="bg-blue-600 text-white">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {isMounted ? translateText(`${area.propertyCount || 0}`) : `${area.propertyCount || 0}`} {t('areas.properties', 'Properties')}
+                          </Badge>
+                        </div>
+                      </div>
+                      <div className="flex flex-col flex-1 justify-end p-6 bg-gradient-to-t from-slate-100/90 to-transparent">
+                        <h3 className="text-xl font-semibold text-slate-800 mb-4">
+                          {(() => {
+                            // Create proper mapping for area names to translation keys
+                            const areaKeyMap: { [key: string]: string } = {
+                              'New Cairo': 'newCairo',
+                              'Sheikh Zayed': 'sheikhZayed', 
+                              '6th of October': 'october',
+                              'Zamalek': 'zamalek',
+                              'Maadi': 'maadi',
+                              'Heliopolis': 'heliopolis',
+                              'Alexandria': 'alexandria',
+                              'Giza': 'giza'
+                            }
+                            const translationKey = areaKeyMap[area.name] || area.name.toLowerCase().replace(/\s+/g, '').replace(/'/g, '')
+                            return t(`cities.${translationKey}`, area.name)
+                          })()}
+                        </h3>
+                        <Button variant="outline" className="w-full bg-white text-blue-700 border-blue-200 hover:bg-blue-50" onClick={() => handleAreaClick(area.name)}>
+                          {t('areas.exploreArea', 'Explore Area')}
+                        </Button>
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Navigation Controls */}
+            <div className="flex items-center justify-between mt-6">
+              {/* Previous Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={prevArea}
+                className="flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {t('common.previous', 'Previous')}
+              </Button>
+
+              {/* Slider Indicators */}
+              <div className="flex gap-2">
+                {topAreas.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => goToArea(index)}
+                    className={`h-2 rounded-full transition-all duration-300 ${
+                      index === currentAreaIndex 
+                        ? 'bg-slate-700 w-6' 
+                        : 'bg-slate-400 hover:bg-slate-500 w-2'
+                    }`}
+                  />
+                ))}
+              </div>
+
+              {/* Next Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={nextArea}
+                className="flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50"
+              >
+                {t('common.next', 'Next')}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* Area Counter */}
+            <div className="text-center mt-4 text-sm text-slate-500">
+              {currentAreaIndex + 1} {t('common.of', 'of')} {topAreas.length} {t('areas.areas', 'areas')}
+            </div>
+          </div>
         </div>
       </section>
 
 
       {/* Lead Capture CTA Section */}
-      <section className="relative z-0 mb-20">
+      <section className="relative z-0 mb-20 mt-20">
         <div className="container mx-auto px-4">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl shadow-xl text-white p-10 mt-[-40px]">
+          <div className="bg-gradient-to-r from-blue-800 to-blue-900 rounded-3xl shadow-xl text-white p-10">
             <div className="text-center max-w-4xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -2188,7 +2305,7 @@ export default function HomePage() {
             >
               <Button
                 size="lg"
-                className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700"
               >
                 <MessageCircle className="h-6 w-6" />
               </Button>
