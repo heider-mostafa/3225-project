@@ -1982,39 +1982,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Market Insights */}
-      <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
-            <div className="flex-1">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
-                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
-                {i18n.language === 'ar' ? 'رؤى السوق' : 'Market Insights'}
-              </h2>
-              <p className="text-sm sm:text-base text-slate-600">{i18n.language === 'ar' ? 'ابق على اطلاع بأحدث اتجاهات وإحصائيات سوق العقارات' : 'Stay informed with the latest real estate market trends and statistics'}</p>
-            </div>
-            <Link href="/market-insights" className="shrink-0">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                {i18n.language === 'ar' ? 'عرض التقرير الكامل' : 'View Full Report'}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            {marketInsights.map((insight) => (
-              <Card key={insight.label} className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                <CardContent className="p-6">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
-                    <insight.icon className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <div className="text-2xl font-bold text-slate-800 mb-2">{isMounted ? translateText(insight.value) : insight.value}</div>
-                  <div className="text-slate-600">{insight.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Lead Capture CTA Section */}
       <section className="relative z-0 mb-20">
