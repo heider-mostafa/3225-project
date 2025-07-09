@@ -58,6 +58,7 @@ import Link from "next/link"
 import { TourViewer } from "@/components/tour-viewer"
 import { ChatBot } from "@/components/ChatBot"
 import { LeadCaptureForm } from "@/components/LeadCaptureForm"
+import { ServicesSection } from "@/components/ServicesSection"
 
 import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog"
 
@@ -489,11 +490,7 @@ export default function HomePage() {
           
           // Featured Properties: Recently added properties with good photos
           // Add property IDs you want to exclude from hero section here:
-          const excludedFromHero = [
-            // Add property IDs here, e.g.:
-            // 'property-id-to-exclude-1',
-            // 'property-id-to-exclude-2'
-          ]
+
           
           const featured = properties
             .filter((p: any) => p.property_photos && p.property_photos.length > 0)
@@ -1645,6 +1642,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Services Section */}
+      <ServicesSection />
 
       {/* Unified Filters & Categories Section */}
       <section className="py-12 bg-white border-b border-slate-200">
