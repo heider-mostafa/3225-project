@@ -333,15 +333,9 @@ export default function GoogleMapView({
     { type: 'townhouse', label: 'Townhouses', color: '#F59E0B', count: filteredProperties.filter(p => p.property_type === 'townhouse').length },
   ]
 
-  // Load Google Maps API
+  // Load Google Maps API using centralized loader
   useEffect(() => {
     const loadGoogleMaps = async () => {
-      // Check if Google Maps is already loaded
-      if (window.google && window.google.maps) {
-        setIsMapLoaded(true)
-        return
-      }
-
       // Get API key from environment
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
       
@@ -352,34 +346,21 @@ export default function GoogleMapView({
       }
 
       try {
-        // Create script element
-        const script = document.createElement('script')
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry,places`
-        script.async = true
-        script.defer = true
+        // Use centralized loader to prevent multiple inclusions
+        const { loadGoogleMaps: loadMaps } = await import('@/lib/google-maps-loader')
         
-        script.onload = () => {
-          console.log('Google Maps API loaded successfully')
-          setIsMapLoaded(true)
-        }
+        await loadMaps({
+          apiKey,
+          libraries: ['geometry', 'places'],
+          language: 'en',
+          region: 'EG'
+        })
         
-        script.onerror = (e) => {
-          console.error('Failed to load Google Maps API:', e)
-          setError('Failed to load Google Maps')
-        }
-
-        // Add script to document
-        document.head.appendChild(script)
-        
-        // Cleanup function
-        return () => {
-          if (document.head.contains(script)) {
-            document.head.removeChild(script)
-          }
-        }
+        console.log('Google Maps API loaded successfully')
+        setIsMapLoaded(true)
       } catch (err) {
         console.error('Error loading Google Maps:', err)
-        setError('Error loading Google Maps')
+        setError('Failed to load Google Maps')
       }
     }
 

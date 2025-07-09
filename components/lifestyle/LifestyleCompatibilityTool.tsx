@@ -276,22 +276,26 @@ declare namespace google {
   }
 }
 
-// Load Google Maps script
-const loadGoogleMapsScript = () => {
-  return new Promise<void>((resolve, reject) => {
-    if (window.google && window.google.maps) {
-      resolve()
-      return
-    }
+// Load Google Maps script using centralized loader
+const loadGoogleMapsScript = async () => {
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY
+  
+  if (!apiKey) {
+    throw new Error('Google Maps API key not configured')
+  }
 
-    const script = document.createElement('script')
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`
-    script.async = true
-    script.defer = true
-    script.onload = () => resolve()
-    script.onerror = () => reject(new Error('Failed to load Google Maps'))
-    document.head.appendChild(script)
-  })
+  try {
+    const { loadGoogleMaps } = await import('@/lib/google-maps-loader')
+    
+    await loadGoogleMaps({
+      apiKey,
+      libraries: ['places'],
+      language: 'en',
+      region: 'EG'
+    })
+  } catch (error) {
+    throw new Error(`Failed to load Google Maps: ${error}`)
+  }
 }
 
 interface UserDestination {
