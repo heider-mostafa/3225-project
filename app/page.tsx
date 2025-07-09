@@ -489,12 +489,8 @@ export default function HomePage() {
           console.log('🎯 Sample property virtual tour URL:', properties[0]?.virtual_tour_url)
           
           // Featured Properties: Recently added properties with good photos
-          // Add property IDs you want to exclude from hero section here:
-
-          
           const featured = properties
             .filter((p: any) => p.property_photos && p.property_photos.length > 0)
-            .filter((p: any) => !excludedFromHero.includes(p.id))
             .map((p: any) => ({
               ...p,
               location: `${p.city}, ${p.state}`,
@@ -1084,16 +1080,16 @@ export default function HomePage() {
       {/* Top Compounds */}
       <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
-                <Building2 className="h-8 w-8 text-blue-600 mr-3" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
+                <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
                 {safeT('properties.topCompounds', 'Top Compounds')}
               </h2>
-              <p className="text-slate-600">{safeT('properties.topCompoundsDescription', 'Discover the most sought-after residential communities in Egypt')}</p>
+              <p className="text-sm sm:text-base text-slate-600">{safeT('properties.topCompoundsDescription', 'Discover the most sought-after residential communities in Egypt')}</p>
             </div>
-            <Link href="/compounds">
-              <Button variant="outline">
+            <Link href="/compounds" className="shrink-0">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 {safeT('properties.viewAllCompounds', 'View All Compounds')}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -1356,16 +1352,16 @@ export default function HomePage() {
       {/* Hottest Listings This Week */}
       <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
-                <TrendingUp className="h-8 w-8 text-red-500 mr-3" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
+                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-red-500 mr-2 sm:mr-3" />
                 {t('properties.hottestListings', 'Hottest Listings This Week')}
               </h2>
-              <p className="text-slate-600">{t('properties.hottestListingsDescription', 'Properties with the highest interest and price growth')}</p>
+              <p className="text-sm sm:text-base text-slate-600">{t('properties.hottestListingsDescription', 'Properties with the highest interest and price growth')}</p>
             </div>
-            <Link href="/properties?sort=trending">
-              <Button variant="outline">
+            <Link href="/properties?sort=trending" className="shrink-0">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 {t('properties.viewAllTrending', 'View All Trending')}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -1981,16 +1977,16 @@ export default function HomePage() {
       {/* Top Areas */}
       <section className="py-12 bg-gradient-to-r from-slate-50 to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
-                <MapPin className="h-8 w-8 text-blue-600 mr-3" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
+                <MapPin className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
                 {t('areas.topAreas', 'Top Areas')}
               </h2>
-              <p className="text-slate-600">{t('areas.topAreasDescription', 'Explore the most popular neighborhoods and districts')}</p>
+              <p className="text-sm sm:text-base text-slate-600">{t('areas.topAreasDescription', 'Explore the most popular neighborhoods and districts')}</p>
             </div>
-            <Link href="/areas">
-              <Button variant="outline">
+            <Link href="/areas" className="shrink-0">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
                 {t('areas.viewAllAreas', 'View All Areas')}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -2044,20 +2040,20 @@ export default function HomePage() {
       {/* Market Insights */}
       <section className="py-20 bg-gradient-to-r from-blue-50 to-purple-50">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-bold text-slate-800 mb-2 flex items-center">
-                <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
+            <div className="flex-1">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
+                <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
                 {i18n.language === 'ar' ? 'رؤى السوق' : 'Market Insights'}
               </h2>
-              <p className="text-slate-600">{i18n.language === 'ar' ? 'ابق على اطلاع بأحدث اتجاهات وإحصائيات سوق العقارات' : 'Stay informed with the latest real estate market trends and statistics'}</p>
+              <p className="text-sm sm:text-base text-slate-600">{i18n.language === 'ar' ? 'ابق على اطلاع بأحدث اتجاهات وإحصائيات سوق العقارات' : 'Stay informed with the latest real estate market trends and statistics'}</p>
             </div>
-                          <Link href="/market-insights">
-                <Button variant="outline">
-                  {i18n.language === 'ar' ? 'عرض التقرير الكامل' : 'View Full Report'}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </Link>
+            <Link href="/market-insights" className="shrink-0">
+              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                {i18n.language === 'ar' ? 'عرض التقرير الكامل' : 'View Full Report'}
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
             {marketInsights.map((insight) => (

@@ -471,7 +471,7 @@ export function LeadCaptureForm({
                       </div>
                     )}
 
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col sm:flex-row gap-3 mt-6">
                       <Button type="button" onClick={prevStep} variant="outline" className="flex-1 h-12 text-base font-medium">
                         Back
                       </Button>
@@ -486,9 +486,14 @@ export function LeadCaptureForm({
                             Processing...
                           </>
                         ) : (
-                          <div className="flex items-center justify-center gap-2 px-2">
-                            <Gift className="h-5 w-5" />
-                            <span className="text-center">Get My FREE Tour</span>
+                          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 px-2">
+                            <div className="flex items-center gap-2">
+                              <Gift className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                              <span className="block sm:hidden text-center leading-tight">
+                                Get My FREE<br />Tour
+                              </span>
+                              <span className="hidden sm:block text-center">Get My FREE Tour</span>
+                            </div>
                           </div>
                         )}
                       </Button>
