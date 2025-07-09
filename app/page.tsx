@@ -1639,9 +1639,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Services Section */}
-      <ServicesSection />
-
       {/* Unified Filters & Categories Section */}
       <section className="py-12 bg-white border-b border-slate-200">
         <div className="container mx-auto px-4">
@@ -1919,60 +1916,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Features Section (Revolutionary Property Viewing Experience) */}
-      <section className="py-16 bg-slate-50">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-800 mb-4">{t('features.revolutionaryExperience', 'Revolutionary Property Viewing Experience')}</h2>
-            <p className="text-slate-600 max-w-2xl mx-auto">
-              {t('features.revolutionaryDescription', 'Our platform combines cutting-edge 3D technology with AI assistance to provide the most immersive property viewing experience.')}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-center group"
-            >
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
-                <Play className="h-8 w-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">{t('features.immersive3DTours', 'Immersive 3D Tours')}</h3>
-              <p className="text-slate-600">{t('features.immersive3DDescription', 'Explore properties in stunning 3D detail from the comfort of your home.')}</p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-center group"
-            >
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-purple-200 transition-colors">
-                <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">AI</span>
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">{t('features.aiPoweredAssistance', 'AI-Powered Assistance')}</h3>
-              <p className="text-slate-600">
-                {t('features.aiAssistanceDescription', 'Get instant answers about properties with our intelligent virtual assistant.')}
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-center group"
-            >
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-green-200 transition-colors">
-                <MapPin className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">{t('features.multiLanguageSupport', 'Multi-Language Support')}</h3>
-              <p className="text-slate-600">{t('features.multiLanguageDescription', 'Communicate in your preferred language with our multilingual AI agents.')}</p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
+      {/* Services Section */}
+      <ServicesSection />
 
       {/* Top Areas */}
       <section className="py-12 bg-gradient-to-r from-slate-50 to-blue-50">
