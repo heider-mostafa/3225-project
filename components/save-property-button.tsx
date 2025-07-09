@@ -75,7 +75,7 @@ export function SavePropertyButton({ propertyId, initialSaved = false }: SavePro
         toggleSave();
       }}
       disabled={isLoading}
-      className={`px-4 py-2 ${
+      className={`px-2 sm:px-4 py-2 ${
         isSaved 
           ? 'bg-red-600 hover:bg-red-700 text-white border-red-600' 
           : 'bg-red-50 hover:bg-red-100 text-red-600 border-red-300 hover:border-red-400'
@@ -83,11 +83,13 @@ export function SavePropertyButton({ propertyId, initialSaved = false }: SavePro
       title={isSaved ? 'Remove from saved' : 'Save property'}
     >
       {isSaved ? (
-        <Heart className="h-4 w-4 mr-2 fill-current" />
+        <Heart className="h-4 w-4 sm:mr-2 fill-current" />
       ) : (
-        <Heart className="h-4 w-4 mr-2" />
+        <Heart className="h-4 w-4 sm:mr-2" />
       )}
-      {isLoading ? 'Saving...' : (isSaved ? 'Saved' : 'Save')}
+      <span className="hidden sm:inline">
+        {isLoading ? 'Saving...' : (isSaved ? 'Saved' : 'Save')}
+      </span>
     </Button>
   );
 } 

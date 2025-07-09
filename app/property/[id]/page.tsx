@@ -416,6 +416,11 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             <span>{t('propertyDetails.backToProperties')}</span>
           </Link>
           <div className="flex items-center space-x-2 w-full sm:w-auto justify-end">
+            {translatedProperty?.marketing_headline && (
+              <Badge className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full animate-pulse">
+                {translatedProperty.marketing_headline}
+              </Badge>
+            )}
             <SavePropertyButton propertyId={property.id} />
             <Button
               variant="outline"
@@ -433,8 +438,10 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                   })
               }}
             >
-              <Share2 className="h-4 w-4 mr-2" />
-              {t('propertyDetails.share')}
+              <Share2 className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">
+                {t('propertyDetails.share')}
+              </span>
             </Button>
           </div>
         </div>
@@ -448,38 +455,9 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             <div className="mb-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  {/* Mobile-optimized header layout */}
-                  <div className="flex flex-col space-y-3 mb-4">
-                    {/* Top row: Badge and action buttons */}
-                    <div className="flex items-center justify-between">
-                      {translatedProperty?.marketing_headline && (
-                        <Badge className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full animate-pulse">
-                          {translatedProperty.marketing_headline}
-                        </Badge>
-                      )}
-                      
-                      {/* Action buttons - mobile optimized */}
-                      <div className="flex items-center space-x-2">
-                        <button 
-                          onClick={() => {/* Add save functionality */}}
-                          className="flex items-center justify-center w-8 h-8 text-red-600 bg-red-50 hover:bg-red-100 rounded-full border border-red-200 transition-colors"
-                        >
-                          <Heart className="h-4 w-4" />
-                        </button>
-                        <button 
-                          onClick={() => {/* Add share functionality */}}
-                          className="flex items-center justify-center w-8 h-8 text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full border border-slate-200 transition-colors"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* Property title */}
-                    <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 rtl:text-right ltr:text-left property-title leading-tight">
-                      {translatedProperty?.title}
-                    </h1>
-                  </div>
+                  <h1 className="text-3xl font-bold text-slate-800 mb-2 rtl:text-right ltr:text-left property-title">
+                    {translatedProperty?.title}
+                  </h1>
                   <div className="flex items-center text-slate-600 mb-4">
                     <MapPin className="h-5 w-5 mr-2" />
                     <span>{translatedProperty?.address}</span>
