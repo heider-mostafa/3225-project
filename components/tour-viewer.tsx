@@ -9,6 +9,74 @@ import { Video, MessageCircle, Play, Mic, MicOff, Volume2, Globe, X, ChevronDown
 import { UnifiedPropertyAgent } from "@/lib/heygen/UnifiedPropertyAgent"
 import { translationService } from '@/lib/translation-service'
 import type * as THREE from "three"
+import React from "react"
+
+// Simple Error Boundary for 3D Canvas
+class ThreeDErrorBoundary extends React.Component<
+  { children: React.ReactNode; fallback: React.ComponentType<{ error: Error }> },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode; fallback: React.ComponentType<{ error: Error }> }) {
+    super(props)
+    this.state = { hasError: false, error: null }
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('3D Canvas Error Boundary caught an error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError && this.state.error) {
+      const FallbackComponent = this.props.fallback
+      return <FallbackComponent error={this.state.error} />
+    }
+
+    return this.props.children
+  }
+}
+
+// Error fallback component for 3D issues
+function ThreeDErrorFallback({ error }: { error: Error }) {
+  console.error('3D Canvas error:', error)
+  return (
+    <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden flex items-center justify-center min-h-[400px]">
+      <div className="text-center text-white p-6">
+        <div className="text-4xl mb-4">🏠</div>
+        <h3 className="text-lg font-semibold mb-2">Virtual Tour Unavailable</h3>
+        <p className="text-slate-300 text-sm mb-4">The 3D tour for this property could not be loaded.</p>
+        <div className="text-xs text-slate-400 space-y-1">
+          <p>• Contact us to schedule an in-person viewing</p>
+          <p>• View property photos in the gallery above</p>
+          <p>• Get more details from our property specialist</p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Simple fallback without 3D for properties without tours
+function renderSimpleFallback(className: string) {
+  return (
+    <div className={`relative bg-gradient-to-br from-blue-900 to-slate-900 rounded-lg overflow-hidden ${className}`}>
+      <div className="flex items-center justify-center min-h-[400px] p-6">
+        <div className="text-center text-white">
+          <div className="text-5xl mb-6">🏠</div>
+          <h3 className="text-xl font-semibold mb-3">Virtual Tour Not Available</h3>
+          <p className="text-blue-200 mb-6">This property doesn't have a virtual tour yet.</p>
+          <div className="space-y-2 text-sm text-blue-300">
+            <p>✓ View detailed photos in the gallery</p>
+            <p>✓ Schedule an in-person viewing</p>
+            <p>✓ Contact our team for more information</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 interface TourViewerProps {
   tourId: string
@@ -21,7 +89,7 @@ interface TourViewerProps {
   hideRoomMenu?: boolean
 }
 
-// Mock 3D room component
+// Mock 3D room component - only use inside Canvas
 function Room3D({ roomType, onRoomClick }: { roomType: string; onRoomClick: (room: string) => void }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
@@ -234,70 +302,11 @@ export function TourViewer({
     },
   ]
 
-  // Fallback render function for invalid URLs or errors
+  // Simple fallback render function - no 3D to avoid React Three Fiber errors
   const renderFallbackTour = () => {
-    console.log('🔄 Rendering fallback 3D mock tour')
-    return (
-      <div className={`relative bg-slate-900 rounded-lg overflow-hidden ${className}`}>
-        <Canvas camera={{ position: [5, 5, 5], fov: 60 }}>
-          <ambientLight intensity={0.5} />
-          <pointLight position={[10, 10, 10]} />
-          <Environment preset="apartment" />
-
-          <RoomHotspots onRoomChange={handleRoomChange} />
-
-          <OrbitControls
-            enablePan={true}
-            enableZoom={true}
-            enableRotate={true}
-            autoRotate={autoRotate}
-            autoRotateSpeed={1}
-          />
-        </Canvas>
-
-        {/* Loading overlay */}
-        {isLoading && (
-          <div className="absolute inset-0 bg-slate-900/80 flex items-center justify-center z-50">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
-              <p className="text-white text-sm">Loading virtual tour...</p>
-            </div>
-          </div>
-        )}
-
-        {/* Room navigation menu */}
-        {!hideRoomMenu && (
-          <div className="absolute bottom-4 left-4 right-4 z-40">
-            <div className="bg-white/10 backdrop-blur-md rounded-lg p-3">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-white font-medium text-sm">Navigate Rooms</h3>
-                <Badge variant="secondary" className="text-xs">
-                  3D Interactive
-                </Badge>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {roomNavigation.map((room) => (
-                  <Button
-                    key={room.id}
-                    variant={currentRoom === room.id ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleRoomChange(room.id)}
-                    className={`text-xs ${
-                      currentRoom === room.id
-                        ? "bg-white text-slate-900"
-                        : "bg-white/20 text-white border-white/30 hover:bg-white/30"
-                    }`}
-                  >
-                    <room.icon className="w-3 h-3 mr-1" />
-                    {room.name}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    )
+    console.log('🔄 Rendering simple fallback tour (no 3D)')
+    
+    return renderSimpleFallback(className)
   }
 
   // Debug logging
@@ -2028,24 +2037,29 @@ ${selectedLang?.code === 'ar' ? `
     )
   }
 
-  // Fallback to 3D mock tour if no tourUrl is provided
+  // Simple fallback for properties without tour URLs
   return (
-    <div className={`relative bg-slate-900 rounded-lg overflow-hidden ${className}`}>
-      <Canvas camera={{ position: [5, 5, 5], fov: 60 }}>
-        <ambientLight intensity={0.5} />
-        <pointLight position={[10, 10, 10]} />
-        <Environment preset="apartment" />
-
-        <RoomHotspots onRoomChange={handleRoomChange} />
-
-        <OrbitControls
-          enablePan={true}
-          enableZoom={true}
-          enableRotate={true}
-          autoRotate={autoRotate}
-          autoRotateSpeed={0.5}
-        />
-      </Canvas>
+    <div className={`relative bg-slate-900 rounded-lg overflow-hidden ${className} flex items-center justify-center`}>
+      <div className="text-center p-8">
+        <div className="w-16 h-16 mx-auto mb-4 bg-blue-600/20 rounded-full flex items-center justify-center">
+          <svg 
+            className="w-8 h-8 text-blue-400" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01" />
+          </svg>
+        </div>
+        <h3 className="text-white font-medium mb-2">Virtual Tour Coming Soon</h3>
+        <p className="text-white/60 text-sm mb-4">
+          3D virtual tour is not available for this property yet.
+        </p>
+        <p className="text-white/40 text-xs">
+          Contact us for more information about this property.
+        </p>
+      </div>
 
       {/* Smart Voice AI Interface - Available in both fullscreen and hero section */}
       {propertyId && (
@@ -2228,41 +2242,6 @@ ${selectedLang?.code === 'ar' ? `
               </div>
             </div>
           )}
-        </div>
-      )}
-
-      {/* Room Navigation Overlay */}
-      {!hideRoomMenu && (
-        <div className="absolute bottom-4 left-4 right-4 z-10">
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-4 border border-white/20">
-            <h3 className="text-white font-medium mb-3">Explore Rooms</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {['living-room', 'kitchen', 'bedroom', 'bathroom'].map((room) => (
-                <button
-                  key={room}
-                  onClick={() => handleRoomChange(room)}
-                  className={`px-3 py-2 rounded-lg text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    currentRoom === room ? 'bg-blue-600 text-white' : 'bg-white/20 text-white hover:bg-white/30'
-                  }`}
-                  aria-label={`Navigate to ${room.replace('-', ' ')}`}
-                  aria-pressed={currentRoom === room}
-                >
-                  {room.replace('-', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tour Controls */}
-      {fullscreen && (
-        <div className="absolute top-4 left-4">
-          <div className="bg-white/10 backdrop-blur-md rounded-lg p-3 border border-white/20">
-            <p className="text-white text-sm">
-              <span className="font-medium">Current Room:</span> {currentRoom.replace("-", " ")}
-            </p>
-          </div>
         </div>
       )}
     </div>
