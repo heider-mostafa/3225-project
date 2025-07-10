@@ -14,11 +14,10 @@ const nextConfig = {
   
   // SWC minification is now enabled by default in Next.js 15
   
-  // 🚀 PERFORMANCE: Experimental optimizations
-  experimental: {
-    optimizeCss: true, // Optimize CSS delivery
-    webVitalsAttribution: ['CLS', 'LCP'], // Track performance metrics
-  },
+  // Experimental features temporarily disabled for stable deployment
+  // experimental: {
+  //   optimizeCss: true, // Can cause build issues in some environments
+  // },
   
   images: {
     // 🚀 ENABLE IMAGE OPTIMIZATION for 30-50% faster loading
