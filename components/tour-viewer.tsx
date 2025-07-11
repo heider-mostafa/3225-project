@@ -193,7 +193,7 @@ export function TourViewer({
   const [selectedLanguage, setSelectedLanguage] = useState('en')
   const [isLanguageInitialized, setIsLanguageInitialized] = useState(false)
   const [voiceLevel, setVoiceLevel] = useState(0)
-  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected')
+  const [connectionStatus, setConnectionStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting'>('disconnected')
   const [connectionError, setConnectionError] = useState<string>('')
   const [fallbackMode, setFallbackMode] = useState(false)
   const [reconnectAttempts, setReconnectAttempts] = useState(0)
@@ -504,7 +504,7 @@ export function TourViewer({
           role: 'user',
           content: [
             {
-              type: 'text',
+              type: 'input_text',
               text: `I'm now viewing the ${room.replace('-', ' ')} in this property.`
             }
           ]
@@ -519,7 +519,7 @@ export function TourViewer({
           role: 'system',
           content: [
             {
-              type: 'text',
+              type: 'input_text',
               text: `BEHAVIORAL INSIGHT: Client moved from ${previousRoom?.replace('-', ' ') || 'entrance'} to ${room.replace('-', ' ')}. 
               
 Current Room Selling Points:
@@ -628,61 +628,65 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
   }
 
   const handleVoiceToggle = () => {
-    setIsVoiceExpanded(!isVoiceExpanded)
-    if (!isVoiceExpanded) {
-      // Expanding - connect to OpenAI Realtime API
-      connectToRealtimeAPI()
-    } else {
-      // Collapsing - disconnect everything
+    console.log('🎤 Voice toggle clicked. Current state:', { isVoiceExpanded, isConnected, connectionStatus })
+    
+    if (isConnected) {
+      // If connected, disconnect
+      console.log('🔌 Disconnecting by user request')
       disconnectRealtimeAPI()
+      setIsVoiceExpanded(false)
+    } else {
+      // If not connected, connect
+      console.log('🔌 Connecting by user request')
+      connectToRealtimeAPI()
+      setIsVoiceExpanded(true)
     }
   }
 
   const attemptReconnection = () => {
-    // Prevent multiple simultaneous reconnection attempts
-    if (isConnectingRef.current) {
-      console.log('🔄 Reconnection already in progress, skipping...')
-      return
-    }
-
-    // Clear any existing reconnection timeout
-    if (reconnectTimeoutRef.current) {
-      window.clearTimeout(reconnectTimeoutRef.current)
-      reconnectTimeoutRef.current = null
-    }
-    
-    setReconnectAttempts(prev => {
-      const newAttempts = prev + 1
-      
-      if (newAttempts > 3) {
-        console.log('❌ Max reconnection attempts reached, switching to fallback mode')
-        setConnectionError('Connection issues persist - please try text chat below')
-        setFallbackMode(true)
-        return newAttempts
-      }
-      
-      console.log(`🔄 Reconnection attempt ${newAttempts}/3`)
-      
-      // Schedule reconnection after state update
-      reconnectTimeoutRef.current = window.setTimeout(() => {
-        if (!isConnectingRef.current && connectionStatus !== 'connected') {
-          connectToRealtimeAPI()
-        }
-      }, 1000)
-      
-      return newAttempts
-    })
+    // DISABLED: No automatic reconnection - user must manually connect
+    console.log('🔄 Automatic reconnection disabled - user must manually reconnect')
+    setConnectionError('Connection lost. Please click the microphone button to reconnect.')
+    setConnectionStatus('error')
+    return
   }
 
   const connectToRealtimeAPI = async () => {
+    console.log('🚀 connectToRealtimeAPI called. Current state:', { isConnectingRef: isConnectingRef.current, isConnected, connectionStatus })
+    
     // Prevent multiple simultaneous connection attempts
     if (isConnectingRef.current) {
       console.log('🔄 Connection already in progress, skipping...')
       return
     }
     
-    // Clean up any previous connection state
-    cleanupConnection()
+    // Prevent connecting if already connected
+    if (isConnected || connectionStatus === 'connected') {
+      console.log('🔄 Already connected, skipping...')
+      return
+    }
+    
+    // Clean up any previous connection state without calling full disconnect
+    if (wsRef.current) {
+      wsRef.current.close()
+      wsRef.current = null
+    }
+    if (dataChannelRef.current) {
+      dataChannelRef.current.close()
+      dataChannelRef.current = null
+    }
+    if (audioElementRef.current) {
+      audioElementRef.current.pause()
+      audioElementRef.current.srcObject = null
+      audioElementRef.current = null
+    }
+    if (mediaStreamRef.current) {
+      if ((mediaStreamRef.current as any).micCleanup) {
+        (mediaStreamRef.current as any).micCleanup()
+      }
+      mediaStreamRef.current.getTracks().forEach(track => track.stop())
+      mediaStreamRef.current = null
+    }
     
     try {
       isConnectingRef.current = true
@@ -711,12 +715,15 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
           throw new Error('No ephemeral key received from server - check OpenAI API access')
         }
         
-        // Create RTCPeerConnection for WebRTC with STUN servers
+        // Create RTCPeerConnection for WebRTC with multiple STUN servers
         const pc = new RTCPeerConnection({
           iceServers: [
             { urls: 'stun:stun.l.google.com:19302' },
-            { urls: 'stun:stun1.l.google.com:19302' }
-          ]
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' }
+          ],
+          iceCandidatePoolSize: 10
         })
         wsRef.current = pc as any // Store in ref for cleanup
         
@@ -727,18 +734,29 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
         audioEl.autoplay = true
         audioElementRef.current = audioEl
         
-        // Add WebRTC connection monitoring to catch auto-disconnects
+        // Add WebRTC connection monitoring - minimal and passive
         pc.oniceconnectionstatechange = () => {
           console.log('🧊 ICE connection state:', pc.iceConnectionState)
-          if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
-            console.error('❌ ICE connection failed/disconnected - this might cause auto-disconnect')
+          
+          if (pc.iceConnectionState === 'connected') {
+            console.log('✅ ICE connection established successfully')
+            setReconnectAttempts(0)
+          } else if (pc.iceConnectionState === 'failed') {
+            console.error('❌ ICE connection failed - will not auto-reconnect')
+          } else if (pc.iceConnectionState === 'disconnected') {
+            console.warn('⚠️ ICE connection disconnected - will not auto-reconnect')
           }
         }
 
         pc.onconnectionstatechange = () => {
           console.log('🔗 WebRTC connection state:', pc.connectionState)
-          if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
-            console.error('❌ WebRTC connection failed/disconnected - this might cause auto-disconnect')
+          
+          if (pc.connectionState === 'connected') {
+            console.log('✅ WebRTC peer connection established')
+          } else if (pc.connectionState === 'failed') {
+            console.error('❌ WebRTC connection permanently failed')
+          } else if (pc.connectionState === 'disconnected') {
+            console.warn('⚠️ WebRTC connection disconnected')
           }
         }
 
@@ -814,24 +832,32 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
           if (audioTrack) {
             // Make sure the track is enabled
             audioTrack.enabled = true
-            pc.addTrack(audioTrack, mediaStream)
-            console.log('🎤 Audio track added to peer connection:', {
-              trackId: audioTrack.id,
-              trackLabel: audioTrack.label,
-              trackEnabled: audioTrack.enabled,
-              trackReadyState: audioTrack.readyState,
-              trackSettings: audioTrack.getSettings()
-            })
             
-            // Test if the track is actually working
-            console.log('🎤 Testing audio track capabilities:', {
-              hasAudio: !!audioTrack,
-              isLive: audioTrack.readyState === 'live',
-              isEnabled: audioTrack.enabled,
-              capabilities: audioTrack.getCapabilities ? audioTrack.getCapabilities() : 'Not available'
-            })
+            // Add track to peer connection with error handling
+            try {
+              pc.addTrack(audioTrack, mediaStream)
+              console.log('🎤 Audio track added to peer connection successfully:', {
+                trackId: audioTrack.id,
+                trackLabel: audioTrack.label,
+                trackEnabled: audioTrack.enabled,
+                trackReadyState: audioTrack.readyState,
+                trackSettings: audioTrack.getSettings()
+              })
+              
+              // Verify the track is actually working
+              console.log('🎤 Audio track verification:', {
+                hasAudio: !!audioTrack,
+                isLive: audioTrack.readyState === 'live',
+                isEnabled: audioTrack.enabled,
+                capabilities: audioTrack.getCapabilities ? audioTrack.getCapabilities() : 'Not available'
+              })
+            } catch (trackError) {
+              console.error('❌ Failed to add audio track to peer connection:', trackError)
+              throw new Error('Failed to add microphone to voice connection')
+            }
           } else {
             console.error('❌ No audio track found in media stream')
+            throw new Error('No microphone audio track available')
           }
           setIsRecording(true)
           
@@ -939,7 +965,7 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
               },
               turn_detection: {
                 type: 'server_vad',
-                threshold: 0.2,  // Lower threshold for more sensitive detection
+                threshold: 0.5,  // Higher threshold for less sensitive detection
                 prefix_padding_ms: 300,
                 silence_duration_ms: 800  // Shorter silence duration
               },
@@ -964,7 +990,7 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
                   role: 'system',
                   content: [
                     {
-                      type: 'text',
+                      type: 'input_text',
                       text: `IMPORTANT: Start immediately with your greeting in ${currentLangObj?.name}. ${
                         selectedLanguage === 'ar' ? 
                         'Say: "أهلاً وسهلاً! مرحباً بيك في جولة العقار الراقي ده. إزيك؟ ممكن تقولي إيه اللي مهمك في العقار ده؟"' :
@@ -1318,7 +1344,7 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
                 role: 'system',
                 content: [
                   {
-                    type: 'text',
+                    type: 'input_text',
                     text: `🎯 SALES INTELLIGENCE ALERT:
                     
 Client Said: "${event.transcript}"
@@ -1645,7 +1671,7 @@ ${selectedLang?.code === 'ar' ? `
               role: 'assistant',
               content: [
                 {
-                  type: 'text',
+                  type: 'input_text',
                   text: langCode === 'ar' ? 
                     `أهلاً وسهلاً! أنا مساعدك العقاري الخاص. إيه رأيك في العقار الجميل ده؟ هل تبحث عن مكان مناسب للعيلة الكريمة؟` :
                     langCode === 'fr' ?
