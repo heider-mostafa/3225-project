@@ -611,6 +611,22 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
   }
 
   // OpenAI Realtime Voice Interface handlers
+  // Helper function to safely send data via data channel
+  const sendDataChannelMessage = (message: any) => {
+    if (dataChannelRef.current && dataChannelRef.current.readyState === 'open') {
+      try {
+        dataChannelRef.current.send(JSON.stringify(message))
+        return true
+      } catch (error) {
+        console.error('❌ Failed to send data channel message:', error)
+        return false
+      }
+    } else {
+      console.warn('⚠️ Data channel not open, message not sent:', message.type)
+      return false
+    }
+  }
+
   const handleVoiceToggle = () => {
     setIsVoiceExpanded(!isVoiceExpanded)
     if (!isVoiceExpanded) {
@@ -711,6 +727,21 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
         audioEl.autoplay = true
         audioElementRef.current = audioEl
         
+        // Add WebRTC connection monitoring to catch auto-disconnects
+        pc.oniceconnectionstatechange = () => {
+          console.log('🧊 ICE connection state:', pc.iceConnectionState)
+          if (pc.iceConnectionState === 'failed' || pc.iceConnectionState === 'disconnected') {
+            console.error('❌ ICE connection failed/disconnected - this might cause auto-disconnect')
+          }
+        }
+
+        pc.onconnectionstatechange = () => {
+          console.log('🔗 WebRTC connection state:', pc.connectionState)
+          if (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') {
+            console.error('❌ WebRTC connection failed/disconnected - this might cause auto-disconnect')
+          }
+        }
+
         pc.ontrack = (event) => {
           console.log('🔊 Received audio track from AI')
           audioEl.srcObject = event.streams[0]
@@ -723,17 +754,85 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
             audio: {
               channelCount: 1,
               sampleRate: 24000,
-              echoCancellation: true,
-              noiseSuppression: true,
-              autoGainControl: true
+              echoCancellation: true,   // Re-enable for cleaner audio
+              noiseSuppression: true,   // Re-enable for cleaner audio
+              autoGainControl: true     // Re-enable for consistent levels
             }
           })
           
           mediaStreamRef.current = mediaStream
-          console.log('🎤 Microphone access granted')
+          console.log('🎤 Microphone access granted:', {
+            trackCount: mediaStream.getTracks().length,
+            audioTrackSettings: mediaStream.getAudioTracks()[0]?.getSettings(),
+            audioConstraints: mediaStream.getAudioTracks()[0]?.getConstraints()
+          })
+          
+          // Test microphone audio levels
+          const audioContext = new AudioContext()
+          const analyser = audioContext.createAnalyser()
+          analyser.fftSize = 256
+          analyser.smoothingTimeConstant = 0.8
+          const source = audioContext.createMediaStreamSource(mediaStream)
+          source.connect(analyser)
+          
+          const bufferLength = analyser.frequencyBinCount
+          const dataArray = new Uint8Array(bufferLength)
+          const checkMicLevel = () => {
+            // Use getByteTimeDomainData for audio amplitude instead of frequency data
+            analyser.getByteTimeDomainData(dataArray)
+            
+            let sum = 0
+            for (let i = 0; i < bufferLength; i++) {
+              const normalized = (dataArray[i] - 128) / 128  // Convert to -1 to 1 range
+              sum += normalized * normalized  // RMS calculation
+            }
+            const rms = Math.sqrt(sum / bufferLength)
+            const amplitude = Math.round(rms * 100)  // Scale to 0-100
+            
+            console.log('🎤 Audio level check:', amplitude, '(should be >10 when speaking)')
+            if (amplitude > 10) {
+              console.log('🔥 SPEECH DETECTED! Level:', amplitude, '- Should trigger OpenAI VAD')
+            }
+          }
+          
+          // Test checkMicLevel immediately to see if it works
+          console.log('🎤 Testing checkMicLevel function immediately...')
+          checkMicLevel()
+          
+          const micLevelInterval = setInterval(checkMicLevel, 1000)
+          console.log('🎤 Audio monitoring interval started with ID:', micLevelInterval)
+          
+          // Store cleanup function
+          ;(mediaStream as any).micCleanup = () => {
+            console.log('🎤 Cleaning up audio monitoring interval:', micLevelInterval)
+            clearInterval(micLevelInterval)
+            audioContext.close()
+          }
           
           // Add local audio track to peer connection
-          pc.addTrack(mediaStream.getTracks()[0])
+          const audioTrack = mediaStream.getAudioTracks()[0]
+          if (audioTrack) {
+            // Make sure the track is enabled
+            audioTrack.enabled = true
+            pc.addTrack(audioTrack, mediaStream)
+            console.log('🎤 Audio track added to peer connection:', {
+              trackId: audioTrack.id,
+              trackLabel: audioTrack.label,
+              trackEnabled: audioTrack.enabled,
+              trackReadyState: audioTrack.readyState,
+              trackSettings: audioTrack.getSettings()
+            })
+            
+            // Test if the track is actually working
+            console.log('🎤 Testing audio track capabilities:', {
+              hasAudio: !!audioTrack,
+              isLive: audioTrack.readyState === 'live',
+              isEnabled: audioTrack.enabled,
+              capabilities: audioTrack.getCapabilities ? audioTrack.getCapabilities() : 'Not available'
+            })
+          } else {
+            console.error('❌ No audio track found in media stream')
+          }
           setIsRecording(true)
           
         } catch (micError) {
@@ -756,6 +855,19 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
         // Monitor data channel state changes
         dataChannel.addEventListener('statechange', () => {
           console.log('📡 Data channel state changed:', dataChannel.readyState)
+        })
+
+        // Add message handler to process OpenAI responses
+        dataChannel.addEventListener('message', (event) => {
+          console.log('📨 Raw data channel message received:', event.data)
+          try {
+            const data = JSON.parse(event.data)
+            console.log('📨 Parsed data channel message:', data.type)
+            handleRealtimeEvent(data)
+          } catch (error) {
+            console.error('❌ Error parsing data channel message:', error)
+            console.error('❌ Raw data was:', event.data)
+          }
         })
 
         dataChannel.addEventListener('open', async () => {
@@ -818,7 +930,7 @@ RESPONSE FRAMEWORK:
 5. Ask qualifying questions
 
 Remember: This is a high-end property in Egypt. Focus on prestige, family values, and investment potential. Communicate in ${currentLangObj?.name} with ${currentLangObj?.salesStyle} approach.`,
-              voice: selectedLanguage === 'ar' ? 'nova' : selectedLanguage === 'fr' ? 'alloy' : selectedLanguage === 'es' ? 'shimmer' : selectedLanguage === 'de' ? 'onyx' : 'alloy',
+              voice: selectedLanguage === 'ar' ? 'alloy' : selectedLanguage === 'fr' ? 'alloy' : selectedLanguage === 'es' ? 'alloy' : selectedLanguage === 'de' ? 'alloy' : 'alloy',
               input_audio_format: 'pcm16',
               output_audio_format: 'pcm16',
               input_audio_transcription: { 
@@ -827,9 +939,9 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
               },
               turn_detection: {
                 type: 'server_vad',
-                threshold: 0.4,
-                prefix_padding_ms: 400,
-                silence_duration_ms: 1000
+                threshold: 0.2,  // Lower threshold for more sensitive detection
+                prefix_padding_ms: 300,
+                silence_duration_ms: 800  // Shorter silence duration
               },
               temperature: 0.7,
               max_response_output_tokens: 2048
@@ -837,46 +949,50 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
           }
           
           console.log('📤 Sending session configuration via data channel...')
-          dataChannel.send(JSON.stringify(sessionConfig))
+          sendDataChannelMessage(sessionConfig)
           
           // Send initial greeting in the detected language after a brief delay
           setTimeout(() => {
             if (dataChannel.readyState === 'open') {
-              const greetingMessage = {
+              console.log(`🎤 Triggering initial greeting in ${currentLangObj?.name}`)
+              
+              // Create a conversation item that tells the AI to greet the user
+              const greetingInstruction = {
                 type: 'conversation.item.create',
                 item: {
                   type: 'message',
-                  role: 'assistant',
+                  role: 'system',
                   content: [
                     {
                       type: 'text',
-                      text: selectedLanguage === 'ar' ? 
-                        `أهلاً وسهلاً! مرحباً بيك في جولة العقار الراقي ده. إزيك؟ هل ده أول مرة تشوف العقار؟` :
+                      text: `IMPORTANT: Start immediately with your greeting in ${currentLangObj?.name}. ${
+                        selectedLanguage === 'ar' ? 
+                        'Say: "أهلاً وسهلاً! مرحباً بيك في جولة العقار الراقي ده. إزيك؟ ممكن تقولي إيه اللي مهمك في العقار ده؟"' :
                         selectedLanguage === 'fr' ?
-                        `Bienvenue dans cette visite virtuelle d'une magnifique propriété! Comment allez-vous? Est-ce la première fois que vous visitez cette propriété?` :
+                        'Say: "Bienvenue dans cette visite virtuelle! Comment puis-je vous aider avec cette propriété?"' :
                         selectedLanguage === 'es' ?
-                        `¡Bienvenido a este recorrido virtual de una hermosa propiedad! ¿Cómo está? ¿Es la primera vez que visita esta propiedad?` :
+                        'Say: "¡Bienvenido a este recorrido virtual! ¿Cómo puedo ayudarle con esta propiedad?"' :
                         selectedLanguage === 'de' ?
-                        `Willkommen zu dieser virtuellen Tour durch eine wunderschöne Immobilie! Wie geht es Ihnen? Ist dies Ihr erster Besuch dieser Immobilie?` :
-                        `Welcome to this virtual tour of a beautiful property! How are you today? Is this your first time viewing this property?`
+                        'Say: "Willkommen zu dieser virtuellen Tour! Wie kann ich Ihnen bei dieser Immobilie helfen?"' :
+                        'Say: "Welcome to this virtual property tour! How can I help you with this property?"'
+                      } Then wait for their response.`
                     }
                   ]
                 }
               }
               
-              console.log(`🎤 Sending initial greeting in ${currentLangObj?.name}`)
-              dataChannel.send(JSON.stringify(greetingMessage))
+              sendDataChannelMessage(greetingInstruction)
               
-              // Trigger response generation to make the AI speak the greeting
+              // Trigger response generation to make the AI speak the greeting immediately
               const responseCommand = {
                 type: 'response.create',
                 response: {
-                  modalities: ['audio']
+                  modalities: ['audio', 'text']
                 }
               }
-              dataChannel.send(JSON.stringify(responseCommand))
+              sendDataChannelMessage(responseCommand)
             }
-          }, 1000) // Wait 1 second for session to be fully established
+          }, 1500) // Wait 1.5 seconds for session to be fully established
         })
         
         // Start the WebRTC session using SDP (Session Description Protocol)
@@ -994,6 +1110,7 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
     }
 
     console.log('🔌 Disconnecting from Realtime API...')
+    console.trace('🕵️ Disconnect called from:') // This will show what's calling disconnect
     
     // First set disconnected state to prevent race conditions
     isConnectingRef.current = false // Reset connection flag immediately
@@ -1008,6 +1125,11 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
     
     // Stop microphone
     if (mediaStreamRef.current) {
+      // Call cleanup function for audio monitoring if it exists
+      if ((mediaStreamRef.current as any).micCleanup) {
+        (mediaStreamRef.current as any).micCleanup()
+        console.log('🎤 Audio monitoring cleanup called')
+      }
       mediaStreamRef.current.getTracks().forEach(track => {
         track.stop()
         console.log('🎤 Stopped microphone track')
@@ -1057,19 +1179,23 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
         console.log('✅ Session updated')
         break
         
+      case 'input_audio_buffer.append':
+        console.log('🎤➡️ Audio data sent to OpenAI buffer')
+        break
+        
       case 'input_audio_buffer.speech_started':
-        console.log('🗣️ User started speaking')
+        console.log('🗣️ User started speaking - OpenAI VAD detected speech!')
         setIsRecording(true)
         setIsResponding(false)
         break
         
       case 'input_audio_buffer.speech_stopped':
-        console.log('🤐 User stopped speaking')
+        console.log('🤐 User stopped speaking - OpenAI VAD detected silence')
         // Don't immediately set recording to false - let server VAD handle it
         break
         
       case 'input_audio_buffer.committed':
-        console.log('💾 Audio buffer committed')
+        console.log('💾 Audio buffer committed for processing')
         setIsRecording(false)
         break
         
@@ -1482,7 +1608,7 @@ Use the sales context and objection handlers to craft a compelling response that
       const sessionUpdate = {
         type: 'session.update',
         session: {
-          voice: langCode === 'ar' ? 'nova' : langCode === 'fr' ? 'alloy' : langCode === 'es' ? 'shimmer' : langCode === 'de' ? 'onyx' : 'alloy',
+          voice: langCode === 'ar' ? 'sage' : langCode === 'fr' ? 'alloy' : langCode === 'es' ? 'shimmer' : langCode === 'de' ? 'echo' : 'alloy',
           input_audio_transcription: { 
             model: 'whisper-1',
             language: langCode === 'ar' ? 'ar' : langCode === 'fr' ? 'fr' : langCode === 'es' ? 'es' : langCode === 'de' ? 'de' : 'en'
@@ -1540,10 +1666,10 @@ ${selectedLang?.code === 'ar' ? `
           const responseCommand = {
             type: 'response.create',
             response: {
-              modalities: ['audio']
+              modalities: ['audio', 'text']
             }
           }
-          dataChannelRef.current.send(JSON.stringify(responseCommand))
+          sendDataChannelMessage(responseCommand)
         }
       }, 500)
       
