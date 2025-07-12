@@ -1986,24 +1986,74 @@ ${selectedLang?.code === 'ar' ? `
         )}
 
         {/* Smart Voice AI Interface - Available in both fullscreen and hero section */}
-        {propertyId && (
-          <div className={`absolute z-10 pointer-events-auto ${fullscreen ? 'top-4 right-4' : 'top-3 right-3'}`}>
-            {!isVoiceExpanded ? (
-              // Collapsed state - Smart button
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleVoiceToggle();
-                }}
-                className={`${fullscreen 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2' 
-                  : 'bg-blue-600/90 backdrop-blur-sm border-blue-500/30 text-white hover:bg-blue-700/90 hover:scale-105 transition-all shadow-lg text-xs px-3 py-2 h-auto font-medium'
-                }`}
-                size={fullscreen ? "lg" : "sm"}
-              >
-                <Mic className={`${fullscreen ? 'h-5 w-5' : 'h-3 w-3'} mr-1`} />
-                {fullscreen ? 'Ask AI Agent' : 'AI Voice'}
-              </Button>
+        {propertyId && (() => {
+          // Mobile detection
+          const isMobile = typeof window !== 'undefined' && 
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          
+          return (
+            <div className={`absolute z-10 pointer-events-auto ${fullscreen ? 'top-4 right-4' : 'top-3 right-3'}`}>
+              {isMobile ? (
+                // Mobile UI - Transparent button with sound waves
+                <div className="relative">
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleVoiceToggle();
+                    }}
+                    className={`relative bg-transparent border-2 rounded-full w-14 h-14 p-0 transition-all duration-300 ${
+                      isConnected 
+                        ? 'border-red-400 hover:border-red-300' 
+                        : 'border-blue-400 hover:border-blue-300'
+                    }`}
+                    size="sm"
+                  >
+                    {/* Background sound waves when active */}
+                    {(isRecording || isResponding) && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <VoiceWave isActive={isRecording || isResponding} level={voiceLevel} />
+                      </div>
+                    )}
+                    
+                    {/* Main icon */}
+                    <div className="relative z-10">
+                      {isConnected ? (
+                        isRecording ? (
+                          <Mic className="h-6 w-6 text-green-400 animate-pulse" />
+                        ) : isResponding ? (
+                          <Volume2 className="h-6 w-6 text-blue-400 animate-pulse" />
+                        ) : (
+                          <X className="h-6 w-6 text-red-400" />
+                        )
+                      ) : (
+                        <Mic className="h-6 w-6 text-blue-400" />
+                      )}
+                    </div>
+                  </Button>
+                  
+                  {/* Small status indicator */}
+                  {connectionStatus === 'connecting' && (
+                    <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2">
+                      <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse"></div>
+                    </div>
+                  )}
+                </div>
+              ) : !isVoiceExpanded ? (
+                // Desktop collapsed state - Smart button
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVoiceToggle();
+                  }}
+                  className={`${fullscreen 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition-all duration-200 flex items-center gap-2' 
+                    : 'bg-blue-600/90 backdrop-blur-sm border-blue-500/30 text-white hover:bg-blue-700/90 hover:scale-105 transition-all shadow-lg text-xs px-3 py-2 h-auto font-medium'
+                  }`}
+                  size={fullscreen ? "lg" : "sm"}
+                >
+                  <Mic className={`${fullscreen ? 'h-5 w-5' : 'h-3 w-3'} mr-1`} />
+                  {fullscreen ? 'Ask AI Agent' : 'AI Voice'}
+                </Button>
             ) : (
               // Expanded state - Voice interface panel
               <div className={`bg-black/80 backdrop-blur-md rounded-2xl border border-white/20 shadow-2xl transition-all duration-300 ${
@@ -2165,9 +2215,11 @@ ${selectedLang?.code === 'ar' ? `
                   )}
                 </div>
               </div>
-            )}
+            )
+          }
           </div>
-        )}
+        );
+        })()}
 
         {/* HeyGen Video Agent Modal */}
         {showHeyGenAgent && propertyId && (
