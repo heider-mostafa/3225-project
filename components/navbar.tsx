@@ -82,16 +82,6 @@ export default function Navbar() {
               {isMounted ? t('nav.virtualTours') : 'Virtual Tours'}
             </Link>
             <Link 
-              href="/auctions" 
-              className={`transition-colors ${
-                pathname.startsWith('/auctions') 
-                  ? 'text-blue-600 font-medium' 
-                  : 'text-slate-600 hover:text-slate-800'
-              }`}
-            >
-              {isMounted ? t('nav.auctions') : 'Auctions'}
-            </Link>
-            <Link 
               href="/about" 
               className={`transition-colors ${
                 pathname === '/about' 
@@ -220,24 +210,6 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.35 }}
                 >
                   <Link 
-                    href="/auctions" 
-                    className={`text-lg transition-colors ${
-                      pathname.startsWith('/auctions') 
-                        ? 'text-blue-600 font-medium' 
-                        : 'text-slate-700 hover:text-blue-600'
-                    }`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {isMounted ? t('nav.auctions') : 'Auctions'}
-                  </Link>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.4 }}
-                >
-                  <Link 
                     href="/about" 
                     className={`text-lg transition-colors ${
                       pathname === '/about' 
@@ -255,7 +227,7 @@ export default function Navbar() {
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, delay: 0.45 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
                   >
                     <Link 
                       href="/admin" 
@@ -275,7 +247,7 @@ export default function Navbar() {
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 }}
+                  transition={{ duration: 0.3, delay: 0.45 }}
                 >
                   <Link 
                     href="/contact" 
@@ -295,7 +267,7 @@ export default function Navbar() {
                   className="py-2"
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.55 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
                 >
                   <LanguageSwitcher />
                 </motion.div>
@@ -305,7 +277,7 @@ export default function Navbar() {
                   className="border-t border-slate-200 pt-4 space-y-3"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3, delay: 0.6 }}
+                  transition={{ duration: 0.3, delay: 0.55 }}
                 >
                   {user ? (
                     <>

@@ -118,16 +118,6 @@ export default function AboutPage() {
                 <ArrowRight className="h-5 w-5 ml-2" />
               </Button>
             </Link>
-            <Link href="/auctions">
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105"
-              >
-                {t('about.viewAuctions', 'View Live Auctions')}
-                <Eye className="h-5 w-5 ml-2" />
-              </Button>
-            </Link>
           </motion.div>
 
           {/* Enhanced Stats Section */}
@@ -699,16 +689,6 @@ export default function AboutPage() {
                 >
                   {t('about.exploreProperties', 'Explore Properties')}
                   <ArrowRight className="h-5 w-5 ml-2" />
-                </Button>
-              </Link>
-              <Link href="/auctions">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white/30 text-white hover:bg-white/10 backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 px-8 py-4 text-lg font-semibold"
-                >
-                  {t('about.viewAuctions', 'View Live Auctions')}
-                  <Eye className="h-5 w-5 ml-2" />
                 </Button>
               </Link>
             </div>
