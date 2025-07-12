@@ -322,9 +322,25 @@ export function TourViewer({
   useEffect(() => {
     if (!isLanguageInitialized) {
       try {
-        // Get current language from translation service
-        const currentLang = translationService.getCurrentLanguage();
-        console.log('🌍 Tour viewer: Detected language from translation service:', currentLang);
+        // Detect mobile devices
+        const isMobile = typeof window !== 'undefined' && 
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        
+        let currentLang: string;
+        
+        if (isMobile) {
+          // Force Arabic for mobile devices
+          currentLang = 'ar';
+          console.log('📱 Mobile device detected - forcing Arabic language');
+          // Save Arabic preference for mobile
+          translationService.saveCurrentLanguage('ar');
+        } else {
+          // Get current language from translation service for desktop
+          currentLang = translationService.getCurrentLanguage();
+          console.log('💻 Desktop detected - using saved language:', currentLang);
+        }
+        
+        console.log('🌍 Tour viewer: Final language selection:', currentLang);
         
         // Find the language in our supported languages array
         const detectedLang = languages.find(lang => lang.code === currentLang);
