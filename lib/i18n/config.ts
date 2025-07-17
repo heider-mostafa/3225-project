@@ -1141,6 +1141,44 @@ const resources = {
           entertainment: 'Entertainment',
           other: 'Other'
         }
+      },
+
+      // Coming Soon Page
+      comingSoon: {
+        launchDate: 'Coming September 1st',
+        heroTitle: 'The Future of',
+        heroTitleHighlight: 'Real Estate',
+        heroTitleEnd: 'is Here',
+        heroDescription: 'Experience properties like never before with AI-powered virtual tours, instant expert guidance, and immersive 3D exploration',
+        feature1: '3D Virtual Tours',
+        feature2: 'AI Voice Agent',
+        feature3: 'Immersive Experience',
+        emailPlaceholder: 'Enter your email address',
+        notifyMe: 'Notify Me',
+        successTitle: "You're on the list!",
+        successMessage: "We'll notify you on September 1st",
+        sneakPeekTitle: 'Get a Sneak Peek',
+        sneakPeekDescription: 'Experience our revolutionary virtual tour technology with these preview samples',
+        clickToLoad: 'Click to Load Virtual Tour',
+        clickToExplore: 'Click to Explore',
+        liveTour: 'Live Tour',
+        launchDateShort: 'Sept 1st'
+      },
+
+      // Footer
+      footer: {
+        description: 'Revolutionizing real estate with immersive virtual tours and AI assistance.',
+        properties: 'Properties',
+        apartments: 'Apartments',
+        villas: 'Villas',
+        penthouses: 'Penthouses',
+        services: 'Services',
+        virtualTours: 'Virtual Tours',
+        aiAssistance: 'AI Assistance',
+        propertyManagement: 'Property Management',
+        contact: 'Contact',
+        location: 'Cairo, Egypt',
+        rights: 'All rights reserved.'
       }
     }
   },
@@ -2294,6 +2332,44 @@ if (resources.ar && resources.ar.translation) {
     aiRecommendationsDescription: 'اختر فلتر ونوع العقار للحصول على',
     smartRecommendations: '3 توصيات ذكية',
     fromOurAI: 'من الذكاء الاصطناعي لدينا!'
+  };
+
+  // Coming Soon Page Arabic
+  (resources.ar.translation as any).comingSoon = {
+    launchDate: 'قادم في 1 سبتمبر',
+    heroTitle: 'مستقبل',
+    heroTitleHighlight: 'العقارات',
+    heroTitleEnd: 'هنا',
+    heroDescription: 'اختبر العقارات كما لم تختبرها من قبل مع الجولات الافتراضية المدعومة بالذكاء الاصطناعي والإرشاد الفوري من الخبراء والاستكشاف الغامر ثلاثي الأبعاد',
+    feature1: 'جولات افتراضية ثلاثية الأبعاد',
+    feature2: 'مساعد صوتي ذكي',
+    feature3: 'تجربة غامرة',
+    emailPlaceholder: 'أدخل عنوان بريدك الإلكتروني',
+    notifyMe: 'أشعرني',
+    successTitle: 'أنت في القائمة!',
+    successMessage: 'سنخبرك في 1 سبتمبر',
+    sneakPeekTitle: 'احصل على نظرة خاطفة',
+    sneakPeekDescription: 'اختبر تقنية الجولة الافتراضية الثورية مع هذه العينات المعاينة',
+    clickToLoad: 'انقر لتحميل الجولة الافتراضية',
+    clickToExplore: 'انقر للاستكشاف',
+    liveTour: 'جولة مباشرة',
+    launchDateShort: '1 سبتمبر'
+  };
+
+  // Footer Arabic
+  (resources.ar.translation as any).footer = {
+    description: 'نحن نثور في مجال العقارات بالجولات الافتراضية الغامرة والمساعدة الذكية.',
+    properties: 'العقارات',
+    apartments: 'الشقق',
+    villas: 'الفيلات',
+    penthouses: 'البنتهاوسات',
+    services: 'الخدمات',
+    virtualTours: 'الجولات الافتراضية',
+    aiAssistance: 'المساعدة الذكية',
+    propertyManagement: 'إدارة العقارات',
+    contact: 'تواصل معنا',
+    location: 'القاهرة، مصر',
+    rights: 'جميع الحقوق محفوظة.'
   };
 
   // Initialize i18n after all translations are added

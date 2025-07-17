@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge"
 import { Video, MessageCircle, Play, Mic, MicOff, Volume2, Globe, X, ChevronDown, Phone } from "lucide-react"
 import { UnifiedPropertyAgent } from "@/lib/heygen/UnifiedPropertyAgent"
 import { translationService } from '@/lib/translation-service'
+import { useAuth } from '@/components/providers'
 import type * as THREE from "three"
 import React from "react"
 
@@ -181,6 +182,7 @@ export function TourViewer({
   tourUrl,
   hideRoomMenu = false,
 }: TourViewerProps) {
+  const { user } = useAuth()
   const [currentRoom, setCurrentRoom] = useState("living-room")
   const [isLoading, setIsLoading] = useState(true)
   const [showHeyGenAgent, setShowHeyGenAgent] = useState(false)
@@ -669,6 +671,13 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
 
   const connectToRealtimeAPI = async () => {
     console.log('🚀 connectToRealtimeAPI called. Current state:', { isConnectingRef: isConnectingRef.current, isConnected, connectionStatus })
+    
+    // Check if user is authenticated before connecting
+    if (!user) {
+      setConnectionError('Please log in or sign up to use the AI assistant feature.')
+      setConnectionStatus('error')
+      return
+    }
     
     // Prevent multiple simultaneous connection attempts
     if (isConnectingRef.current) {

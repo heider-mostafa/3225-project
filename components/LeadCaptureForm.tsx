@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -102,6 +102,7 @@ const timelineOptions = [
 interface LeadCaptureFormProps {
   trigger?: React.ReactNode
   isOpen?: boolean
+  onClose?: () => void
   onOpenChange?: (open: boolean) => void
   className?: string
   utm_source?: string
@@ -112,6 +113,7 @@ interface LeadCaptureFormProps {
 export function LeadCaptureForm({ 
   trigger, 
   isOpen, 
+  onClose,
   onOpenChange,
   className = "",
   utm_source,
@@ -142,6 +144,7 @@ export function LeadCaptureForm({
     setOpen(newOpen)
     onOpenChange?.(newOpen)
     if (!newOpen) {
+      onClose?.()
       // Reset form when closing
       setTimeout(() => {
         setStep(1)
@@ -151,6 +154,14 @@ export function LeadCaptureForm({
       }, 300)
     }
   }
+
+  // Sync with external isOpen prop
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      console.log("LeadCaptureForm useEffect: isOpen changed to", isOpen)
+      setOpen(isOpen)
+    }
+  }, [isOpen])
 
   const onSubmit = async (data: LeadCaptureFormData) => {
     setIsSubmitting(true)
