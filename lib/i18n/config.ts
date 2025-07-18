@@ -1162,7 +1162,8 @@ const resources = {
         clickToLoad: 'Click to Load Virtual Tour',
         clickToExplore: 'Click to Explore',
         liveTour: 'Live Tour',
-        launchDateShort: 'Sept 1st'
+        launchDateShort: 'Sept 1st',
+        viewInFullscreen: 'View in Fullscreen'
       },
 
       // Footer
@@ -2353,7 +2354,8 @@ if (resources.ar && resources.ar.translation) {
     clickToLoad: 'انقر لتحميل الجولة الافتراضية',
     clickToExplore: 'انقر للاستكشاف',
     liveTour: 'جولة مباشرة',
-    launchDateShort: '1 سبتمبر'
+    launchDateShort: '1 سبتمبر',
+    viewInFullscreen: 'عرض في ملء الشاشة'
   };
 
   // Footer Arabic

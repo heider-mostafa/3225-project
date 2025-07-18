@@ -133,23 +133,29 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors z-50 relative"
-            aria-label="Toggle mobile menu"
-          >
-            <motion.div
-              animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
-              transition={{ duration: 0.2 }}
+          {/* Mobile Navigation - Language Switcher + Menu Button */}
+          <div className="md:hidden flex items-center space-x-2">
+            {/* Language Switcher for Mobile */}
+            <LanguageSwitcher />
+            
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="p-2 rounded-lg hover:bg-slate-100 transition-colors z-50 relative"
+              aria-label="Toggle mobile menu"
             >
-              {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-slate-700" />
-              ) : (
-                <Menu className="w-6 h-6 text-slate-700" />
-              )}
-            </motion.div>
-          </button>
+              <motion.div
+                animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-6 h-6 text-slate-700" />
+                ) : (
+                  <Menu className="w-6 h-6 text-slate-700" />
+                )}
+              </motion.div>
+            </button>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -260,16 +266,6 @@ export default function Navbar() {
                   >
                     {isMounted ? t('nav.contact') : 'Contact'}
                   </Link>
-                </motion.div>
-
-                {/* Language Switcher */}
-                <motion.div 
-                  className="py-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.5 }}
-                >
-                  <LanguageSwitcher />
                 </motion.div>
 
                 {/* Authentication Links */}

@@ -18,7 +18,9 @@ import {
   TrendingUp,
   Users,
   Star,
-  Phone
+  Phone,
+  Maximize2,
+  X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -37,6 +39,7 @@ export default function ComingSoonPage() {
   const [loadedTours, setLoadedTours] = useState<string[]>([])
   const [activeTours, setActiveTours] = useState<string[]>([])
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [fullscreenTour, setFullscreenTour] = useState<string | null>(null)
 
   useEffect(() => {
     setMounted(true)
@@ -314,66 +317,73 @@ export default function ComingSoonPage() {
                 viewport={{ once: true }}
                 className="group w-full"
               >
-                <div 
-                  className="relative h-64 md:h-96 w-full overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer"
-                  onClick={() => handleTourClick(tour.id)}
-                  onMouseDown={() => handleTourMouseDown(tour.id)}
-                  onMouseUp={() => handleTourMouseUp(tour.id)}
-                  onMouseLeave={() => handleTourMouseUp(tour.id)}
-                >
-                  {/* Embedded Virtual Tour - Only load when clicked */}
-                  {loadedTours.includes(tour.id) ? (
-                    <iframe
-                      src={tour.virtual_tour_url}
-                      className="w-full h-full border-0"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                      title={`Virtual Tour ${index + 1}`}
-                    />
-                  ) : (
-                    <>
-                      {/* Preview overlay before loading */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-purple-100/50 backdrop-blur-sm" />
-                      <div className="absolute inset-0 flex items-center justify-center px-4">
-                        <div className="text-center text-slate-700">
-                          <Eye className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-2 md:mb-4 opacity-60" />
-                          <p className="text-base md:text-lg font-semibold mb-1 md:mb-2">{mounted ? t('comingSoon.clickToLoad', 'Click to Load Virtual Tour') : 'Click to Load Virtual Tour'}</p>
-                          <p className="text-xs md:text-sm opacity-70 px-2">{tour.title}</p>
+                <div className="space-y-2">
+                  <div 
+                    className="relative h-64 md:h-96 w-full overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                    onClick={() => handleTourClick(tour.id)}
+                  >
+                    {/* Embedded Virtual Tour - Only load when clicked */}
+                    {loadedTours.includes(tour.id) ? (
+                      <>
+                        <TourViewer 
+                          tourId={tour.id}
+                          propertyId={tour.id}
+                          tourUrl={tour.virtual_tour_url}
+                          className="w-full h-full rounded-lg"
+                          hideRoomMenu={true}
+                        />
+
+                        {/* Transparent Hover Overlay - Same as property details */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-lg flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full">
+                            <div className="flex items-center space-x-2 text-slate-800">
+                              <Maximize2 className="h-4 w-4" />
+                              <span className="text-sm font-medium">{mounted ? t('comingSoon.clickToExplore', 'Click to Explore') : 'Click to Explore'}</span>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </>
-                  )}
-                  
-                  {/* Interactive Overlay - Only show on loaded tours when not being clicked */}
-                  {loadedTours.includes(tour.id) && !activeTours.includes(tour.id) && (
-                    <div 
-                      className="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10 pointer-events-auto"
-                      onMouseDown={() => handleTourMouseDown(tour.id)}
-                      onMouseUp={() => handleTourMouseUp(tour.id)}
-                      onMouseLeave={() => handleTourMouseUp(tour.id)}
-                    >
-                      <div className="text-center text-white pointer-events-none">
-                        <Eye className="w-8 md:w-12 h-8 md:h-12 mx-auto mb-1 md:mb-2 opacity-80" />
-                        <p className="text-xs md:text-sm font-medium">{mounted ? t('comingSoon.clickToExplore', 'Click to Explore') : 'Click to Explore'}</p>
-                      </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Preview overlay before loading */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-purple-100/50 backdrop-blur-sm rounded-lg" />
+                        <div className="absolute inset-0 flex items-center justify-center px-4">
+                          <div className="text-center text-slate-700">
+                            <Eye className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-2 md:mb-4 opacity-60" />
+                            <p className="text-base md:text-lg font-semibold mb-1 md:mb-2">{mounted ? t('comingSoon.clickToLoad', 'Click to Load Virtual Tour') : 'Click to Load Virtual Tour'}</p>
+                            <p className="text-xs md:text-sm opacity-70 px-2">{tour.title}</p>
+                          </div>
+                        </div>
+                      </>
+                    )}
+
+                    {/* Tour Badge */}
+                    <div className="absolute top-2 md:top-4 right-2 md:right-4 z-10">
+                      <Badge className="bg-blue-600/90 text-white backdrop-blur-sm text-xs md:text-sm">
+                        <Globe className="w-2 md:w-3 h-2 md:h-3 mr-1" />
+                        {mounted ? t('comingSoon.liveTour', 'Live Tour') : 'Live Tour'}
+                      </Badge>
                     </div>
+
+                    {/* Coming Soon Badge */}
+                    <div className="absolute top-2 md:top-4 left-2 md:left-4 z-10">
+                      <Badge className="bg-purple-600/90 text-white animate-pulse backdrop-blur-sm text-xs md:text-sm">
+                        <Clock className="w-2 md:w-3 h-2 md:h-3 mr-1" />
+                        {mounted ? t('comingSoon.launchDateShort', 'Sept 1st') : 'Sept 1st'}
+                      </Badge>
+                    </div>
+                  </div>
+
+                  {/* Fullscreen Button - Same as property details */}
+                  {loadedTours.includes(tour.id) && (
+                    <button
+                      onClick={() => setFullscreenTour(tour.id)}
+                      className="w-full mt-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-700 rounded-lg transition-all duration-200 border border-gray-200 hover:border-gray-300 text-sm font-medium flex items-center justify-center space-x-2 group"
+                    >
+                      <Maximize2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      <span>{mounted ? t('comingSoon.viewInFullscreen', 'View in Fullscreen') : 'View in Fullscreen'}</span>
+                    </button>
                   )}
-
-                  {/* Tour Badge */}
-                  <div className="absolute top-2 md:top-4 right-2 md:right-4 z-10">
-                    <Badge className="bg-blue-600/90 text-white backdrop-blur-sm text-xs md:text-sm">
-                      <Globe className="w-2 md:w-3 h-2 md:h-3 mr-1" />
-                      {mounted ? t('comingSoon.liveTour', 'Live Tour') : 'Live Tour'}
-                    </Badge>
-                  </div>
-
-                  {/* Coming Soon Badge */}
-                  <div className="absolute top-2 md:top-4 left-2 md:left-4 z-10">
-                    <Badge className="bg-purple-600/90 text-white animate-pulse backdrop-blur-sm text-xs md:text-sm">
-                      <Clock className="w-2 md:w-3 h-2 md:h-3 mr-1" />
-                      {mounted ? t('comingSoon.launchDateShort', 'Sept 1st') : 'Sept 1st'}
-                    </Badge>
-                  </div>
                 </div>
               </motion.div>
             ))}
@@ -685,6 +695,29 @@ export default function ComingSoonPage() {
           </div>
         </div>
       </footer>
+
+      {/* Fullscreen Tour Modal - Same as property details */}
+      {fullscreenTour && (
+        <div className="fixed inset-0 bg-black z-50">
+          <div className="absolute top-4 right-4 z-10 flex gap-4">
+            <Button
+              onClick={() => setFullscreenTour(null)}
+              variant="outline"
+              size="icon"
+              className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+          <TourViewer 
+            tourId={fullscreenTour}
+            propertyId={fullscreenTour}
+            tourUrl={sampleTours.find(tour => tour.id === fullscreenTour)?.virtual_tour_url}
+            className="w-full h-full"
+            fullscreen={true}
+          />
+        </div>
+      )}
 
     </div>
   )
