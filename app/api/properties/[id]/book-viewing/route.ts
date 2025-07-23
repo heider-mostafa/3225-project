@@ -108,18 +108,34 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
 
     // Check broker availability
-    const { data: availability, error: availabilityError } = await supabase
+    console.log('🔍 Checking availability for:', { broker_id, viewing_date, viewing_time });
+    
+    // First, let's see what availability slots exist for this broker on this date
+    const { data: allSlots, error: allSlotsError } = await supabase
+      .from('broker_availability')
+      .select('*')
+      .eq('broker_id', broker_id)
+      .eq('date', viewing_date);
+    
+    console.log('📅 All availability slots for broker on', viewing_date, ':', allSlots);
+    
+    // Get all matching availability slots first
+    const { data: availabilitySlots, error: availabilityError } = await supabase
       .from('broker_availability')
       .select('id, max_bookings, current_bookings, start_time, end_time, slot_duration_minutes')
       .eq('broker_id', broker_id)
       .eq('date', viewing_date)
       .eq('is_available', true)
       .lte('start_time', viewing_time)
-      .gte('end_time', viewing_time)
-      .filter('current_bookings', 'lt', 'max_bookings')
-      .single();
+      .gte('end_time', viewing_time);
+
+    // For now, use the first matching slot (we'll check capacity below with actual bookings)
+    const availability = availabilitySlots?.[0];
+
+    console.log('🎯 Availability query result:', { availability, availabilityError });
 
     if (availabilityError || !availability) {
+      console.log('❌ No matching availability slot found');
       return NextResponse.json(
         { success: false, error: 'Time slot not available' },
         { status: 400 }
@@ -153,12 +169,18 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       .eq('viewing_time', viewing_time)
       .eq('status', 'scheduled');
 
+    console.log('📊 Existing bookings for', viewing_time, ':', existingBookings);
+    console.log('🎯 Max bookings allowed:', availability.max_bookings);
+
     if (existingBookings && existingBookings.length >= availability.max_bookings) {
+      console.log('❌ Time slot fully booked:', existingBookings.length, 'bookings, max:', availability.max_bookings);
       return NextResponse.json(
         { success: false, error: 'Time slot is fully booked' },
         { status: 400 }
       );
     }
+    
+    console.log('✅ Time slot available for booking');
 
     // Calculate end time
     const [hours, minutes] = viewing_time.split(':').map(Number);
@@ -194,6 +216,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       }
     };
 
+    console.log('💾 About to insert into property_viewings table');
+    console.log('📝 Insert data:', JSON.stringify(viewingData, null, 2));
+    
     const { data: viewing, error: viewingError } = await supabase
       .from('property_viewings')
       .insert(viewingData)
@@ -215,12 +240,31 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       .single();
 
     if (viewingError) {
-      console.error('Error creating viewing:', viewingError);
+      console.error('❌ DETAILED ERROR:', {
+        code: viewingError.code,
+        message: viewingError.message,
+        details: viewingError.details,
+        hint: viewingError.hint
+      });
+      console.error('🔍 Failed data:', JSON.stringify(viewingData, null, 2));
+      
+      // Check if this is the constraint violation we're seeing
+      if (viewingError.message?.includes('broker_availability_check1')) {
+        console.error('🚨 CONSTRAINT VIOLATION: This suggests a database trigger is trying to update broker_availability');
+        console.error('🔍 Current availability slot:', JSON.stringify(availability, null, 2));
+      }
+      
       return NextResponse.json(
         { success: false, error: 'Failed to book viewing' },
         { status: 500 }
       );
     }
+    
+    console.log('✅ Property viewing inserted successfully!');
+
+    // Note: We don't update current_bookings counter since we're tracking individual time slots
+    // The actual booking count is determined by querying property_viewings for specific times
+    console.log('✅ Booking created successfully, skipping counter update');
 
     // Send notifications using Mailgun instead of N8N webhook
     try {

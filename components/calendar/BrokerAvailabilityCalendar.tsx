@@ -106,8 +106,11 @@ export default function BrokerAvailabilityCalendar({
       setLoading(true);
       setError(null);
       
+      console.log('🏢 Loading brokers for property:', propertyId);
       const response = await fetch(`/api/properties/${propertyId}/brokers`);
       const data: PropertyBrokersResponse = await response.json();
+      
+      console.log('🎯 Brokers response:', data);
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to load brokers');
@@ -148,8 +151,11 @@ export default function BrokerAvailabilityCalendar({
         url.searchParams.set('broker_id', activeBroker.id);
       }
       
+      console.log('📅 Loading slots for date:', date, 'URL:', url.toString());
       const response = await fetch(url.toString());
       const data: AvailableSlotsResponse = await response.json();
+      
+      console.log('🎯 Slots response:', data);
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to load available slots');

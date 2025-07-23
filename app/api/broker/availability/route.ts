@@ -3,6 +3,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
+import { isServerUserAdmin } from '@/lib/auth/admin'
 // GET /api/broker/availability - Get broker's availability
 export async function GET(request: Request) {
   try {
@@ -11,35 +12,46 @@ export async function GET(request: Request) {
     const date = searchParams.get('date')
     const startDate = searchParams.get('start_date')
     const endDate = searchParams.get('end_date')
+    const broker_id = searchParams.get('broker_id')
     
     // Create Supabase client with anon key for user operations
     const supabase = await createServerSupabaseClient()
 
     // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Get broker ID for current user
-    const { data: broker, error: brokerError } = await supabase
-      .from('brokers')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .eq('is_active', true)
-      .single()
+    // Get broker ID - either from parameter or current user
+    let brokerId: string
+    
+    if (broker_id) {
+      // If broker_id is provided, use it directly (for admin/public access)
+      brokerId = broker_id
+    } else {
+      // Otherwise, get broker ID for current user
+      const { data: broker, error: brokerError } = await supabase
+        .from('brokers')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single()
 
-    if (brokerError || !broker) {
-      return NextResponse.json({ 
-        error: 'Broker profile not found. Please contact admin.' 
-      }, { status: 404 })
+      if (brokerError || !broker) {
+        return NextResponse.json({ 
+          error: 'Broker profile not found. Please contact admin.' 
+        }, { status: 404 })
+      }
+      
+      brokerId = broker.id
     }
 
     // Build query based on parameters
     let query = supabase
       .from('broker_availability')
       .select('*')
-      .eq('broker_id', broker.id)
+      .eq('broker_id', brokerId)
       .order('date', { ascending: true })
       .order('start_time', { ascending: true })
 
@@ -80,15 +92,20 @@ export async function GET(request: Request) {
 
 // POST /api/broker/availability - Create new availability slot
 export async function POST(request: Request) {
+  console.log('🚀 POST /api/broker/availability - Starting request')
   try {
     const cookieStore = await cookies()
+    console.log('🍪 Cookies accessed successfully')
+    
     const body = await request.json()
+    console.log('📝 Request body:', JSON.stringify(body, null, 2))
     
     const {
       date,
       start_time,
       end_time,
-      max_bookings = 1,
+      broker_id,
+      max_bookings = 5,
       slot_duration_minutes = 60,
       break_between_slots = 15,
       booking_type = 'property_viewing',
@@ -139,32 +156,71 @@ export async function POST(request: Request) {
     }
 
     const supabase = await createServerSupabaseClient()
+    console.log('🔐 Supabase client created')
 
     // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    console.log('🔍 User check - Error:', userError, 'User exists:', !!user)
+    
+    if (userError || !user) {
+      console.log('❌ Authentication failed - returning 401')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    
+    console.log('✅ User authenticated:', user.id)
 
-    // Get broker ID for current user
-    const { data: broker, error: brokerError } = await supabase
-      .from('brokers')
-      .select('id')
-      .eq('user_id', session.user.id)
-      .eq('is_active', true)
-      .single()
+    // Check if user is admin
+    const isAdmin = await isServerUserAdmin()
+    console.log('🔐 Admin check result:', isAdmin)
 
-    if (brokerError || !broker) {
-      return NextResponse.json({ 
-        error: 'Broker profile not found' 
-      }, { status: 404 })
+    // Get broker ID - either from current user or allow admin access
+    let targetBrokerId: string
+    
+    if (isAdmin && broker_id) {
+      // Admin can manage any broker if broker_id is provided
+      targetBrokerId = broker_id
+      console.log('🏢 Admin managing broker:', targetBrokerId)
+      
+      // Verify the broker exists
+      const { data: targetBroker, error: targetBrokerError } = await supabase
+        .from('brokers')
+        .select('id, full_name')
+        .eq('id', targetBrokerId)
+        .eq('is_active', true)
+        .single()
+      
+      if (targetBrokerError || !targetBroker) {
+        return NextResponse.json({ 
+          error: 'Target broker not found or inactive' 
+        }, { status: 404 })
+      }
+      
+      console.log('✅ Target broker found:', targetBroker.full_name)
+    } else {
+      // Regular user or admin without broker_id - must be the broker owner
+      const { data: broker, error: brokerError } = await supabase
+        .from('brokers')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .single()
+      
+      console.log('🏢 Broker lookup - Error:', brokerError, 'Broker found:', !!broker)
+
+      if (brokerError || !broker) {
+        return NextResponse.json({ 
+          error: 'Broker profile not found. Only the broker owner can manage availability.' 
+        }, { status: 404 })
+      }
+      
+      targetBrokerId = broker.id
     }
 
     // Check for existing availability conflicts
     const { data: conflicts, error: conflictError } = await supabase
       .from('broker_availability')
       .select('id, start_time, end_time')
-      .eq('broker_id', broker.id)
+      .eq('broker_id', targetBrokerId)
       .eq('date', date)
       .or(`start_time.lt.${end_time},end_time.gt.${start_time}`)
 
@@ -184,7 +240,7 @@ export async function POST(request: Request) {
 
     // Create availability record
     const availabilityData = {
-      broker_id: broker.id,
+      broker_id: targetBrokerId,
       date,
       start_time,
       end_time,
@@ -216,7 +272,7 @@ export async function POST(request: Request) {
     if (recurring_pattern !== 'none' && recurring_until) {
       await handleRecurringAvailability(
         supabase,
-        broker.id,
+        targetBrokerId,
         availabilityData,
         recurring_pattern,
         recurring_until

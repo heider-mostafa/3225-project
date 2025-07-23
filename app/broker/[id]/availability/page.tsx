@@ -142,7 +142,7 @@ export default function BrokerAvailabilityPage() {
       }
       
       const data = await response.json();
-      setAvailabilitySlots(data.slots || []);
+      setAvailabilitySlots(data.availability || []);
     } catch (error) {
       console.error('Error loading availability slots:', error);
       setAvailabilitySlots([]);
@@ -562,14 +562,30 @@ export default function BrokerAvailabilityPage() {
                         <div>
                           <p className="text-gray-600">
                             <User className="w-4 h-4 inline mr-1" />
-                            {viewing.client_name}
+                            {viewing.visitor_name}
+                            {viewing.party_size && viewing.party_size > 1 && (
+                              <span className="text-gray-500"> ({viewing.party_size} people)</span>
+                            )}
                           </p>
                           <p className="text-gray-600">
                             <Mail className="w-4 h-4 inline mr-1" />
-                            {viewing.client_email}
+                            {viewing.visitor_email}
                           </p>
+                          {viewing.visitor_phone && (
+                            <p className="text-gray-600">
+                              <Phone className="w-4 h-4 inline mr-1" />
+                              {viewing.visitor_phone}
+                            </p>
+                          )}
                         </div>
                       </div>
+                      {viewing.special_requests && (
+                        <div className="mt-3 p-3 bg-blue-50 rounded-md border border-blue-200">
+                          <p className="text-sm text-blue-800">
+                            <strong>Special Requests:</strong> {viewing.special_requests}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

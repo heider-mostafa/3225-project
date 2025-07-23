@@ -29,15 +29,29 @@ const nextConfig = {
       process.env.NEXT_PUBLIC_SUPABASE_URL?.replace('https://', '') || '',
       'api.heygen.com',
       'storage.googleapis.com',
+      'images.unsplash.com',
+      'example.com',
     ],
     remotePatterns: [
       {
         protocol: 'https',
         hostname: '**.supabase.co',
+        pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'api.heygen.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'example.com',
+        pathname: '/**',
       },
     ],
   },

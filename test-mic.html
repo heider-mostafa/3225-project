@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Microphone Test</title>
+</head>
+<body>
+    <h1>Microphone Test</h1>
+    <button id="testMic">Test Microphone</button>
+    <div id="results"></div>
+    
+    <script>
+    document.getElementById('testMic').addEventListener('click', async () => {
+        const results = document.getElementById('results');
+        results.innerHTML = 'Testing microphone...';
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+            
+            results.innerHTML += '<br>✅ Microphone access granted';
+            
+            // Test audio levels
+            const audioContext = new AudioContext();
+            const analyser = audioContext.createAnalyser();
+            analyser.fftSize = 256;
+            const source = audioContext.createMediaStreamSource(stream);
+            source.connect(analyser);
+            
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            
+            let testCount = 0;
+            const testInterval = setInterval(() => {
+                analyser.getByteTimeDomainData(dataArray);
+                
+                let sum = 0;
+                for (let i = 0; i < bufferLength; i++) {
+                    const normalized = (dataArray[i] - 128) / 128;
+                    sum += normalized * normalized;
+                }
+                const rms = Math.sqrt(sum / bufferLength);
+                const amplitude = Math.round(rms * 100);
+                
+                results.innerHTML = `<br>🎤 Audio level: ${amplitude} (speak into microphone)`;
+                
+                testCount++;
+                if (testCount > 20) {
+                    clearInterval(testInterval);
+                    stream.getTracks().forEach(track => track.stop());
+                    audioContext.close();
+                    results.innerHTML += '<br>✅ Test completed';
+                }
+            }, 500);
+            
+        } catch (error) {
+            results.innerHTML += '<br>❌ Error: ' + error.message;
+        }
+    });
+    </script>
+</body>
+</html>

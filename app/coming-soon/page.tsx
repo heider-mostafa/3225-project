@@ -40,12 +40,58 @@ export default function ComingSoonPage() {
   const [activeTours, setActiveTours] = useState<string[]>([])
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [fullscreenTour, setFullscreenTour] = useState<string | null>(null)
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  })
 
   useEffect(() => {
     setMounted(true)
     // Auto-load first tour to show users what they'll get
     setLoadedTours(['1'])
   }, [])
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (!mounted) return
+
+    const calculateTimeLeft = () => {
+      const now = new Date()
+      const currentYear = now.getFullYear()
+      let targetDate = new Date(currentYear, 8, 1) // September 1st (month is 0-indexed)
+      
+      // If we're past September 1st this year, target next year
+      if (now > targetDate) {
+        targetDate = new Date(currentYear + 1, 8, 1)
+      }
+      
+      // Countdown is always active from now until September 1st
+
+      const difference = targetDate.getTime() - now.getTime()
+      
+      if (difference > 0) {
+        const days = Math.floor(difference / (1000 * 60 * 60 * 24))
+        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60))
+        const seconds = Math.floor((difference % (1000 * 60)) / 1000)
+        
+        return { days, hours, minutes, seconds }
+      }
+      
+      return { days: 0, hours: 0, minutes: 0, seconds: 0 }
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft())
+    }, 1000)
+
+    // Set initial value
+    setTimeLeft(calculateTimeLeft())
+
+    return () => clearInterval(timer)
+  }, [mounted])
 
   // Mouse tracking for interactive background
   useEffect(() => {
@@ -188,6 +234,51 @@ export default function ComingSoonPage() {
               {mounted ? t('comingSoon.launchDate', 'Coming September 1st') : 'Coming September 1st'}
             </Badge>
           </motion.div>
+
+          {/* Countdown Banner */}
+          {mounted && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="mb-8"
+            >
+              <div className="bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 max-w-2xl mx-auto">
+                <div className="text-center mb-4">
+                  <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
+                    {t('comingSoon.countdownTitle', 'Launch Countdown')}
+                  </h3>
+                  <p className="text-slate-600 text-sm md:text-base">
+                    {t('comingSoon.countdownSubtitle', 'Get ready for the future of real estate')}
+                  </p>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-2 md:gap-4">
+                  {[
+                    { value: timeLeft.days, label: t('comingSoon.days', 'Days') },
+                    { value: timeLeft.hours, label: t('comingSoon.hours', 'Hours') },
+                    { value: timeLeft.minutes, label: t('comingSoon.minutes', 'Min') },
+                    { value: timeLeft.seconds, label: t('comingSoon.seconds', 'Sec') }
+                  ].map((unit, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ scale: 0.8 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.4 + index * 0.1 }}
+                      className="bg-white/20 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center"
+                    >
+                      <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-1">
+                        {unit.value.toString().padStart(2, '0')}
+                      </div>
+                      <div className="text-xs md:text-sm text-slate-600 font-medium">
+                        {unit.label}
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Main Headline */}
           <motion.h1

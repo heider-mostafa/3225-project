@@ -35,16 +35,16 @@ export async function PUT(
     const supabase = await createServerSupabaseClient()
 
     // Check authentication
-    //const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    //if (sessionError || !session) {
-    //  return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    //}
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     // Get broker ID for current user
     const { data: broker, error: brokerError } = await supabase
       .from('brokers')
       .select('id')
-      //.eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .single()
 
@@ -187,8 +187,8 @@ export async function DELETE(
     const supabase = await createServerSupabaseClient()
 
     // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -196,7 +196,7 @@ export async function DELETE(
     const { data: broker, error: brokerError } = await supabase
       .from('brokers')
       .select('id')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .single()
 
@@ -278,8 +278,8 @@ export async function GET(
     const supabase = await createServerSupabaseClient()
 
     // Check authentication
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session) {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -287,7 +287,7 @@ export async function GET(
     const { data: broker, error: brokerError } = await supabase
       .from('brokers')
       .select('id')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .single()
 

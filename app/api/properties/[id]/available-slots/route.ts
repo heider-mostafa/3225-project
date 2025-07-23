@@ -111,6 +111,7 @@ export async function GET(
 
     // Get availability for all brokers on the specified date
     const finalBrokerIds = brokers.map(b => b.id);
+    console.log('🔍 Fetching availability for brokers:', finalBrokerIds, 'on date:', date);
     
     // Query broker availability with proper filtering
     const { data: availability, error: availabilityError } = await supabase
@@ -133,6 +134,9 @@ export async function GET(
       .order('broker_id')
       .order('start_time');
 
+    console.log('📅 Raw availability data:', availability);
+    console.log('❌ Availability error:', availabilityError);
+
     if (availabilityError) {
       console.error('Error fetching availability:', availabilityError);
       return NextResponse.json(
@@ -141,10 +145,8 @@ export async function GET(
       );
     }
 
-    // Filter out fully booked slots in JavaScript to avoid the database issue
-    const availableSlots = availability?.filter(slot => 
-      (slot.current_bookings || 0) < (slot.max_bookings || 1)
-    ) || [];
+    // Don't filter out slots here - we'll handle availability per time slot
+    const availableSlots = availability || [];
 
     // Check for blocked times
     const startOfDay = `${date}T00:00:00Z`;
@@ -198,9 +200,9 @@ export async function GET(
             
             slots.push({
               time: timeString,
-              available: (avail.current_bookings || 0) < (avail.max_bookings || 1),
+              available: true, // Each time slot can be booked independently
               maxBookings: avail.max_bookings || 1,
-              currentBookings: avail.current_bookings || 0,
+              currentBookings: 0, // We'd need to count actual bookings for this specific time
               broker_id: avail.broker_id,
               availability_id: avail.id,
               duration_minutes: duration,
@@ -223,6 +225,8 @@ export async function GET(
         timeSlots: timeSlots || []
       };
     });
+
+    console.log('🎯 Final slots response:', JSON.stringify(slotsResponse, null, 2));
 
     return NextResponse.json({
       success: true,

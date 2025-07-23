@@ -9,6 +9,7 @@ import { Video, MessageCircle, Play, Mic, MicOff, Volume2, Globe, X, ChevronDown
 import { UnifiedPropertyAgent } from "@/lib/heygen/UnifiedPropertyAgent"
 import { translationService } from '@/lib/translation-service'
 import { useAuth } from '@/components/providers'
+import { useToast } from '@/components/ui/use-toast'
 import type * as THREE from "three"
 import React from "react"
 
@@ -183,6 +184,7 @@ export function TourViewer({
   hideRoomMenu = false,
 }: TourViewerProps) {
   const { user } = useAuth()
+  const { toast } = useToast()
   const [currentRoom, setCurrentRoom] = useState("living-room")
   const [isLoading, setIsLoading] = useState(true)
   const [showHeyGenAgent, setShowHeyGenAgent] = useState(false)
@@ -676,6 +678,20 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
     if (!user) {
       setConnectionError('Please log in or sign up to use the AI assistant feature.')
       setConnectionStatus('error')
+      
+      // Show toast notification for mobile users (same as save property button)
+      const isMobile = typeof window !== 'undefined' && 
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobile) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please sign in to use the AI assistant feature.',
+          variant: 'destructive',
+          duration: 4000,
+        });
+      }
+      
       return
     }
     

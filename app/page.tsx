@@ -60,7 +60,7 @@ import { ChatBot } from "@/components/ChatBot"
 import { LeadCaptureForm } from "@/components/LeadCaptureForm"
 import { ServicesSection } from "@/components/ServicesSection"
 
-import { Dialog, DialogContent, DialogTrigger, DialogTitle } from "@/components/ui/dialog"
+
 
 // Real property interface matching our database schema
 interface Property {
@@ -439,11 +439,11 @@ export default function HomePage() {
     if (!isAutoRotating || isInteracting) return
 
     const interval = setInterval(() => {
-      setCurrentTourIndex((prev) => (prev + 1) % featuredProperties.length)
+      setCurrentTourIndex((prev) => (prev + 1) % translatedFeatured.length)
     }, 12000)
 
     return () => clearInterval(interval)
-  }, [isAutoRotating, isInteracting, featuredProperties.length])
+  }, [isAutoRotating, isInteracting, translatedFeatured.length])
 
   // Auto-rotate testimonials every 5 seconds
   useEffect(() => {
@@ -564,7 +564,7 @@ export default function HomePage() {
     loadHomepageData()
   }, [])
 
-  const currentProperty = featuredProperties.length > 0 ? featuredProperties[currentTourIndex] : {
+  const currentProperty = translatedFeatured.length > 0 ? translatedFeatured[currentTourIndex] : {
     id: 'demo',
     title: 'Welcome to OpenBeit',
     description: 'Discover amazing properties with our AI-powered platform',
@@ -597,12 +597,12 @@ export default function HomePage() {
 
   const nextTour = () => {
     setIsAutoRotating(false)
-    setCurrentTourIndex((prev) => (prev + 1) % featuredProperties.length)
+    setCurrentTourIndex((prev) => (prev + 1) % translatedFeatured.length)
   }
 
   const prevTour = () => {
     setIsAutoRotating(false)
-    setCurrentTourIndex((prev) => (prev - 1 + featuredProperties.length) % featuredProperties.length)
+    setCurrentTourIndex((prev) => (prev - 1 + translatedFeatured.length) % translatedFeatured.length)
   }
 
   // Function to fetch real AI recommendations from the database
@@ -960,7 +960,7 @@ export default function HomePage() {
                     {currentProperty.isHot && (
                       <Badge className="bg-red-500 text-white animate-pulse text-xs">
                         <TrendingUp className="h-3 w-3 mr-1" />
-                        HOT
+                        {safeT('properties.hot', 'HOT')}
                       </Badge>
                     )}
                   </div>
@@ -972,19 +972,19 @@ export default function HomePage() {
                     <div className="flex items-center">
                       <Bed className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.beds?.toString() || '0') : (currentProperty.beds?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'غرف نوم' : 'beds'}
+                        {isMounted ? translateText(currentProperty.beds?.toString() || '0') : (currentProperty.beds?.toString() || '0')} {safeT('common.bed', 'beds')}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <Bath className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.baths?.toString() || '0') : (currentProperty.baths?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'حمامات' : 'baths'}
+                        {isMounted ? translateText(currentProperty.baths?.toString() || '0') : (currentProperty.baths?.toString() || '0')} {safeT('common.bath', 'baths')}
                       </span>
                     </div>
                     <div className="flex items-center">
                       <Square className="h-4 w-4 mr-1 flex-shrink-0" />
                       <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.sqm?.toString() || '0') : (currentProperty.sqm?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'م²' : 'sqm'}
+                        {isMounted ? translateText(currentProperty.sqm?.toString() || '0') : (currentProperty.sqm?.toString() || '0')} {safeT('common.sqm', 'sqm')}
                       </span>
                     </div>
                     <div className="flex items-center">
@@ -1054,12 +1054,12 @@ export default function HomePage() {
                 {isSearching ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    Searching...
+                    {safeT('search.searching', 'Searching...')}
                   </>
                 ) : (
                   <>
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Smart Search
+                    {safeT('search.smartSearch', 'Smart Search')}
                   </>
                 )}
               </Button>
@@ -1313,7 +1313,7 @@ export default function HomePage() {
                           <div className="flex items-center gap-2">
                             <Gift className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
                             <span className="block sm:hidden text-center leading-tight">
-                              Claim My FREE<br />Virtual Tour
+                              {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(0, 3).join(' ')}<br />{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(3).join(' ')}
                             </span>
                             <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                           </div>
@@ -1613,7 +1613,7 @@ export default function HomePage() {
                       )}
                     </div>
                     <CardContent className="p-6">
-                      <h3 className="text-xl font-semibold text-slate-800 mb-2">{property.title}</h3>
+                      <h3 className="text-xl font-semibold text-slate-800 mb-2">{translatePropertyTitle(property.title)}</h3>
                       <div className="flex items-center text-slate-600 mb-3">
                         <MapPin className="h-4 w-4 mr-2" />
                         {translateLocation(property.location, i18n.language === 'ar')}
@@ -2153,7 +2153,7 @@ export default function HomePage() {
                         <div className="flex items-center gap-2">
                           <Gift className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                           <span className="block sm:hidden text-center leading-tight">
-                            Claim My FREE<br />Virtual Tour
+                            {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(0, 3).join(' ')}<br />{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(3).join(' ')}
                           </span>
                           <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                         </div>
@@ -2296,39 +2296,55 @@ export default function HomePage() {
 
       {/* ChatBot */}
       <div className="fixed bottom-6 right-6 z-50">
-        <Dialog open={isChatOpen} onOpenChange={setIsChatOpen}>
-          <DialogTrigger asChild>
-            <motion.div
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              className="relative"
+        {!isChatOpen ? (
+          <motion.div
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            className="relative"
+          >
+            <Button
+              size="lg"
+              className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700"
+              onClick={() => setIsChatOpen(true)}
             >
-              <Button
-                size="lg"
-                className="rounded-full h-14 w-14 shadow-lg hover:shadow-xl transition-all bg-gradient-to-r from-blue-600 to-blue-600 hover:from-blue-700 hover:to-blue-700"
-              >
-                <MessageCircle className="h-6 w-6" />
-              </Button>
-              <motion.div
-                className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full"
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.5 }}
-              />
-            </motion.div>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl h-[700px] p-0 border-none bg-transparent">
-            <DialogTitle className="sr-only">AI Assistant Chat</DialogTitle>
+              <MessageCircle className="h-6 w-6" />
+            </Button>
+            <motion.div
+              className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5 }}
+            />
+          </motion.div>
+        ) : (
+          <div 
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+            onClick={(e) => {
+              // Close when clicking the overlay (but not the chatbot itself)
+              if (e.target === e.currentTarget) {
+                setIsChatOpen(false);
+              }
+            }}
+          >
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.3, ease: "easeOut" }}
+              className="w-full max-w-2xl h-[700px]"
+              onClick={(e) => e.stopPropagation()}
             >
-              <ChatBot propertyId={currentProperty.id} agentType="general" />
+              <ChatBot 
+                propertyId={currentProperty.id} 
+                agentType="general" 
+                onClose={() => {
+                  console.log('Close button clicked'); // Debug log
+                  setIsChatOpen(false);
+                }} 
+              />
             </motion.div>
-          </DialogContent>
-        </Dialog>
+          </div>
+        )}
       </div>
 
       {/* Fullscreen Tour Modal */}

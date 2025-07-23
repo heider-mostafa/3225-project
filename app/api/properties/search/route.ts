@@ -87,7 +87,11 @@ export async function GET(request: Request) {
             // Apply additional filters to spatial results
             if (minPrice) spatialQuery = spatialQuery.gte('price', minPrice);
             if (maxPrice) spatialQuery = spatialQuery.lte('price', maxPrice);
-            if (propertyTypes.length > 0) spatialQuery = spatialQuery.in('property_type', propertyTypes);
+            if (propertyTypes.length > 0) {
+              // Use case-insensitive matching for property types  
+              const typeFilter = propertyTypes.map(type => `property_type.ilike.${type}`).join(',');
+              spatialQuery = spatialQuery.or(typeFilter);
+            }
             if (bedrooms.length > 0) spatialQuery = spatialQuery.in('bedrooms', bedrooms.map(b => parseInt(b)));
             if (bathrooms.length > 0) spatialQuery = spatialQuery.in('bathrooms', bathrooms.map(b => parseInt(b)));
 
@@ -132,11 +136,12 @@ export async function GET(request: Request) {
       if (minSqm) regularQuery = regularQuery.gte('square_meters', minSqm);
       if (maxSqm) regularQuery = regularQuery.lte('square_meters', maxSqm);
       if (cities.length > 0) {
-        // Use exact matching for cities (they should already be properly formatted)
-        regularQuery = regularQuery.in('city', cities);
+        // Use case-insensitive matching for cities to handle formatting differences
+        const cityFilter = cities.map(city => `city.ilike.%${city}%`).join(',');
+        regularQuery = regularQuery.or(cityFilter);
       }
       if (state) regularQuery = regularQuery.eq('state', state);
-      if (compound) regularQuery = regularQuery.eq('compound', compound);
+      if (compound) regularQuery = regularQuery.ilike('compound', `%${compound}%`);
       if (furnished) regularQuery = regularQuery.eq('furnished', furnished === 'true');
 
       // Amenity filters

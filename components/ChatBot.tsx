@@ -4,13 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Send, Bot, User, Loader2, Mic, Volume2, X, ChevronDown, Check, MapPin, Bed, Bath, Square, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { heygenManager } from '@/lib/heygen/HeygenAgentManager'
 import type { AgentType } from '@/lib/heygen/HeygenAgentManager';
 import Link from "next/link";
-import Image from "next/image";
 import { translationService } from '@/lib/translation-service';
 
 const LANGUAGES = [
@@ -138,12 +136,14 @@ const PropertyChatCard = ({ property }: { property: PropertyRecommendation }) =>
   return (
     <Link href={property.link} target="_blank" rel="noopener noreferrer">
       <Card className="overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer border border-slate-200 bg-white">
-        <div className="relative h-40 w-full">
-          <Image
+        <div className="relative h-40 w-full overflow-hidden">
+          <img
             src={property.image}
             alt={property.title}
-            fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.currentTarget.src = '/placeholder-property.jpg';
+            }}
           />
           <div className="absolute top-2 right-2">
             <ExternalLink className="h-4 w-4 text-white bg-black/50 rounded p-1" />
@@ -187,7 +187,7 @@ const PropertyChatCard = ({ property }: { property: PropertyRecommendation }) =>
   );
 };
 
-export function ChatBot({ propertyId, agentType }: { propertyId: string; agentType: AgentType }) {
+export function ChatBot({ propertyId, agentType, onClose }: { propertyId: string; agentType: AgentType; onClose?: () => void }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -290,8 +290,20 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
   }, [messages]);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    try {
+      if (scrollRef.current && typeof scrollRef.current.scrollTo === 'function') {
+        // Use scrollTo for better compatibility
+        scrollRef.current.scrollTo({
+          top: scrollRef.current.scrollHeight,
+          behavior: 'smooth'
+        });
+      } else if (scrollRef.current && 'scrollTop' in scrollRef.current) {
+        // Fallback to scrollTop
+        scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+    } catch (error) {
+      // Silently ignore scroll errors to prevent crashes
+      console.debug('Scroll error (non-critical):', error);
     }
   }, [messages]);
 
@@ -532,14 +544,26 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
             <Volume2 className="h-5 w-5" />
           </Button>
           {/* Close Button (for modal use) */}
-          <Button variant="ghost" size="icon" className="rounded-full" aria-label="Close">
-            <X className="h-5 w-5" />
-          </Button>
+          {onClose && (
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full hover:bg-gray-100" 
+              aria-label="Close chat"
+              onClick={onClose}
+            >
+              <X className="h-5 w-5" />
+            </Button>
+          )}
         </div>
       </div>
 
       {/* Chat Area */}
-      <ScrollArea ref={scrollRef} className="flex-1 px-6 py-4 bg-slate-50">
+      <div 
+        ref={scrollRef} 
+        className="flex-1 px-6 py-4 bg-slate-50 overflow-y-auto max-h-[400px]"
+        style={{ scrollBehavior: 'smooth' }}
+      >
         <div className="space-y-6">
           <AnimatePresence>
             {messages.map((message, index) => (
@@ -600,7 +624,7 @@ export function ChatBot({ propertyId, agentType }: { propertyId: string; agentTy
             </motion.div>
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       {/* Suggestions */}
       <div className="px-6 pb-2 pt-1 bg-white border-t">
