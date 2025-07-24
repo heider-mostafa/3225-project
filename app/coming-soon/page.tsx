@@ -191,7 +191,7 @@ export default function ComingSoonPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       {/* Hero Section */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-screen sm:h-screen flex items-center justify-center overflow-hidden py-8 sm:py-0">
         {/* Background gradient */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-slate-900/30" />
         
@@ -221,7 +221,7 @@ export default function ComingSoonPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
           {/* Coming Soon Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -285,7 +285,7 @@ export default function ComingSoonPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-4xl md:text-6xl lg:text-7xl font-bold text-slate-800 mb-6 leading-tight"
+            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-slate-800 mb-4 sm:mb-6 leading-tight"
           >
             {mounted ? t('comingSoon.heroTitle', 'The Future of') : 'The Future of'}{" "}
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
@@ -299,7 +299,7 @@ export default function ComingSoonPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="text-xl md:text-2xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed"
+            className="text-lg sm:text-xl md:text-2xl text-slate-600 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed"
           >
             {mounted ? t('comingSoon.heroDescription', 'Experience properties like never before with AI-powered virtual tours, instant expert guidance, and immersive 3D exploration') : 'Experience properties like never before with AI-powered virtual tours, instant expert guidance, and immersive 3D exploration'}
           </motion.p>
@@ -309,7 +309,7 @@ export default function ComingSoonPage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-wrap justify-center gap-4 mb-12"
+            className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8 sm:mb-12"
           >
             {[
               { icon: Globe, text: mounted ? t('comingSoon.feature1', '3D Virtual Tours') : '3D Virtual Tours' },
@@ -318,10 +318,10 @@ export default function ComingSoonPage() {
             ].map((feature, index) => (
               <div
                 key={index}
-                className="flex items-center gap-2 bg-white/10 backdrop-blur-md rounded-full px-4 py-2 text-slate-700"
+                className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-md rounded-full px-2 sm:px-4 py-1 sm:py-2 text-slate-700"
               >
-                <feature.icon className="w-4 h-4" />
-                <span className="text-sm font-medium">{feature.text}</span>
+                <feature.icon className="w-3 sm:w-4 h-3 sm:h-4" />
+                <span className="text-xs sm:text-sm font-medium">{feature.text}</span>
               </div>
             ))}
           </motion.div>
