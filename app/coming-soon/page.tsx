@@ -128,7 +128,7 @@ export default function ComingSoonPage() {
       id: "2", 
       title: "Modern Apartment in Zamalek",
       location: "Zamalek, Cairo",
-      virtual_tour_url: "https://realsee.ai/P5vvkz9k",
+      virtual_tour_url: "https://realsee.ai/98OORjlW",
       image: "/api/placeholder/600/400",
       bedrooms: 2,
       bathrooms: 2,
