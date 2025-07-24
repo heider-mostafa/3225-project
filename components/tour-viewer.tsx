@@ -1869,7 +1869,7 @@ ${selectedLang?.code === 'ar' ? `
 
   // If tourUrl is provided, render iframe-based virtual tour
   if (tourUrl) {
-    console.log('🖼️ Rendering iframe with tourUrl:', tourUrl)
+    console.log('🖼️ Rendering iframe with tourUrl:', tourUrl, 'for tourId:', tourId)
     
     // Validate URL before processing
     try {
@@ -1880,9 +1880,19 @@ ${selectedLang?.code === 'ar' ? `
       return renderFallbackTour()
     }
     
+    // Check if we're on mobile Safari which has iframe issues
+    const isMobileSafari = typeof window !== 'undefined' && 
+      /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+    
     // Enhance the Realsee URL to start directly in 3D model view
     const enhancedModelUrl = (() => {
       try {
+        // For mobile Safari, use simpler URLs to avoid crashes
+        if (isMobileSafari) {
+          console.log('📱 Mobile Safari detected - using simple URL for stability')
+          return tourUrl
+        }
+        
         if (tourUrl.includes('realsee.ai')) {
           const separator = tourUrl.includes('?') ? '&' : '?'
           
@@ -1915,7 +1925,7 @@ ${selectedLang?.code === 'ar' ? `
               
               // Add error handler for iframe
               iframe.onerror = (event) => {
-                console.error('❌ Failed to load iframe tour URL:', enhancedModelUrl, event)
+                console.error('❌ Failed to load iframe tour URL:', enhancedModelUrl, 'for tourId:', tourId, event)
                 clearTimeout(loadTimeout);
                 setIsLoading(false)
                 
@@ -1929,8 +1939,10 @@ ${selectedLang?.code === 'ar' ? `
                   // Try to reload with a simpler URL without parameters for mobile
                   const baseUrl = tourUrl.split('?')[0];
                   if (baseUrl !== enhancedModelUrl) {
-                    console.log('🔄 Attempting mobile fallback with base URL:', baseUrl);
+                    console.log('🔄 Attempting mobile fallback with base URL:', baseUrl, 'for tourId:', tourId);
                     iframe.src = baseUrl;
+                  } else {
+                    console.log('🚫 Already using base URL for tourId:', tourId, '- cannot fallback further');
                   }
                 }
               }
