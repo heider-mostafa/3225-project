@@ -1907,51 +1907,81 @@ ${selectedLang?.code === 'ar' ? `
         <iframe
           ref={(iframe) => {
             if (iframe) {
+              // Set up a timeout to prevent indefinite loading
+              const loadTimeout = setTimeout(() => {
+                console.log('⏰ Iframe load timeout - stopping loading indicator');
+                setIsLoading(false);
+              }, 15000); // 15 second timeout
+              
               // Add error handler for iframe
-              iframe.onerror = () => {
-                console.error('❌ Failed to load iframe tour URL:', enhancedModelUrl)
+              iframe.onerror = (event) => {
+                console.error('❌ Failed to load iframe tour URL:', enhancedModelUrl, event)
+                clearTimeout(loadTimeout);
                 setIsLoading(false)
+                
+                // Additional mobile-specific error handling
+                const isMobile = typeof window !== 'undefined' && 
+                  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                  console.log('📱 Mobile iframe error detected - this may be due to cross-origin restrictions');
+                  
+                  // Try to reload with a simpler URL without parameters for mobile
+                  const baseUrl = tourUrl.split('?')[0];
+                  if (baseUrl !== enhancedModelUrl) {
+                    console.log('🔄 Attempting mobile fallback with base URL:', baseUrl);
+                    iframe.src = baseUrl;
+                  }
+                }
               }
               
               // Add load handler
               iframe.onload = () => {
                 console.log('✅ Iframe loaded successfully')
+                clearTimeout(loadTimeout);
                 setIsLoading(false)
                 
-                // Fallback approach: Use JavaScript injection to switch to 3D view
-                if (tourUrl.includes('realsee.ai')) {
+                // Check if on mobile device
+                const isMobile = typeof window !== 'undefined' && 
+                  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                // Only try JavaScript injection on desktop to avoid mobile crashes
+                if (tourUrl.includes('realsee.ai') && !isMobile && !fullscreen) {
                   try {
                     // Wait a bit for the tour to fully load, then try to switch to 3D view
                     setTimeout(() => {
-                      const injectionScript = `
-                        // Try multiple methods to switch to 3D/dollhouse view
-                        if (window.switchToDollhouse) window.switchToDollhouse();
-                        if (window.switchTo3D) window.switchTo3D();
-                        if (window.setView) window.setView('dollhouse');
-                        if (window.setMode) window.setMode('3d');
-                        
-                        // Try to find and click dollhouse/3D button
-                        const dollhouseBtn = document.querySelector('[data-view="dollhouse"], .dollhouse-btn, .view-3d, [aria-label*="3D"], [title*="dollhouse"]');
-                        if (dollhouseBtn) dollhouseBtn.click();
-                        
-                        // Alternative: Look for buttons with 3D-related text
-                        const buttons = document.querySelectorAll('button, .btn, [role="button"]');
-                        buttons.forEach(btn => {
-                          const text = btn.textContent?.toLowerCase() || '';
-                          if (text.includes('dollhouse') || text.includes('3d') || text.includes('model')) {
-                            btn.click();
-                          }
-                        });
-                      `;
-                      
-                      // Only inject if we can access the iframe content (same-origin)
                       try {
                         const doc = iframe.contentDocument || iframe.contentWindow?.document;
                         if (doc) {
+                          const injectionScript = `
+                            try {
+                              // Try multiple methods to switch to 3D/dollhouse view
+                              if (window.switchToDollhouse) window.switchToDollhouse();
+                              if (window.switchTo3D) window.switchTo3D();
+                              if (window.setView) window.setView('dollhouse');
+                              if (window.setMode) window.setMode('3d');
+                              
+                              // Try to find and click dollhouse/3D button
+                              const dollhouseBtn = document.querySelector('[data-view="dollhouse"], .dollhouse-btn, .view-3d, [aria-label*="3D"], [title*="dollhouse"]');
+                              if (dollhouseBtn) dollhouseBtn.click();
+                              
+                              // Alternative: Look for buttons with 3D-related text
+                              const buttons = document.querySelectorAll('button, .btn, [role="button"]');
+                              buttons.forEach(btn => {
+                                const text = btn.textContent?.toLowerCase() || '';
+                                if (text.includes('dollhouse') || text.includes('3d') || text.includes('model')) {
+                                  btn.click();
+                                }
+                              });
+                            } catch (e) {
+                              console.log('Script injection error caught:', e);
+                            }
+                          `;
+                          
                           const script = doc.createElement('script');
                           script.textContent = injectionScript;
                           doc.head?.appendChild(script);
-                          console.log('🎯 Injected 3D view switch script');
+                          console.log('🎯 Injected 3D view switch script (desktop only)');
                         }
                       } catch (e) {
                         console.log('🔒 Cross-origin iframe - cannot inject script (this is normal for external tours)');
@@ -1960,6 +1990,8 @@ ${selectedLang?.code === 'ar' ? `
                   } catch (error) {
                     console.log('⚠️ Could not inject 3D view script:', error);
                   }
+                } else if (isMobile) {
+                  console.log('📱 Mobile device detected - skipping script injection to prevent crashes');
                 }
               }
             }
