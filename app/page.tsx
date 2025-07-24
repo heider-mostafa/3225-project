@@ -1307,13 +1307,13 @@ export default function HomePage() {
                     trigger={
                       <Button 
                         size="lg" 
-                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-8 sm:py-7 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
+                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-6 sm:py-8 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
                       >
                         <span className="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                           <div className="flex items-center gap-2">
                             <Gift className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
                             <span className="block sm:hidden text-center leading-tight">
-                              {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(0, 3).join(' ')}<br />{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(3).join(' ')}
+                              {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').replace(' ', '\n')}
                             </span>
                             <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                           </div>
@@ -2153,7 +2153,7 @@ export default function HomePage() {
                         <div className="flex items-center gap-2">
                           <Gift className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
                           <span className="block sm:hidden text-center leading-tight">
-                            {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(0, 3).join(' ')}<br />{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').split(' ').slice(3).join(' ')}
+                            {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').replace(' ', '\n')}
                           </span>
                           <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                         </div>

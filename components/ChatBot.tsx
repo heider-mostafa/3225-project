@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Send, Bot, User, Loader2, Mic, Volume2, X, ChevronDown, Check, MapPin, Bed, Bath, Square, ExternalLink } from "lucide-react";
+import { Send, Bot, User, Loader2, Mic, Volume2, X, ChevronDown, Check, MapPin, Bed, Bath, Square, ExternalLink, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { heygenManager } from '@/lib/heygen/HeygenAgentManager'
 import type { AgentType } from '@/lib/heygen/HeygenAgentManager';
@@ -196,11 +196,25 @@ export function ChatBot({ propertyId, agentType, onClose }: { propertyId: string
   const [soundOn, setSoundOn] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   
   // Audio states
   const [isListening, setIsListening] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [speechRecognition, setSpeechRecognition] = useState<SpeechRecognition | null>(null);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize with language-aware greeting
   useEffect(() => {
@@ -627,21 +641,51 @@ export function ChatBot({ propertyId, agentType, onClose }: { propertyId: string
       </div>
 
       {/* Suggestions */}
-      <div className="px-6 pb-2 pt-1 bg-white border-t">
-        <div className="text-xs text-slate-500 mb-2">Suggested questions:</div>
-        <div className="flex flex-wrap gap-2">
-          {SUGGESTIONS.map((suggestion) => (
-            <button
-              key={suggestion}
-              className="px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-sm text-slate-700 border border-slate-200 transition"
-              onClick={() => handleSuggestion(suggestion)}
-              type="button"
-            >
-              {getTranslatedSuggestion(suggestion)}
-            </button>
-          ))}
+      {showSuggestions && (
+        <div className="px-6 pb-2 pt-1 bg-white border-t">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs text-slate-500">Suggested questions:</div>
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-slate-500 hover:text-slate-700 p-1 h-6"
+                onClick={() => setShowSuggestions(false)}
+              >
+                <ChevronUp className="h-3 w-3 mr-1" />
+                Hide
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {(isMobile ? SUGGESTIONS.slice(0, 3) : SUGGESTIONS).map((suggestion) => (
+              <button
+                key={suggestion}
+                className="px-4 py-2 rounded-full bg-slate-100 hover:bg-slate-200 text-sm text-slate-700 border border-slate-200 transition"
+                onClick={() => handleSuggestion(suggestion)}
+                type="button"
+              >
+                {getTranslatedSuggestion(suggestion)}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
+      
+      {/* Show suggestions button when hidden (mobile only) */}
+      {!showSuggestions && isMobile && (
+        <div className="px-6 py-2 bg-white border-t">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs text-slate-500 hover:text-slate-700 w-full justify-center"
+            onClick={() => setShowSuggestions(true)}
+          >
+            <ChevronDown className="h-3 w-3 mr-1" />
+            Show suggested questions
+          </Button>
+        </div>
+      )}
 
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-4 border-t bg-slate-50 rounded-b-2xl">
