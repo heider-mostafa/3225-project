@@ -41,7 +41,7 @@ export const PropertyTranslationWrapper = React.memo(function PropertyTranslatio
     }
 
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('preferred-language') || 'en'
+      const savedLang = localStorage.getItem('i18nextLng') || localStorage.getItem('preferred-language') || 'en'
       setCurrentLang(savedLang)
       
       window.addEventListener('languageChange', handleLanguageChange as EventListener)
@@ -260,7 +260,7 @@ export function usePropertiesTranslation(properties: PropertyBase[]) {
     }
 
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('preferred-language') || 'en'
+      const savedLang = localStorage.getItem('i18nextLng') || localStorage.getItem('preferred-language') || 'en'
       setCurrentLang(savedLang)
       
       window.addEventListener('languageChange', handleLanguageChange as EventListener)

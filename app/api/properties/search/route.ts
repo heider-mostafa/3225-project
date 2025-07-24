@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     // Amenity filters (using our new database schema)
     const amenityFilters = [
       'has_pool', 'has_garden', 'has_security', 'has_parking', 
-      'has_gym', 'has_playground', 'has_community_center'
+      'has_gym', 'has_playground', 'has_community_center', 'has_balcony', 'has_elevator'
     ];
     const selectedAmenities = amenityFilters.filter(amenity => 
       searchParams.get(amenity) === 'true'
@@ -50,8 +50,28 @@ export async function GET(request: Request) {
     const radius_km = searchParams.get('radius_km') || '10';
     
     // Sorting and pagination
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    const sortByParam = searchParams.get('sortBy') || 'created_at';
+    const sortOrderParam = searchParams.get('sortOrder') || 'desc';
+    
+    // Map UI sort values to database column names
+    const getSortMapping = (sortValue: string): { sortBy: string, sortOrder: 'asc' | 'desc' } => {
+      switch (sortValue) {
+        case "price-low":
+          return { sortBy: 'price', sortOrder: 'asc' }
+        case "price-high":
+          return { sortBy: 'price', sortOrder: 'desc' }
+        case "beds":
+          return { sortBy: 'bedrooms', sortOrder: 'desc' }
+        case "sqm":
+          return { sortBy: 'square_meters', sortOrder: 'desc' }
+        case "newest":
+          return { sortBy: 'created_at', sortOrder: 'desc' }
+        default:
+          return { sortBy: 'created_at', sortOrder: 'desc' }
+      }
+    }
+    
+    const { sortBy, sortOrder } = getSortMapping(sortByParam);
     const page = parseInt(searchParams.get('page') || '1');
     const pageSize = parseInt(searchParams.get('pageSize') || '20');
 
@@ -116,26 +136,39 @@ export async function GET(request: Request) {
           property_photos(*)
         `, { count: 'exact' });
 
-      // Text search
-      if (search_query) {
+      // Text search - only apply if we don't have specific parsed filters
+      const hasSpecificFilters = propertyTypes.length > 0 || bedrooms.length > 0 || cities.length > 0;
+      
+      if (search_query && !hasSpecificFilters) {
+        console.log('🔍 Applying text search for:', search_query);
         regularQuery = regularQuery.or(
           `title.ilike.%${search_query}%,description.ilike.%${search_query}%,address.ilike.%${search_query}%,city.ilike.%${search_query}%,state.ilike.%${search_query}%`
         );
+      } else if (hasSpecificFilters) {
+        console.log('🎯 Using parsed filters instead of text search');
       }
 
       // Apply filters
       if (minPrice) regularQuery = regularQuery.gte('price', minPrice);
       if (maxPrice) regularQuery = regularQuery.lte('price', maxPrice);
       if (propertyTypes.length > 0) {
+        console.log('🏠 Filtering by property types:', propertyTypes);
         // Use case-insensitive matching for property types
         const typeFilter = propertyTypes.map(type => `property_type.ilike.${type}`).join(',');
         regularQuery = regularQuery.or(typeFilter);
       }
-      if (bedrooms.length > 0) regularQuery = regularQuery.in('bedrooms', bedrooms.map(b => parseInt(b)));
-      if (bathrooms.length > 0) regularQuery = regularQuery.in('bathrooms', bathrooms.map(b => parseInt(b)));
+      if (bedrooms.length > 0) {
+        console.log('🛏️ Filtering by bedrooms:', bedrooms);
+        regularQuery = regularQuery.in('bedrooms', bedrooms.map(b => parseInt(b)));
+      }
+      if (bathrooms.length > 0) {
+        console.log('🚿 Filtering by bathrooms:', bathrooms);
+        regularQuery = regularQuery.in('bathrooms', bathrooms.map(b => parseInt(b)));
+      }
       if (minSqm) regularQuery = regularQuery.gte('square_meters', minSqm);
       if (maxSqm) regularQuery = regularQuery.lte('square_meters', maxSqm);
       if (cities.length > 0) {
+        console.log('🏙️ Filtering by cities:', cities);
         // Use case-insensitive matching for cities to handle formatting differences
         const cityFilter = cities.map(city => `city.ilike.%${city}%`).join(',');
         regularQuery = regularQuery.or(cityFilter);
@@ -166,6 +199,16 @@ export async function GET(request: Request) {
       console.log('About to execute query with filters:', {
         cities, propertyTypes, bedrooms, bathrooms, minPrice, maxPrice
       });
+      
+      // Debug: Let's also check what's in the database
+      const { data: allProperties, error: debugError } = await supabase
+        .from('properties')
+        .select('id, title, bedrooms, property_type, city, state')
+        .limit(5);
+      
+      if (!debugError && allProperties) {
+        console.log('🔍 Sample properties in database:', allProperties);
+      }
 
       const { data, error, count: totalCount } = await regularQuery;
 

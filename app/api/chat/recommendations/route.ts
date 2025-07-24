@@ -278,7 +278,10 @@ function parseSearchQuery(query: string): any {
   else if (lowerQuery.includes('giza')) criteria.city = 'Giza';
 
   // Extract amenities - with more variations
-  if (lowerQuery.includes('pool') || lowerQuery.includes('swimming')) criteria.hasPool = true;
+  if (lowerQuery.includes('pool') || lowerQuery.includes('swimming')) {
+    criteria.hasPool = true;
+    console.log('🏊 Pool amenity detected in query:', lowerQuery);
+  }
   if (lowerQuery.includes('garden') || lowerQuery.includes('yard')) criteria.hasGarden = true;
   if (lowerQuery.includes('parking') || lowerQuery.includes('garage')) criteria.hasParking = true;
   if (lowerQuery.includes('gym') || lowerQuery.includes('fitness')) criteria.hasGym = true;

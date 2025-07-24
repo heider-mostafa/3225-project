@@ -92,22 +92,52 @@ export default function PropertiesPage() {
   
   // Ref for intersection observer
   const loadMoreRef = useRef<HTMLDivElement>(null)
+  
+  // Ref to track if we've already processed current search params to prevent loops
+  const processedSearchParams = useRef<string>('')
 
   // Performance optimization: Limit max properties to prevent memory issues
   const MAX_PROPERTIES = 200 // Maximum properties to keep in memory
 
   const searchParams = useSearchParams()
 
+  // Auto-trigger search when basic filters change - but only if user has actively searched
+  // DISABLED to prevent infinite loops during development
+  // useEffect(() => {
+  //   // Only trigger if we have search results already displayed (user has searched)
+  //   // AND we have either a search query or advanced filters applied
+  //   if (searchResultsTotal !== null && (searchQuery.trim() || Object.keys(currentFilters).length > 0)) {
+  //     const timer = setTimeout(() => {
+  //       handleSearchSubmit()
+  //     }, 500) // Debounce to avoid too many API calls
+  //     
+  //     return () => clearTimeout(timer)
+  //   }
+  // }, [propertyType, bedrooms, status, priceRange])
+
   useEffect(() => {
-    loadProperties(true) // true = reset
-    loadSavedSearches()
-    loadSearchHistory()
-    loadSavedProperties()
+    const currentSearchParamsString = searchParams.toString()
+    
+    // Prevent infinite loops by checking if we've already processed these exact search params
+    // BUT allow first run even if both are empty strings
+    if (processedSearchParams.current === currentSearchParamsString && processedSearchParams.current !== '') {
+      return
+    }
+    
+    // Load basic data only on first run
+    if (processedSearchParams.current === '') {
+      loadSavedSearches()
+      loadSearchHistory()
+      loadSavedProperties()
+    }
     
     // Check for URL parameters (smart search, area clicks, compound clicks)
-    const hasSearchParams = searchParams.toString().length > 0
+    const hasSearchParams = currentSearchParamsString.length > 0
     
     if (hasSearchParams) {
+      // Set loading to false since we're handling search instead of loadProperties
+      setLoading(false)
+      
       // Parse all search parameters
       const searchQueryParam = searchParams.get('search_query')
       const cityParam = searchParams.get('city')
@@ -115,6 +145,7 @@ export default function PropertiesPage() {
       const minPriceParam = searchParams.get('minPrice')
       const maxPriceParam = searchParams.get('maxPrice')
       const bedroomsParams = searchParams.getAll('bedrooms[]')
+      const bathroomsParams = searchParams.getAll('bathrooms[]')
       const propertyTypeParams = searchParams.getAll('propertyType[]')
       const cityParams = searchParams.getAll('city[]')
       
@@ -124,6 +155,9 @@ export default function PropertiesPage() {
       const hasParking = searchParams.get('has_parking') === 'true'
       const hasSecurity = searchParams.get('has_security') === 'true'
       const hasGym = searchParams.get('has_gym') === 'true'
+      const hasBalcony = searchParams.get('has_balcony') === 'true'
+      const hasElevator = searchParams.get('has_elevator') === 'true'
+      const furnished = searchParams.get('furnished') === 'true'
       
       // Build amenities array using the correct database column names
       const amenities: string[] = []
@@ -132,6 +166,8 @@ export default function PropertiesPage() {
       if (hasParking) amenities.push('has_parking')
       if (hasSecurity) amenities.push('has_security')
       if (hasGym) amenities.push('has_gym')
+      if (hasBalcony) amenities.push('has_balcony')
+      if (hasElevator) amenities.push('has_elevator')
       
       // Build cities array - handle both single city and multiple city[] params
       const cities: string[] = []
@@ -149,13 +185,14 @@ export default function PropertiesPage() {
         priceRange,
         propertyTypes: propertyTypeParams.map(pt => decodeURIComponent(pt)),
         bedrooms: bedroomsParams.map(b => decodeURIComponent(b)),
-        bathrooms: [],
+        bathrooms: bathroomsParams.map(b => decodeURIComponent(b)),
         squareFeetRange: [0, 10000],
         cities,
         compound: compoundParam ? decodeURIComponent(compoundParam).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : undefined,
         amenities,
         features: [],
         maxDistances: {},
+        furnished: furnished || undefined,
         sortBy: 'created_at',
         sortOrder: 'desc'
       }
@@ -183,9 +220,20 @@ export default function PropertiesPage() {
         setBedrooms(bedroomsParams[0])
       }
       
-      // Apply filters and trigger search
+      // Apply filters and trigger search only if we have search parameters
+      console.log('🎯 Setting filters and triggering search:', filters.searchQuery)
       setCurrentFilters(filters)
-      handleAdvancedSearch(filters)
+      // Add a small delay to ensure state is set before triggering search
+      // Mark these search params as processed to prevent re-processing
+      processedSearchParams.current = currentSearchParamsString
+      
+      setTimeout(() => {
+        handleAdvancedSearch(filters)
+      }, 100)
+    } else {
+      // No search parameters, load initial properties
+      processedSearchParams.current = currentSearchParamsString
+      loadProperties(true)
     }
   }, [searchParams])
 
@@ -226,8 +274,10 @@ export default function PropertiesPage() {
   }, [loadingMore, hasMoreData, loading])
 
   const loadProperties = async (reset = false) => {
+    console.log('\ud83d\udcda loadProperties called with reset:', reset)
     try {
       if (reset) {
+        console.log('\ud83d\udd04 Reset mode - setting loading to true')
         setLoading(true)
         setCurrentPage(1)
         setProperties([])
@@ -236,15 +286,18 @@ export default function PropertiesPage() {
       }
 
       const page = reset ? 1 : currentPage + 1
+      console.log('\ud83d\udccb Fetching properties page:', page)
       const response = await fetch(`/api/properties?page=${page}&limit=20`)
       
       if (response.ok) {
         const data = await response.json()
         const newProperties = data.properties || []
+        console.log('\u2705 Properties API response:', data.properties?.length, 'properties')
         
         setPagination(data.pagination)
         
         if (reset) {
+          console.log('\ud83d\udd04 Setting properties (reset mode)')
           setProperties(newProperties)
         } else {
           setProperties(prev => {
@@ -261,11 +314,12 @@ export default function PropertiesPage() {
         // Check if we've reached the end
         setHasMoreData(page < data.pagination.totalPages)
       } else {
-        console.error('Failed to load properties')
+        console.error('\u274c Failed to load properties')
       }
     } catch (error) {
-      console.error('Error loading properties:', error)
+      console.error('\u274c Error loading properties:', error)
     } finally {
+      console.log('\ud83c\udfc1 loadProperties finally block - setting loading to false')
       setLoading(false)
       setLoadingMore(false)
     }
@@ -336,9 +390,86 @@ export default function PropertiesPage() {
     loadProperties(true)
   }
 
+  const handleSearchSubmit = async () => {
+    if (!searchQuery.trim()) {
+      // If search query is empty, reset to show all properties
+      setCurrentFilters({})
+      setSearchResultsTotal(null)
+      resetAndLoadProperties()
+      return
+    }
+
+    // Map UI sort values to database column names
+    const getSortMapping = (sortValue: string): { sortBy: string, sortOrder: 'asc' | 'desc' } => {
+      switch (sortValue) {
+        case "price-low":
+          return { sortBy: 'price', sortOrder: 'asc' }
+        case "price-high":
+          return { sortBy: 'price', sortOrder: 'desc' }
+        case "beds":
+          return { sortBy: 'bedrooms', sortOrder: 'desc' }
+        case "sqm":
+          return { sortBy: 'square_meters', sortOrder: 'desc' }
+        case "newest":
+          return { sortBy: 'created_at', sortOrder: 'desc' }
+        default:
+          return { sortBy: 'created_at', sortOrder: 'desc' }
+      }
+    }
+
+    const { sortBy: dbSortBy, sortOrder: dbSortOrder } = getSortMapping(sortBy)
+
+    // Create simple search filters from current search query and basic filters
+    const filters: SearchFilters = {
+      searchQuery: searchQuery.trim(),
+      priceRange: priceRange,
+      propertyTypes: propertyType === "all" ? [] : [propertyType],
+      bedrooms: bedrooms === "all" ? [] : [bedrooms],
+      bathrooms: [],
+      squareFeetRange: [0, 10000],
+      cities: [],
+      amenities: [],
+      features: [],
+      maxDistances: {},
+      sortBy: dbSortBy,
+      sortOrder: dbSortOrder
+    }
+    
+    // Apply the search
+    await handleAdvancedSearch(filters)
+  }
+
   const handleAdvancedSearch = async (filters: SearchFilters) => {
+    if (isSearching) {
+      return
+    }
+    
     setIsSearching(true)
     setCurrentFilters(filters)
+    
+    // Sync basic UI filters with advanced filters for consistency
+    if (filters.searchQuery) {
+      setSearchQuery(filters.searchQuery)
+    }
+    
+    // Update price range if it's different from default
+    if (filters.priceRange && (filters.priceRange[0] !== 0 || filters.priceRange[1] !== 10000000)) {
+      setPriceRange(filters.priceRange)
+    }
+    
+    // Update property type if only one is selected
+    if (filters.propertyTypes.length === 1) {
+      setPropertyType(filters.propertyTypes[0])
+    } else if (filters.propertyTypes.length === 0) {
+      setPropertyType("all")
+    }
+    
+    // Update bedrooms if only one is selected
+    if (filters.bedrooms.length === 1) {
+      setBedrooms(filters.bedrooms[0])
+    } else if (filters.bedrooms.length === 0) {
+      setBedrooms("all")
+    }
     
     try {
       // Build API query parameters from filters
@@ -370,9 +501,10 @@ export default function PropertiesPage() {
       
       if (response.ok) {
         const data = await response.json()
-        console.log('Search response:', data)
+        console.log('✅ Search response received:', data.total, 'properties found')
         setProperties(data.properties || [])
         setSearchResultsTotal(data.total || data.properties?.length || 0)
+        console.log('📊 Search state updated - total:', data.total)
         
         // Reset pagination for search results
         setCurrentPage(1)
@@ -389,6 +521,7 @@ export default function PropertiesPage() {
     } catch (error) {
       console.error('Error during advanced search:', error)
     } finally {
+      console.log('🏁 Search completed, setting isSearching to false')
       setIsSearching(false)
     }
   }
@@ -470,23 +603,32 @@ export default function PropertiesPage() {
     // trackPropertyView(property.id, 'map-view')
   }
 
-  // Filter properties based on current filters (using original properties for infinite scroll)
-  const filteredProperties = properties.filter((property) => {
-    const matchesSearch =
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.city.toLowerCase().includes(searchQuery.toLowerCase())
+  // Determine which properties to show: search results or filtered local properties
+  const displayProperties = (() => {
+    // If we have search results (from API), use those directly
+    if (searchResultsTotal !== null || Object.keys(currentFilters).length > 0) {
+      return properties // These are already filtered by the API
+    }
+    
+    // Otherwise, filter local properties based on basic UI filters
+    return properties.filter((property) => {
+      const matchesSearch =
+        !searchQuery.trim() ||
+        property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        property.city.toLowerCase().includes(searchQuery.toLowerCase())
 
-    const matchesPrice = property.price >= priceRange[0] && property.price <= priceRange[1]
-    const matchesType = propertyType === "all" || property.property_type.toLowerCase() === propertyType.toLowerCase()
-    const matchesBeds = bedrooms === "all" || (property.bedrooms?.toString() ?? "") === bedrooms
-    const matchesStatus = status === "all" || property.status.toLowerCase() === status.toLowerCase()
+      const matchesPrice = property.price >= priceRange[0] && property.price <= priceRange[1]
+      const matchesType = propertyType === "all" || property.property_type.toLowerCase() === propertyType.toLowerCase()
+      const matchesBeds = bedrooms === "all" || (property.bedrooms?.toString() ?? "") === bedrooms
+      const matchesStatus = status === "all" || property.status.toLowerCase() === status.toLowerCase()
 
-    return matchesSearch && matchesPrice && matchesType && matchesBeds && matchesStatus
-  })
+      return matchesSearch && matchesPrice && matchesType && matchesBeds && matchesStatus
+    })
+  })()
 
-  // Sort properties (using original properties for infinite scroll)
-  const sortedProperties = [...filteredProperties].sort((a, b) => {
+  // Sort properties
+  const sortedProperties = [...displayProperties].sort((a, b) => {
     switch (sortBy) {
       case "price-low":
         return a.price - b.price
@@ -568,6 +710,11 @@ export default function PropertiesPage() {
                 placeholder={t('properties.searchPlaceholder', 'Search by location, property type, or features...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter') {
+                    handleSearchSubmit()
+                  }
+                }}
                   className="pl-12 h-12 text-base border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 rounded-xl shadow-sm"
                 />
                   </div>
@@ -782,6 +929,11 @@ export default function PropertiesPage() {
                     setCurrentFilters({})
                     setSearchQuery('')
                     setSearchResultsTotal(null)
+                    // Reset basic UI filters to default
+                    setPropertyType("all")
+                    setBedrooms("all")
+                    setStatus("all")
+                    setPriceRange([0, 500000])
                     resetAndLoadProperties()
                   }}
                     className="text-blue-700 hover:text-blue-900 hover:bg-blue-100 rounded-lg"

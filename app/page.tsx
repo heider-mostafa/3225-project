@@ -845,6 +845,7 @@ export default function HomePage() {
         
         // Add parsed criteria if available
         if (criteria.bedrooms) searchParams.append('bedrooms[]', criteria.bedrooms.toString());
+        if (criteria.bathrooms) searchParams.append('bathrooms[]', criteria.bathrooms.toString());
         if (criteria.propertyType) searchParams.append('propertyType[]', criteria.propertyType);
         if (criteria.city) searchParams.append('city[]', criteria.city);
         if (criteria.minPrice) searchParams.append('minPrice', criteria.minPrice.toString());
@@ -854,6 +855,9 @@ export default function HomePage() {
         if (criteria.hasParking) searchParams.append('has_parking', 'true');
         if (criteria.hasSecurity) searchParams.append('has_security', 'true');
         if (criteria.hasGym) searchParams.append('has_gym', 'true');
+        if (criteria.hasBalcony) searchParams.append('has_balcony', 'true');
+        if (criteria.hasElevator) searchParams.append('has_elevator', 'true');
+        if (criteria.furnished) searchParams.append('furnished', 'true');
         
         // Navigate to properties page with smart search parameters
         router.push(`/properties?${searchParams.toString()}`);

@@ -65,14 +65,14 @@ class TranslationService {
 
   private loadCurrentLanguage() {
     if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('preferred-language') || 'en'
+      const savedLang = localStorage.getItem('i18nextLng') || localStorage.getItem('preferred-language') || 'en'
       this.currentLanguage = savedLang
     }
   }
 
   saveCurrentLanguage(lang: string) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('preferred-language', lang)
+      localStorage.setItem('i18nextLng', lang)
       this.currentLanguage = lang
     }
   }
