@@ -49,9 +49,9 @@ export default function ComingSoonPage() {
 
   useEffect(() => {
     setMounted(true)
-    // Auto-load all tours to prevent mobile Safari iframe initialization issues
-    // Tours 2 and 3 were crashing because they were loaded on-demand
-    setLoadedTours(['1', '2', '3'])
+    // Only auto-load first tour to prevent mobile Safari from being overwhelmed
+    // We'll handle the other tours differently for mobile
+    setLoadedTours(['1'])
   }, [])
 
   // Countdown timer effect
@@ -788,7 +788,7 @@ export default function ComingSoonPage() {
         </div>
       </footer>
 
-      {/* Fullscreen Tour Modal - Same as property details */}
+      {/* Fullscreen Tour Modal - Mobile Safari optimized */}
       {fullscreenTour && (
         <div className="fixed inset-0 bg-black z-50">
           <div className="absolute top-4 right-4 z-10 flex gap-4">
@@ -801,13 +801,53 @@ export default function ComingSoonPage() {
               <X className="h-4 w-4" />
             </Button>
           </div>
-          <TourViewer 
-            tourId={fullscreenTour}
-            propertyId={fullscreenTour}
-            tourUrl={sampleTours.find(tour => tour.id === fullscreenTour)?.virtual_tour_url}
-            className="w-full h-full"
-            fullscreen={true}
-          />
+          {(() => {
+            const isMobileSafari = typeof window !== 'undefined' && 
+              /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+            
+            const tourUrl = sampleTours.find(tour => tour.id === fullscreenTour)?.virtual_tour_url;
+            
+            if (isMobileSafari) {
+              // For mobile Safari, provide a launch screen instead of problematic iframe
+              return (
+                <div className="flex items-center justify-center w-full h-full p-8">
+                  <div className="text-center text-white max-w-md">
+                    <div className="text-8xl mb-8">🏠</div>
+                    <h2 className="text-3xl font-bold mb-4">
+                      {sampleTours.find(tour => tour.id === fullscreenTour)?.title}
+                    </h2>
+                    <p className="text-slate-300 mb-8 text-lg">
+                      Experience this property in full interactive 3D. Opens in a new tab optimized for mobile viewing.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        window.open(tourUrl, '_blank', 'noopener,noreferrer');
+                        setFullscreenTour(null); // Close modal after opening
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-xl text-xl mb-4"
+                    >
+                      <Globe className="w-6 h-6 mr-3" />
+                      Launch Virtual Tour
+                    </Button>
+                    <p className="text-xs text-slate-400">
+                      Optimized for mobile • Full interactive features
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            
+            // For desktop, use the iframe as normal
+            return (
+              <TourViewer 
+                tourId={fullscreenTour}
+                propertyId={fullscreenTour}
+                tourUrl={tourUrl}
+                className="w-full h-full"
+                fullscreen={true}
+              />
+            );
+          })()}
         </div>
       )}
 
