@@ -24,7 +24,8 @@ import {
   Heart,
   Car,
   PlayCircle,
-  Building2
+  Building2,
+  Globe
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -1233,7 +1234,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         </div>
       </div>
 
-      {/* Fullscreen Tour Modal */}
+      {/* Fullscreen Tour Modal - Mobile Safari optimized */}
       {isFullscreenTour && (
         <div className="fixed inset-0 bg-black z-50">
           <div className="absolute top-4 right-4 z-10 flex gap-4">
@@ -1246,14 +1247,52 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
               <Clock className="h-4 w-4" />
             </Button>
           </div>
-          <TourViewer 
-            tourId={property.tourId || property.id}
-            propertyId={property.id}
-            tourUrl={property.virtual_tour_url}
-            className="w-full h-full"
-            onRoomChange={updateRoom}
-            fullscreen={true}
-          />
+          {(() => {
+            const isMobileSafari = typeof window !== 'undefined' && 
+              /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+            
+            if (isMobileSafari && property?.virtual_tour_url) {
+              // For mobile Safari, provide a launch screen instead of problematic iframe
+              return (
+                <div className="flex items-center justify-center w-full h-full p-8">
+                  <div className="text-center text-white max-w-md">
+                    <div className="text-8xl mb-8">🏠</div>
+                    <h2 className="text-3xl font-bold mb-4">
+                      {property.title}
+                    </h2>
+                    <p className="text-slate-300 mb-8 text-lg">
+                      Experience this property in full interactive 3D. Opens in a new tab optimized for mobile viewing.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        window.open(property.virtual_tour_url, '_blank', 'noopener,noreferrer');
+                        setIsFullscreenTour(false); // Close modal after opening
+                      }}
+                      className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-xl text-xl mb-4"
+                    >
+                      <Globe className="w-6 h-6 mr-3" />
+                      Launch Virtual Tour
+                    </Button>
+                    <p className="text-xs text-slate-400">
+                      Optimized for mobile • Full interactive features
+                    </p>
+                  </div>
+                </div>
+              );
+            }
+            
+            // For desktop, use the iframe as normal
+            return (
+              <TourViewer 
+                tourId={property.tourId || property.id}
+                propertyId={property.id}
+                tourUrl={property.virtual_tour_url}
+                className="w-full h-full"
+                onRoomChange={updateRoom}
+                fullscreen={true}
+              />
+            );
+          })()}
         </div>
       )}
 
