@@ -49,8 +49,9 @@ export default function ComingSoonPage() {
 
   useEffect(() => {
     setMounted(true)
-    // Auto-load first tour to show users what they'll get
-    setLoadedTours(['1'])
+    // Auto-load all tours to prevent mobile Safari iframe initialization issues
+    // Tours 2 and 3 were crashing because they were loaded on-demand
+    setLoadedTours(['1', '2', '3'])
   }, [])
 
   // Countdown timer effect

@@ -1884,35 +1884,6 @@ ${selectedLang?.code === 'ar' ? `
     const isMobileSafari = typeof window !== 'undefined' && 
       /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
     
-    // Check if this is tour 2 which has advanced features (renovation/split screen)
-    const hasAdvancedFeatures = tourId === "2" || tourUrl.includes('98OORjlW');
-    
-    // For tours with advanced features on mobile, provide alternative interface
-    if (hasAdvancedFeatures && isMobileSafari && fullscreen) {
-      console.log('🚀 Advanced tour detected on mobile Safari - providing alternative interface')
-      return (
-        <div className={`relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden ${className} flex items-center justify-center`}>
-          <div className="text-center text-white p-8">
-            <div className="text-6xl mb-6">🏠</div>
-            <h3 className="text-2xl font-bold mb-4">Interactive Virtual Tour</h3>
-            <p className="text-slate-300 mb-6 max-w-md">
-              This tour includes advanced features like renovation views and split screens. 
-              For the best experience, open it in a new tab.
-            </p>
-            <Button
-              onClick={() => window.open(tourUrl, '_blank', 'noopener,noreferrer')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-8 py-4 rounded-lg text-lg"
-            >
-              <Globe className="w-5 h-5 mr-2" />
-              Open Full Tour
-            </Button>
-            <p className="text-xs text-slate-400 mt-4">
-              Opens in new tab with full interactive features
-            </p>
-          </div>
-        </div>
-      )
-    }
     
     // Enhance the Realsee URL to start directly in 3D model view
     const enhancedModelUrl = (() => {
