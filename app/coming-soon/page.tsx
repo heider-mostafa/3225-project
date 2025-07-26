@@ -733,7 +733,7 @@ export default function ComingSoonPage() {
       {/* Footer */}
       <footer className="bg-slate-800 text-white py-12">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white">
@@ -758,7 +758,7 @@ export default function ComingSoonPage() {
                 </Button>
               </div>
             </div>
-            <div>
+            {/* <div>
               <h4 className="font-semibold mb-4">{mounted ? t('footer.properties', 'Properties') : 'Properties'}</h4>
               <ul className="space-y-2 text-slate-400">
                 <li>
@@ -797,18 +797,18 @@ export default function ComingSoonPage() {
                   </Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
             <div>
               <h4 className="font-semibold mb-4">{mounted ? t('footer.contact', 'Contact') : 'Contact'}</h4>
               <ul className="space-y-2 text-slate-400">
                 <li>
-                  <a href="tel:+201234567890" className="hover:text-white transition-colors">
-                    +20 123 456 7890
+                  <a href="tel:+201211164331" className="hover:text-white transition-colors">
+                    +20 121 116 4331
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:info@virtualestate.com" className="hover:text-white transition-colors">
-                    info@virtualestate.com
+                  <a href="mailto:info@openbeit.com" className="hover:text-white transition-colors">
+                    info@openbeit.com
                   </a>
                 </li>
                 <li>{mounted ? t('footer.location', 'Cairo, Egypt') : 'Cairo, Egypt'}</li>
