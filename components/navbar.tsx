@@ -44,13 +44,14 @@ export default function Navbar() {
   }
 
   const isAdmin = userRole === 'admin' || userRole === 'super_admin'
+  const isComingSoonPage = pathname === '/coming-soon'
 
   return (
     <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
+          <Link href="/coming-soon" className="flex items-center space-x-3">
             <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
               <rect x="12" y="8" width="28" height="48" stroke="currentColor" strokeWidth="4"/>
               <polygon points="12,8 36,20 36,52 12,56" fill="currentColor"/>
@@ -61,76 +62,68 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link 
-              href="/properties" 
-              className={`transition-colors ${
-                pathname === '/properties' 
-                  ? 'text-blue-600 font-medium' 
-                  : 'text-slate-600 hover:text-slate-800'
-              }`}
-            >
-              {isMounted ? t('nav.properties') : 'Properties'}
-            </Link>
-            <Link 
-              href="/virtual-tours" 
-              className={`transition-colors ${
-                pathname === '/virtual-tours' 
-                  ? 'text-blue-600 font-medium' 
-                  : 'text-slate-600 hover:text-slate-800'
-              }`}
-            >
-              {isMounted ? t('nav.virtualTours') : 'Virtual Tours'}
-            </Link>
-            <Link 
-              href="/about" 
-              className={`transition-colors ${
-                pathname === '/about' 
-                  ? 'text-blue-600 font-medium' 
-                  : 'text-slate-600 hover:text-slate-800'
-              }`}
-            >
-              {isMounted ? t('nav.about') : 'About'}
-            </Link>
-            
-            {/* Admin Access for Admin Users */}
-            {isAdmin && (
-              <Link 
-                href="/admin" 
-                className={`flex items-center space-x-1 transition-colors ${
-                  pathname.startsWith('/admin') 
-                    ? 'text-purple-600 font-medium' 
-                    : 'text-slate-600 hover:text-purple-600'
-                }`}
-              >
-                <Shield className="w-4 h-4" />
-                <span>{isMounted ? t('nav.admin') : 'Admin'}</span>
-              </Link>
-            )}
-            
-            {/* Language Switcher */}
-            <LanguageSwitcher />
-            
-            <Link href="/contact">
-              <Button variant={pathname === '/contact' ? 'default' : 'outline'}>
-                {isMounted ? t('nav.contact') : 'Contact'}
-              </Button>
-            </Link>
-            {user ? (
+            {!isComingSoonPage && (
               <>
-                <Link href="/profile" className="text-slate-600 hover:text-slate-800 transition-colors">
-                  {isMounted ? t('nav.profile') : 'Profile'}
+                <Link 
+                  href="/coming-soon" 
+                  className="text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  {isMounted ? t('nav.properties') : 'Properties'}
                 </Link>
-                <button onClick={handleSignOut} className="text-red-600 hover:text-red-700 transition-colors font-medium">
-                  {isMounted ? t('nav.signOut') : 'Sign Out'}
-                </button>
+                <Link 
+                  href="/coming-soon" 
+                  className="text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  {isMounted ? t('nav.virtualTours') : 'Virtual Tours'}
+                </Link>
+                <Link 
+                  href="/coming-soon" 
+                  className="text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  {isMounted ? t('nav.about') : 'About'}
+                </Link>
+                
+                {/* Admin Access for Admin Users */}
+                {isAdmin && (
+                  <Link 
+                    href="/admin" 
+                    className={`flex items-center space-x-1 transition-colors ${
+                      pathname.startsWith('/admin') 
+                        ? 'text-purple-600 font-medium' 
+                        : 'text-slate-600 hover:text-purple-600'
+                    }`}
+                  >
+                    <Shield className="w-4 h-4" />
+                    <span>{isMounted ? t('nav.admin') : 'Admin'}</span>
+                  </Link>
+                )}
+                
+                <Link href="/coming-soon">
+                  <Button variant="outline">
+                    {isMounted ? t('nav.contact') : 'Contact'}
+                  </Button>
+                </Link>
+                {user ? (
+                  <>
+                    <Link href="/profile" className="text-slate-600 hover:text-slate-800 transition-colors">
+                      {isMounted ? t('nav.profile') : 'Profile'}
+                    </Link>
+                    <button onClick={handleSignOut} className="text-red-600 hover:text-red-700 transition-colors font-medium">
+                      {isMounted ? t('nav.signOut') : 'Sign Out'}
+                    </button>
+                  </>
+                ) : (
+                  <Link href="/auth">
+                    <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                      {isMounted ? t('nav.signIn') : 'Sign In'}
+                    </Button>
+                  </Link>
+                )}
               </>
-            ) : (
-              <Link href="/auth">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  {isMounted ? t('nav.signIn') : 'Sign In'}
-                </Button>
-              </Link>
             )}
+            
+            {/* Language Switcher - Always visible */}
+            <LanguageSwitcher />
           </div>
 
           {/* Mobile Navigation - Language Switcher + Menu Button */}
@@ -138,29 +131,31 @@ export default function Navbar() {
             {/* Language Switcher for Mobile */}
             <LanguageSwitcher />
             
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2 rounded-lg hover:bg-slate-100 transition-colors z-50 relative"
-              aria-label="Toggle mobile menu"
-            >
-              <motion.div
-                animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
-                transition={{ duration: 0.2 }}
+            {/* Mobile Menu Button - Hidden on coming soon page */}
+            {!isComingSoonPage && (
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors z-50 relative"
+                aria-label="Toggle mobile menu"
               >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6 text-slate-700" />
-                ) : (
-                  <Menu className="w-6 h-6 text-slate-700" />
-                )}
-              </motion.div>
-            </button>
+                <motion.div
+                  animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="w-6 h-6 text-slate-700" />
+                  ) : (
+                    <Menu className="w-6 h-6 text-slate-700" />
+                  )}
+                </motion.div>
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mobile Menu */}
         <AnimatePresence>
-          {isMobileMenuOpen && (
+          {isMobileMenuOpen && !isComingSoonPage && (
             <motion.div 
               className="md:hidden mt-4 pb-4 border-t border-slate-200 overflow-hidden"
               initial={{ opacity: 0, height: 0 }}
@@ -180,12 +175,8 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.2 }}
                 >
                   <Link 
-                    href="/properties" 
-                    className={`text-lg transition-colors ${
-                      pathname === '/properties' 
-                        ? 'text-blue-600 font-medium' 
-                        : 'text-slate-700 hover:text-blue-600'
-                    }`}
+                    href="/coming-soon" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {isMounted ? t('nav.properties') : 'Properties'}
@@ -198,12 +189,8 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.3 }}
                 >
                   <Link 
-                    href="/virtual-tours" 
-                    className={`text-lg transition-colors ${
-                      pathname === '/virtual-tours' 
-                        ? 'text-blue-600 font-medium' 
-                        : 'text-slate-700 hover:text-blue-600'
-                    }`}
+                    href="/coming-soon" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {isMounted ? t('nav.virtualTours') : 'Virtual Tours'}
@@ -216,12 +203,8 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.35 }}
                 >
                   <Link 
-                    href="/about" 
-                    className={`text-lg transition-colors ${
-                      pathname === '/about' 
-                        ? 'text-blue-600 font-medium' 
-                        : 'text-slate-700 hover:text-blue-600'
-                    }`}
+                    href="/coming-soon" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {isMounted ? t('nav.about') : 'About'}
@@ -256,12 +239,8 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.45 }}
                 >
                   <Link 
-                    href="/contact" 
-                    className={`text-lg transition-colors ${
-                      pathname === '/contact' 
-                        ? 'text-blue-600 font-medium' 
-                        : 'text-slate-700 hover:text-blue-600'
-                    }`}
+                    href="/coming-soon" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {isMounted ? t('nav.contact') : 'Contact'}
