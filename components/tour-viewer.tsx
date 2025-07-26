@@ -89,6 +89,7 @@ interface TourViewerProps {
   propertyId?: string
   tourUrl?: string
   hideRoomMenu?: boolean
+  hideConversationalAI?: boolean
 }
 
 // Mock 3D room component - only use inside Canvas
@@ -182,6 +183,7 @@ export function TourViewer({
   propertyId,
   tourUrl,
   hideRoomMenu = false,
+  hideConversationalAI = false,
 }: TourViewerProps) {
   const { user } = useAuth()
   const { toast } = useToast()
@@ -2056,7 +2058,7 @@ ${selectedLang?.code === 'ar' ? `
         )}
 
         {/* Smart Voice AI Interface - Available in both fullscreen and hero section */}
-        {propertyId && (() => {
+        {propertyId && !hideConversationalAI && (() => {
           // Mobile detection
           const isMobile = typeof window !== 'undefined' && 
             /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -2292,7 +2294,7 @@ ${selectedLang?.code === 'ar' ? `
         })()}
 
         {/* HeyGen Video Agent Modal */}
-        {showHeyGenAgent && propertyId && (
+        {showHeyGenAgent && propertyId && !hideConversationalAI && (
           <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-2xl w-full max-w-4xl h-[80vh] flex flex-col overflow-hidden shadow-2xl">
               {/* Header */}

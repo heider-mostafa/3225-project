@@ -455,6 +455,7 @@ export default function ComingSoonPage() {
                           tourUrl={tour.virtual_tour_url}
                           className="w-full h-full rounded-lg"
                           hideRoomMenu={true}
+                          hideConversationalAI={true}
                         />
 
                         {/* Transparent Hover Overlay - Same as property details */}
@@ -877,6 +878,7 @@ export default function ComingSoonPage() {
                 tourUrl={tourUrl}
                 className="w-full h-full"
                 fullscreen={true}
+                hideConversationalAI={true}
               />
             );
           })()}
