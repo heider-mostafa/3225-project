@@ -1,7 +1,6 @@
 import './globals.css'
 import Navbar from '@/components/navbar'
 import { Providers } from '@/components/providers'
-import { HomepageRedirect } from '@/components/homepage-redirect'
 import { Cairo, Amiri, Montserrat } from 'next/font/google'
 
 // Fonts
@@ -64,12 +63,10 @@ export default function RootLayout({
       </head>
       <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} suppressHydrationWarning={true}>
         <Providers>
-          <HomepageRedirect>
-            <Navbar />
-            <main>
-              {children}
-            </main>
-          </HomepageRedirect>
+          <Navbar />
+          <main>
+            {children}
+          </main>
         </Providers>
       </body>
     </html>

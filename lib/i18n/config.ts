@@ -1023,7 +1023,7 @@ const resources = {
         getYourFree: 'Get Your FREE',
         virtualTour3D: '3D Virtual Tour',
         worth: 'Worth',
-        priceEGP: '5,000 EGP',
+        priceEGP: '50,000 EGP',
         hundredPercentFree: '100% FREE',
         sellFasterDescription: 'Sell your property 73% faster with immersive virtual tours that captivate serious buyers',
         professionalPhotography: 'Professional Photography',
@@ -1165,7 +1165,13 @@ const resources = {
         clickToExplore: 'Click to Explore',
         liveTour: 'Live Tour',
         launchDateShort: 'Sept 1st',
-        viewInFullscreen: 'View in Fullscreen'
+        viewInFullscreen: 'View in Fullscreen',
+        countdownTitle: 'Launch Countdown',
+        countdownSubtitle: 'Get ready for the future of real estate',
+        days: 'Days',
+        hours: 'Hours',
+        minutes: 'Min',
+        seconds: 'Sec'
       },
 
       // Footer
@@ -2217,7 +2223,7 @@ if (resources.ar && resources.ar.translation) {
     getYourFree: 'احصل على',
     virtualTour3D: 'جولة افتراضية ثلاثية الأبعاد',
     worth: 'بقيمة',
-    priceEGP: '5000 جنيه مصري',
+    priceEGP: '50,000 جنيه مصري',
     hundredPercentFree: '100٪ مجاناً',
     sellFasterDescription: 'بع عقارك بسرعة أكبر بنسبة 73٪ مع جولات افتراضية غامرة تجذب المشترين الجديين',
     professionalPhotography: 'تصوير احترافي',
@@ -2359,7 +2365,13 @@ if (resources.ar && resources.ar.translation) {
     clickToExplore: 'انقر للاستكشاف',
     liveTour: 'جولة مباشرة',
     launchDateShort: '1 سبتمبر',
-    viewInFullscreen: 'عرض في ملء الشاشة'
+    viewInFullscreen: 'عرض في ملء الشاشة',
+    countdownTitle: 'العد التنازلي للإطلاق',
+    countdownSubtitle: 'استعد لمستقبل العقارات',
+    days: 'أيام',
+    hours: 'ساعات',
+    minutes: 'دقائق',
+    seconds: 'ثواني'
   };
 
   // Footer Arabic

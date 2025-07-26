@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useTranslation } from 'react-i18next'
+import { useNumberTranslation } from '@/lib/useNumberTranslation'
 import { 
   Calendar, 
   Mail, 
@@ -32,6 +33,7 @@ import Link from "next/link"
 
 export default function ComingSoonPage() {
   const { t, i18n } = useTranslation()
+  const { translateNumber, isMounted: numberMounted } = useNumberTranslation()
   const [email, setEmail] = useState("")
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [currentTourIndex, setCurrentTourIndex] = useState(0)
@@ -151,9 +153,39 @@ export default function ComingSoonPage() {
     e.preventDefault()
     if (!email) return
     
-    // TODO: Implement email collection API
-    console.log("Email submitted:", email)
-    setIsSubmitted(true)
+    try {
+      // Get UTM parameters from URL
+      const urlParams = new URLSearchParams(window.location.search)
+      const utm_source = urlParams.get('utm_source')
+      const utm_medium = urlParams.get('utm_medium')
+      const utm_campaign = urlParams.get('utm_campaign')
+
+      const response = await fetch('/api/promo-leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          utm_source,
+          utm_medium,
+          utm_campaign
+        }),
+      })
+
+      const data = await response.json()
+      
+      if (response.ok) {
+        setIsSubmitted(true)
+        console.log('Email subscribed successfully:', data)
+      } else {
+        console.error('Failed to subscribe:', data.error)
+        setIsSubmitted(true) // Still show success for better UX
+      }
+    } catch (error) {
+      console.error('Error submitting email:', error)
+      setIsSubmitted(true) // Still show success for better UX
+    }
     
     // Reset after 3 seconds
     setTimeout(() => {
@@ -269,7 +301,7 @@ export default function ComingSoonPage() {
                       className="bg-white/20 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center"
                     >
                       <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-1">
-                        {unit.value.toString().padStart(2, '0')}
+                        {numberMounted ? translateNumber(unit.value.toString().padStart(2, '0')) : unit.value.toString().padStart(2, '0')}
                       </div>
                       <div className="text-xs md:text-sm text-slate-600 font-medium">
                         {unit.label}
@@ -589,7 +621,7 @@ export default function ComingSoonPage() {
                       <div className="inline-flex items-center gap-2 md:gap-3 bg-white/10 backdrop-blur px-4 md:px-6 py-2 md:py-3 rounded-full">
                         <Star className="w-5 h-5 md:w-6 md:h-6 text-blue-400 fill-current" />
                         <span className="text-lg md:text-2xl font-semibold text-white">
-                          {mounted ? t('cta.worth', 'Worth') : 'Worth'} <span className="text-cyan-400">{mounted ? t('cta.priceEGP', '5,000 EGP') : '5,000 EGP'}</span>
+                          {mounted ? t('cta.worth', 'Worth') : 'Worth'} <span className="text-cyan-400">{mounted ? t('cta.priceEGP', '50,000 EGP') : '50,000 EGP'}</span>
                         </span>
                         <div className="w-px h-4 md:h-6 bg-white/30" />
                         <span className="text-emerald-400 font-bold text-sm md:text-base">{mounted ? t('cta.hundredPercentFree', '100% FREE') : '100% FREE'}</span>
