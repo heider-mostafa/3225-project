@@ -469,20 +469,14 @@ export default function ComingSoonPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6">
               {mounted ? t('valueProposition.title', 'What We Do') : 'What We Do'}
             </h2>
             <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
               {mounted ? t('valueProposition.subtitle', 'We revolutionize property showcasing with cutting-edge technology that transforms how developers sell real estate') : 'We revolutionize property showcasing with cutting-edge technology that transforms how developers sell real estate'}
             </p>
-          </motion.div>
+          </div>
 
           {/* Value Proposition Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
@@ -509,24 +503,20 @@ export default function ComingSoonPage() {
                 bgColor: 'from-emerald-500/20 to-teal-500/20'
               }
             ].map((benefit, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                viewport={{ once: true }}
                 className="group"
               >
-                <Card className="bg-white/80 backdrop-blur-xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-500 h-full group-hover:scale-105">
+                <Card className="bg-white/80 backdrop-blur-xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-500 h-full">
                   <CardContent className="p-8">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${benefit.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${benefit.color} p-4 mb-6 shadow-lg`}>
                       <benefit.icon className="w-full h-full text-white" />
                     </div>
                     <h3 className="text-xl font-bold text-slate-900 mb-4">{benefit.title}</h3>
                     <p className="text-slate-600 leading-relaxed">{benefit.description}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
@@ -646,13 +636,7 @@ export default function ComingSoonPage() {
         </div>
         <div className="w-full relative z-10">
           {/* Enhanced Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            viewport={{ once: true }}
-            className="text-center mb-16 px-4"
-          >
+          <div className="text-center mb-16 px-4">
             <div className="inline-flex items-center gap-3 bg-cyan-500 text-white rounded-full px-6 py-3 mb-8 shadow-lg">
               <Eye className="w-5 h-5" />
               <span className="font-semibold text-sm tracking-wide">
@@ -665,17 +649,13 @@ export default function ComingSoonPage() {
             <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
               {mounted ? t('comingSoon.sneakPeekDescription', 'Experience our revolutionary virtual tour technology with these interactive property previews') : 'Experience our revolutionary virtual tour technology with these interactive property previews'}
             </p>
-          </motion.div>
+          </div>
 
           {/* Tour Cards */}
           <div className="flex flex-col md:grid md:grid-cols-3 w-full">
             {sampleTours.map((tour, index) => (
-              <motion.div
+              <div
                 key={tour.id}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
                 className="group w-full"
               >
                 <div className="space-y-4">
@@ -749,7 +729,7 @@ export default function ComingSoonPage() {
                     </button>
                   )}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
 
@@ -757,13 +737,7 @@ export default function ComingSoonPage() {
           <section id="virtual-tour-cta" className="relative py-16 md:py-32 overflow-hidden bg-gradient-to-br from-slate-100 to-blue-100">
             <div className="container mx-auto px-4 relative z-10">
               {/* Premium Card Container */}
-              <motion.div
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
-                viewport={{ once: true }}
-                className="relative max-w-5xl mx-auto"
-              >
+              <div className="relative max-w-5xl mx-auto">
                 {/* Animated Background Gradient */}
                 <div className="absolute inset-0 rounded-[2rem] overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 opacity-95" />
@@ -819,27 +793,18 @@ export default function ComingSoonPage() {
                 {/* Glass Morphism Content Container */}
                 <div className="relative bg-white/5 backdrop-blur-xl rounded-[2rem] p-6 md:p-12 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
                   {/* Premium Badge */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, delay: 0.2 }}
-                    className="absolute -top-6 left-1/2 transform -translate-x-1/2"
-                  >
+                  <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
                     <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 md:px-8 py-2 md:py-3 rounded-full font-bold shadow-xl flex items-center gap-2 text-sm md:text-base">
                       <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
                       {mounted ? t('cta.exclusiveOffer', 'EXCLUSIVE OFFER') : 'EXCLUSIVE OFFER'}
                       <Sparkles className="w-4 h-4 md:w-5 md:h-5" />
                     </div>
-                  </motion.div>
+                  </div>
 
                   {/* Main Content */}
                   <div className="text-center space-y-6 md:space-y-8 pt-8">
                     {/* Title */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.3 }}
-                    >
+                    <div>
                       <h2 className="text-3xl md:text-5xl lg:text-6xl font-bold mb-4 md:mb-6">
                         <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-white">
                           {mounted ? t('cta.getYourFree', 'Get Your FREE') : 'Get Your FREE'}
@@ -849,15 +814,10 @@ export default function ComingSoonPage() {
                           {mounted ? t('cta.virtualTour3D', '3D Virtual Tour') : '3D Virtual Tour'}
                         </span>
                       </h2>
-                    </motion.div>
+                    </div>
 
                     {/* Value Proposition */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.4 }}
-                      className="space-y-4"
-                    >
+                    <div className="space-y-4">
                       <div className="inline-flex items-center gap-2 md:gap-3 bg-white/10 backdrop-blur px-4 md:px-6 py-2 md:py-3 rounded-full">
                         <Star className="w-5 h-5 md:w-6 md:h-6 text-blue-400 fill-current" />
                         <span className="text-lg md:text-2xl font-semibold text-white">
@@ -870,23 +830,17 @@ export default function ComingSoonPage() {
                       <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">
                         {mounted ? t('cta.sellFasterDescription', 'Sell your property 73% faster with immersive virtual tours that captivate serious buyers') : 'Sell your property 73% faster with immersive virtual tours that captivate serious buyers'}
                       </p>
-                    </motion.div>
+                    </div>
 
                     {/* Features Grid */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.5 }}
-                      className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 my-8 md:my-10"
-                    >
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 my-8 md:my-10">
                       {[
                         { icon: Camera, title: mounted ? t('cta.professionalPhotography', 'Professional Photography') : 'Professional Photography', desc: mounted ? t('cta.hdrDroneShots', 'HDR & Drone shots') : 'HDR & Drone shots', color: "from-blue-500 to-cyan-500" },
                         { icon: TrendingUp, title: mounted ? t('cta.interactive3DTour', 'Interactive 3D Tour') : 'Interactive 3D Tour', desc: mounted ? t('cta.dollhouseFloorPlans', 'Dollhouse & Floor plans') : 'Dollhouse & Floor plans', color: "from-cyan-500 to-teal-500" },
                         { icon: Users, title: mounted ? t('cta.brokerNetwork', 'Broker Network') : 'Broker Network', desc: mounted ? t('cta.activeAgents', '1000+ active agents') : '1000+ active agents', color: "from-teal-500 to-blue-500" }
                       ].map((feature, index) => (
-                        <motion.div
+                        <div
                           key={index}
-                          whileHover={{ scale: 1.05, y: -5 }}
                           className="bg-white/5 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group"
                         >
                           <div className={`w-12 h-12 md:w-14 md:h-14 rounded-xl bg-gradient-to-br ${feature.color} p-2 md:p-3 mb-3 md:mb-4 group-hover:shadow-lg transition-shadow mx-auto`}>
@@ -894,16 +848,12 @@ export default function ComingSoonPage() {
                           </div>
                           <h3 className="text-white font-semibold text-base md:text-lg mb-1">{feature.title}</h3>
                           <p className="text-slate-400 text-xs md:text-sm">{feature.desc}</p>
-                        </motion.div>
+                        </div>
                       ))}
-                    </motion.div>
+                    </div>
 
                     {/* CTA Button */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.6, delay: 0.6 }}
-                    >
+                    <div>
                       <LeadCaptureForm
                         trigger={
                           <Button 
@@ -927,15 +877,10 @@ export default function ComingSoonPage() {
                         utm_medium="cta"
                         utm_campaign="free-virtual-tour"
                       />
-                    </motion.div>
+                    </div>
 
                     {/* Urgency Indicators */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      transition={{ duration: 0.6, delay: 0.7 }}
-                      className="space-y-3"
-                    >
+                    <div className="space-y-3">
                       <div className="flex items-center justify-center gap-4 md:gap-6 text-xs md:text-sm">
                         <div className="flex items-center gap-2 text-slate-400">
                           <Clock className="h-4 w-4" />
@@ -951,19 +896,14 @@ export default function ComingSoonPage() {
                       {/* Progress Bar */}
                       <div className="max-w-xs mx-auto">
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                          <motion.div
-                            initial={{ width: "0%" }}
-                            whileInView={{ width: "76%" }}
-                            transition={{ duration: 1, delay: 0.8 }}
-                            className="h-full bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full"
-                          />
+                          <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full w-3/4" />
                         </div>
                         <p className="text-xs text-slate-400 mt-2">{mounted ? t('cta.claimedThisMonth', '38 of 50 claimed this month') : '38 of 50 claimed this month'}</p>
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             </div>
           </section>
         </div>
@@ -981,13 +921,7 @@ export default function ComingSoonPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-emerald-400/30 rounded-full px-6 py-3 mb-8">
               <TrendingUp className="w-5 h-5 text-emerald-400" />
               <span className="text-white font-semibold text-sm tracking-wide">
@@ -1000,7 +934,7 @@ export default function ComingSoonPage() {
             <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
               {mounted ? t('developerBenefits.subtitle', 'Proven results that transform your sales process and maximize revenue') : 'Proven results that transform your sales process and maximize revenue'}
             </p>
-          </motion.div>
+          </div>
 
           {/* Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
@@ -1027,18 +961,14 @@ export default function ComingSoonPage() {
                 color: 'from-purple-400 to-pink-500'
               }
             ].map((item, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                viewport={{ once: true }}
                 className="text-center group"
               >
-                <Card className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-500 h-full group-hover:scale-105">
+                <Card className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-500 h-full">
                   <CardContent className="p-8">
                     {/* Icon */}
-                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${item.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${item.color} p-4 mb-6`}>
                       <item.icon className="w-full h-full text-white" />
                     </div>
                     
@@ -1054,7 +984,7 @@ export default function ComingSoonPage() {
                     <p className="text-slate-300 leading-relaxed">{item.description}</p>
                   </CardContent>
                 </Card>
-              </motion.div>
+              </div>
             ))}
           </div>
 
