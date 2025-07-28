@@ -1147,31 +1147,99 @@ const resources = {
 
       // Coming Soon Page
       comingSoon: {
-        launchDate: 'Coming September 1st',
+        launchDate: 'LAUNCHING SEPTEMBER 1ST',
         heroTitle: 'The Future of',
         heroTitleHighlight: 'Real Estate',
-        heroTitleEnd: 'is Here',
-        heroDescription: 'Experience properties like never before with AI-powered virtual tours, instant expert guidance, and immersive 3D exploration',
-        feature1: '3D Virtual Tours',
-        feature2: 'AI Voice Agent',
-        feature3: 'Immersive Experience',
-        emailPlaceholder: 'Enter your email address',
-        notifyMe: 'Notify Me',
-        successTitle: "You're on the list!",
-        successMessage: "We'll notify you on September 1st",
-        sneakPeekTitle: 'Get a Sneak Peek',
-        sneakPeekDescription: 'Experience our revolutionary virtual tour technology with these preview samples',
+        heroTitleEnd: 'Development',
+        heroDescription: 'Transform how you showcase and sell properties with AI-powered virtual tours, instant lead qualification, and immersive 3D experiences',
+        feature1: 'Free 3D Virtual Tours',
+        feature2: '24/7 AI Assistant',
+        feature3: 'Instant Lead Qualification',
+        emailPlaceholder: 'Enter your email for early access',
+        notifyMe: 'Get Early Access',
+        successTitle: "You're on the VIP list!",
+        successMessage: "We'll notify you with exclusive early access on September 1st",
+        sneakPeekBadge: 'EXPERIENCE THE DIFFERENCE',
+        sneakPeekTitle: 'Preview Our Technology',
+        sneakPeekDescription: 'Experience our revolutionary virtual tour technology with these interactive property previews',
         clickToLoad: 'Click to Load Virtual Tour',
         clickToExplore: 'Click to Explore',
         liveTour: 'Live Tour',
         launchDateShort: 'Sept 1st',
         viewInFullscreen: 'View in Fullscreen',
-        countdownTitle: 'Launch Countdown',
-        countdownSubtitle: 'Get ready for the future of real estate',
+        countdownTitle: 'LAUNCH COUNTDOWN',
+        countdownSubtitle: 'Get ready for the future of real estate development',
         days: 'Days',
         hours: 'Hours',
         minutes: 'Min',
         seconds: 'Sec'
+      },
+
+      // Value Proposition Section
+      valueProposition: {
+        title: 'What We Do',
+        subtitle: 'We revolutionize property showcasing with cutting-edge technology that transforms how developers sell real estate',
+        benefit1: {
+          title: 'Free Professional 3D Virtual Tours',
+          description: 'Complete property filming and 3D tour creation at no cost. Professional-grade immersive experiences that captivate buyers.'
+        },
+        benefit2: {
+          title: '24/7 AI Property Assistant',
+          description: 'Intelligent AI agent handles inquiries, qualifies leads, and provides detailed property information around the clock.'
+        },
+        benefit3: {
+          title: 'Instant Lead Qualification',
+          description: 'Advanced algorithms instantly identify and prioritize serious buyers, maximizing your time and conversion rates.'
+        }
+      },
+
+      // How It Works Section
+      howItWorks: {
+        title: 'How It Works',
+        subtitle: 'Three simple steps to transform your property marketing',
+        step1: {
+          title: 'We Film Your Property',
+          subtitle: '(Free)',
+          description: 'Our professional photographers capture your property with advanced 3D scanning technology and high-resolution cameras.'
+        },
+        step2: {
+          title: 'Create Immersive Virtual Tours',
+          description: 'We transform the captured data into stunning 3D virtual tours with dollhouse views, floor plans, and interactive features.'
+        },
+        step3: {
+          title: 'AI Assistant Handles Inquiries',
+          subtitle: '24/7',
+          description: 'Our AI agent engages visitors, answers questions, qualifies leads, and schedules appointments automatically.'
+        }
+      },
+
+      // Developer Benefits Section
+      developerBenefits: {
+        badge: 'BUILT FOR DEVELOPERS',
+        title: 'Why Developers Choose Us',
+        subtitle: 'Proven results that transform your sales process and maximize revenue',
+        metric1: {
+          label: 'Faster Sales Cycle',
+          description: 'Virtual tours reduce the need for multiple site visits, accelerating decision-making'
+        },
+        metric2: {
+          label: 'Reduction in Site Visits',
+          description: 'Pre-qualified leads arrive ready to buy, saving time and resources'
+        },
+        metric3: {
+          label: 'Automated Responses',
+          description: 'AI assistant captures leads and provides information around the clock'
+        },
+        trust1: 'Enterprise Security',
+        trust2: 'Data Protection',
+        trust3: 'GDPR Compliant'
+      },
+
+      // Tech Stack Section
+      techStack: {
+        badge: 'POWERED BY ADVANCED AI',
+        title: 'Cutting-Edge Technology',
+        subtitle: 'Built with the latest technologies to deliver unmatched performance and reliability'
       },
 
       // Footer
@@ -2347,31 +2415,99 @@ if (resources.ar && resources.ar.translation) {
 
   // Coming Soon Page Arabic
   (resources.ar.translation as any).comingSoon = {
-    launchDate: 'قادم في 1 سبتمبر',
+    launchDate: 'الإطلاق في 1 سبتمبر',
     heroTitle: 'مستقبل',
     heroTitleHighlight: 'العقارات',
-    heroTitleEnd: 'هنا',
-    heroDescription: 'اختبر العقارات كما لم تختبرها من قبل مع الجولات الافتراضية المدعومة بالذكاء الاصطناعي والإرشاد الفوري من الخبراء والاستكشاف الغامر ثلاثي الأبعاد',
-    feature1: 'جولات افتراضية ثلاثية الأبعاد',
-    feature2: 'مساعد صوتي ذكي',
-    feature3: 'تجربة غامرة',
-    emailPlaceholder: 'أدخل عنوان بريدك الإلكتروني',
-    notifyMe: 'أشعرني',
-    successTitle: 'أنت في القائمة!',
-    successMessage: 'سنخبرك في 1 سبتمبر',
-    sneakPeekTitle: 'احصل على نظرة خاطفة',
-    sneakPeekDescription: 'اختبر تقنية الجولة الافتراضية الثورية مع هذه العينات المعاينة',
+    heroTitleEnd: 'التطوير',
+    heroDescription: 'غيّر طريقة عرض وبيع العقارات مع الجولات الافتراضية المدعومة بالذكاء الاصطناعي وتأهيل العملاء الفوري والتجارب الغامرة ثلاثية الأبعاد',
+    feature1: 'جولات افتراضية ثلاثية الأبعاد مجانية',
+    feature2: 'مساعد ذكي 24/7',
+    feature3: 'تأهيل فوري للعملاء المحتملين',
+    emailPlaceholder: 'أدخل بريدك الإلكتروني للوصول المبكر',
+    notifyMe: 'احصل على الوصول المبكر',
+    successTitle: 'أنت في قائمة كبار الشخصيات!',
+    successMessage: 'سنخبرك بالوصول المبكر الحصري في 1 سبتمبر',
+    sneakPeekBadge: 'اختبر الفرق',
+    sneakPeekTitle: 'معاينة تقنيتنا',
+    sneakPeekDescription: 'اختبر تقنية الجولات الافتراضية الثورية مع هذه المعاينات التفاعلية للعقارات',
     clickToLoad: 'انقر لتحميل الجولة الافتراضية',
     clickToExplore: 'انقر للاستكشاف',
     liveTour: 'جولة مباشرة',
     launchDateShort: '1 سبتمبر',
     viewInFullscreen: 'عرض في ملء الشاشة',
     countdownTitle: 'العد التنازلي للإطلاق',
-    countdownSubtitle: 'استعد لمستقبل العقارات',
+    countdownSubtitle: 'استعد لمستقبل تطوير العقارات',
     days: 'أيام',
     hours: 'ساعات',
     minutes: 'دقائق',
     seconds: 'ثواني'
+  };
+
+  // Value Proposition Section Arabic
+  (resources.ar.translation as any).valueProposition = {
+    title: 'ما نقوم به',
+    subtitle: 'نحن نثور في عرض العقارات بتقنيات متطورة تغير طريقة بيع المطورين للعقارات',
+    benefit1: {
+      title: 'جولات ثلاثية الأبعاد احترافية مجانية',
+      description: 'تصوير وإنشاء جولات ثلاثية الأبعاد كاملة بدون تكلفة. تجارب غامرة احترافية تجذب المشترين.'
+    },
+    benefit2: {
+      title: 'مساعد عقاري ذكي 24/7',
+      description: 'مساعد ذكي يتعامل مع الاستفسارات ويؤهل العملاء المحتملين ويقدم معلومات مفصلة عن العقارات على مدار الساعة.'
+    },
+    benefit3: {
+      title: 'تأهيل فوري للعملاء المحتملين',
+      description: 'خوارزميات متقدمة تحدد وتعطي الأولوية للمشترين الجديين فوراً، مما يزيد من وقتك ومعدلات التحويل.'
+    }
+  };
+
+  // How It Works Section Arabic
+  (resources.ar.translation as any).howItWorks = {
+    title: 'كيف يعمل',
+    subtitle: 'ثلاث خطوات بسيطة لتحويل تسويق عقارك',
+    step1: {
+      title: 'نصور عقارك',
+      subtitle: '(مجاناً)',
+      description: 'مصورونا المحترفون يلتقطون عقارك بتقنية المسح ثلاثي الأبعاد المتقدمة والكاميرات عالية الدقة.'
+    },
+    step2: {
+      title: 'إنشاء جولات افتراضية غامرة',
+      description: 'نحول البيانات الملتقطة إلى جولات ثلاثية الأبعاد مذهلة مع عروض البيت المجسم ومخططات الطوابق والميزات التفاعلية.'
+    },
+    step3: {
+      title: 'المساعد الذكي يتعامل مع الاستفسارات',
+      subtitle: '24/7',
+      description: 'مساعدنا الذكي يتفاعل مع الزوار ويجيب على الأسئلة ويؤهل العملاء المحتملين ويحدد المواعيد تلقائياً.'
+    }
+  };
+
+  // Developer Benefits Section Arabic
+  (resources.ar.translation as any).developerBenefits = {
+    badge: 'مصمم للمطورين',
+    title: 'لماذا يختارنا المطورون',
+    subtitle: 'نتائج مثبتة تحول عملية البيع وتزيد الإيرادات',
+    metric1: {
+      label: 'دورة مبيعات أسرع',
+      description: 'الجولات الافتراضية تقلل الحاجة لزيارات متعددة للموقع، مما يسرع اتخاذ القرارات'
+    },
+    metric2: {
+      label: 'تقليل زيارات الموقع',
+      description: 'العملاء المحتملون المؤهلون مسبقاً يصلون مستعدين للشراء، مما يوفر الوقت والموارد'
+    },
+    metric3: {
+      label: 'ردود تلقائية',
+      description: 'المساعد الذكي يلتقط العملاء المحتملين ويقدم المعلومات على مدار الساعة'
+    },
+    trust1: 'أمان المؤسسات',
+    trust2: 'حماية البيانات',
+    trust3: 'متوافق مع اللائحة العامة لحماية البيانات'
+  };
+
+  // Tech Stack Section Arabic
+  (resources.ar.translation as any).techStack = {
+    badge: 'مدعوم بالذكاء الاصطناعي المتقدم',
+    title: 'تقنية متطورة',
+    subtitle: 'مبني بأحدث التقنيات لتقديم أداء وموثوقية لا مثيل لهما'
   };
 
   // Footer Arabic

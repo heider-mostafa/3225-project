@@ -21,7 +21,17 @@ import {
   Star,
   Phone,
   Maximize2,
-  X
+  X,
+  Shield,
+  Zap,
+  Brain,
+  Video,
+  Headphones,
+  BarChart3,
+  Cpu,
+  Database,
+  Code,
+  Cloud
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -222,28 +232,44 @@ export default function ComingSoonPage() {
   if (!mounted) return null
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
       {/* Hero Section */}
-      <section className="relative min-h-screen sm:h-screen flex items-center justify-center overflow-hidden py-8 sm:py-0">
-        {/* Background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/20 via-purple-600/10 to-slate-900/30" />
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-8">
+        {/* Premium background with geometric patterns */}
+        <div className="absolute inset-0">
+          {/* Primary gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-800" />
+          
+          {/* Geometric grid pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `linear-gradient(rgba(0,212,255,0.3) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,212,255,0.3) 1px, transparent 1px)`,
+              backgroundSize: '100px 100px'
+            }} />
+          </div>
+          
+          {/* Ambient glow effects */}
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl" />
+        </div>
         
-        {/* Floating elements */}
+        {/* Floating tech particles */}
         <div className="absolute inset-0 overflow-hidden">
-          {[...Array(20)].map((_, i) => (
+          {[...Array(15)].map((_, i) => (
             <motion.div
               key={i}
-              className="absolute w-2 h-2 bg-blue-400/30 rounded-full"
+              className="absolute w-1 h-1 bg-cyan-400/60 rounded-full"
               animate={{
                 y: [0, -100, 0],
-                x: [0, Math.random() * 100 - 50, 0],
+                x: [0, Math.random() * 50 - 25, 0],
                 scale: [1, 1.5, 1],
-                opacity: [0, 1, 0]
+                opacity: [0, 0.8, 0]
               }}
               transition={{
-                duration: 3 + Math.random() * 2,
+                duration: 4 + Math.random() * 3,
                 repeat: Infinity,
-                delay: Math.random() * 2
+                delay: Math.random() * 3
               }}
               style={{
                 left: `${Math.random() * 100}%`,
@@ -254,39 +280,42 @@ export default function ComingSoonPage() {
         </div>
 
         {/* Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto w-full">
-          {/* Coming Soon Badge */}
+        <div className="relative z-10 text-center px-4 max-w-5xl mx-auto w-full">
+          {/* Premium Coming Soon Badge */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="mb-6"
+            className="mb-8"
           >
-            <Badge className="bg-blue-600 text-white px-6 py-2 text-lg font-semibold">
-              <Calendar className="w-4 h-4 mr-2" />
-              {mounted ? t('comingSoon.launchDate', 'Coming September 1st') : 'Coming September 1st'}
-            </Badge>
+            <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-cyan-400/30 rounded-full px-8 py-4 shadow-2xl">
+              <div className="w-3 h-3 bg-cyan-400 rounded-full animate-pulse" />
+              <span className="text-white font-semibold text-lg tracking-wide">
+                {mounted ? t('comingSoon.launchDate', 'LAUNCHING SEPTEMBER 1ST') : 'LAUNCHING SEPTEMBER 1ST'}
+              </span>
+              <Calendar className="w-5 h-5 text-cyan-400" />
+            </div>
           </motion.div>
 
-          {/* Countdown Banner */}
+          {/* Premium Countdown Banner */}
           {mounted && (timeLeft.days > 0 || timeLeft.hours > 0 || timeLeft.minutes > 0 || timeLeft.seconds > 0) && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="mb-8"
+              className="mb-12"
             >
-              <div className="bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-purple-600/10 backdrop-blur-md border border-white/20 rounded-2xl p-6 max-w-2xl mx-auto">
-                <div className="text-center mb-4">
-                  <h3 className="text-xl md:text-2xl font-bold text-slate-800 mb-2">
-                    {t('comingSoon.countdownTitle', 'Launch Countdown')}
+              <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 max-w-3xl mx-auto shadow-2xl">
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl md:text-3xl font-bold text-white mb-3">
+                    {t('comingSoon.countdownTitle', 'LAUNCH COUNTDOWN')}
                   </h3>
-                  <p className="text-slate-600 text-sm md:text-base">
-                    {t('comingSoon.countdownSubtitle', 'Get ready for the future of real estate')}
+                  <p className="text-slate-300 text-lg md:text-xl">
+                    {t('comingSoon.countdownSubtitle', 'Get ready for the future of real estate development')}
                   </p>
                 </div>
                 
-                <div className="grid grid-cols-4 gap-2 md:gap-4">
+                <div className="grid grid-cols-4 gap-3 md:gap-6">
                   {[
                     { value: timeLeft.days, label: t('comingSoon.days', 'Days') },
                     { value: timeLeft.hours, label: t('comingSoon.hours', 'Hours') },
@@ -298,12 +327,12 @@ export default function ComingSoonPage() {
                       initial={{ scale: 0.8 }}
                       animate={{ scale: 1 }}
                       transition={{ delay: 0.4 + index * 0.1 }}
-                      className="bg-white/20 backdrop-blur-sm rounded-xl p-3 md:p-4 text-center"
+                      className="bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-2xl p-4 md:p-6 text-center border border-white/10 hover:border-cyan-400/30 transition-all duration-300"
                     >
-                      <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-slate-800 mb-1">
+                      <div className="text-3xl md:text-4xl lg:text-5xl font-black text-cyan-400 mb-2">
                         {numberMounted ? translateNumber(unit.value.toString().padStart(2, '0')) : unit.value.toString().padStart(2, '0')}
                       </div>
-                      <div className="text-xs md:text-sm text-slate-600 font-medium">
+                      <div className="text-sm md:text-base text-slate-300 font-semibold tracking-wide">
                         {unit.label}
                       </div>
                     </motion.div>
@@ -313,58 +342,68 @@ export default function ComingSoonPage() {
             </motion.div>
           )}
 
-          {/* Main Headline */}
+          {/* Premium Main Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-bold text-slate-800 mb-4 sm:mb-6 leading-tight"
+            className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-[0.9] tracking-tight"
+            style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
           >
-            {mounted ? t('comingSoon.heroTitle', 'The Future of') : 'The Future of'}{" "}
-            <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            {mounted ? t('comingSoon.heroTitle', 'The Future of') : 'The Future of'}
+            <br />
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent animate-pulse">
               {mounted ? t('comingSoon.heroTitleHighlight', 'Real Estate') : 'Real Estate'}
-            </span>{" "}
-            {mounted ? t('comingSoon.heroTitleEnd', 'is Here') : 'is Here'}
+            </span>
+            <br />
+            <span className="text-slate-300">
+              {mounted ? t('comingSoon.heroTitleEnd', 'Development') : 'Development'}
+            </span>
           </motion.h1>
 
-          {/* Sub-headline */}
+          {/* Premium Sub-headline */}
           <motion.p
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
-            className="text-lg sm:text-xl md:text-2xl text-slate-600 mb-6 sm:mb-8 max-w-3xl mx-auto leading-relaxed"
+            className="text-xl sm:text-2xl md:text-3xl text-slate-300 mb-8 max-w-4xl mx-auto leading-relaxed font-light"
           >
-            {mounted ? t('comingSoon.heroDescription', 'Experience properties like never before with AI-powered virtual tours, instant expert guidance, and immersive 3D exploration') : 'Experience properties like never before with AI-powered virtual tours, instant expert guidance, and immersive 3D exploration'}
+            {mounted ? t('comingSoon.heroDescription', 'Transform how you showcase and sell properties with AI-powered virtual tours, instant lead qualification, and immersive 3D experiences') : 'Transform how you showcase and sell properties with AI-powered virtual tours, instant lead qualification, and immersive 3D experiences'}
           </motion.p>
 
-          {/* Features Preview */}
+          {/* Premium Features Preview */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex flex-wrap justify-center gap-2 sm:gap-4 mb-8 sm:mb-12"
+            className="flex flex-wrap justify-center gap-3 sm:gap-6 mb-12"
           >
             {[
-              { icon: Globe, text: mounted ? t('comingSoon.feature1', '3D Virtual Tours') : '3D Virtual Tours' },
-              { icon: Sparkles, text: mounted ? t('comingSoon.feature2', 'AI Voice Agent') : 'AI Voice Agent' },
-              { icon: Eye, text: mounted ? t('comingSoon.feature3', 'Immersive Experience') : 'Immersive Experience' }
+              { icon: Video, text: mounted ? t('comingSoon.feature1', 'Free 3D Virtual Tours') : 'Free 3D Virtual Tours', color: 'from-cyan-400 to-blue-500' },
+              { icon: Brain, text: mounted ? t('comingSoon.feature2', '24/7 AI Assistant') : '24/7 AI Assistant', color: 'from-purple-400 to-pink-500' },
+              { icon: Zap, text: mounted ? t('comingSoon.feature3', 'Instant Lead Qualification') : 'Instant Lead Qualification', color: 'from-emerald-400 to-teal-500' }
             ].map((feature, index) => (
-              <div
+              <motion.div
                 key={index}
-                className="flex items-center gap-1 sm:gap-2 bg-white/10 backdrop-blur-md rounded-full px-2 sm:px-4 py-1 sm:py-2 text-slate-700"
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.9 + index * 0.1 }}
+                className="flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-6 py-4 text-white hover:bg-white/10 transition-all duration-300"
               >
-                <feature.icon className="w-3 sm:w-4 h-3 sm:h-4" />
-                <span className="text-xs sm:text-sm font-medium">{feature.text}</span>
-              </div>
+                <div className={`p-2 rounded-xl bg-gradient-to-r ${feature.color}`}>
+                  <feature.icon className="w-5 h-5 text-white" />
+                </div>
+                <span className="text-sm sm:text-base font-semibold">{feature.text}</span>
+              </motion.div>
             ))}
           </motion.div>
 
-          {/* Email Capture Form */}
+          {/* Premium Email Capture Form */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 1 }}
-            className="max-w-md mx-auto"
+            className="max-w-xl mx-auto"
           >
             <AnimatePresence mode="wait">
               {!isSubmitted ? (
@@ -374,23 +413,23 @@ export default function ComingSoonPage() {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   onSubmit={handleEmailSubmit}
-                  className="flex flex-col sm:flex-row gap-3"
+                  className="flex flex-col sm:flex-row gap-4"
                 >
                   <Input
                     type="email"
-                    placeholder={mounted ? t('comingSoon.emailPlaceholder', 'Enter your email address') : 'Enter your email address'}
+                    placeholder={mounted ? t('comingSoon.emailPlaceholder', 'Enter your email for early access') : 'Enter your email for early access'}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 h-12 text-lg bg-white/10 backdrop-blur-md border-white/20 text-slate-800 placeholder:text-slate-500"
+                    className="flex-1 h-16 text-lg bg-white/5 backdrop-blur-xl border border-white/20 text-white placeholder:text-slate-400 rounded-2xl px-6 focus:border-cyan-400/50 focus:ring-cyan-400/20"
                     required
                   />
                   <Button
                     type="submit"
-                    className="h-12 px-8 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+                    className="h-16 px-8 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-lg rounded-2xl shadow-2xl hover:shadow-cyan-500/25 transform hover:scale-105 transition-all duration-300"
                   >
-                    <Mail className="w-4 h-4 mr-2" />
-                    {mounted ? t('comingSoon.notifyMe', 'Notify Me') : 'Notify Me'}
-                    <ArrowRight className="w-4 h-4 ml-2" />
+                    <Mail className="w-5 h-5 mr-3" />
+                    {mounted ? t('comingSoon.notifyMe', 'Get Early Access') : 'Get Early Access'}
+                    <ArrowRight className="w-5 h-5 ml-3" />
                   </Button>
                 </motion.form>
               ) : (
@@ -399,34 +438,232 @@ export default function ComingSoonPage() {
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="bg-green-500/10 backdrop-blur-md border border-green-500/20 rounded-lg p-4 text-green-700"
+                  className="bg-emerald-500/10 backdrop-blur-xl border border-emerald-400/30 rounded-2xl p-6 text-emerald-300"
                 >
-                  <CheckCircle className="w-6 h-6 mx-auto mb-2" />
-                  <p className="font-semibold">{mounted ? t('comingSoon.successTitle', "You're on the list!") : "You're on the list!"}</p>
-                  <p className="text-sm">{mounted ? t('comingSoon.successMessage', "We'll notify you on September 1st") : "We'll notify you on September 1st"}</p>
+                  <CheckCircle className="w-8 h-8 mx-auto mb-3 text-emerald-400" />
+                  <p className="font-bold text-lg">{mounted ? t('comingSoon.successTitle', "You're on the VIP list!") : "You're on the VIP list!"}</p>
+                  <p className="text-sm text-emerald-200">{mounted ? t('comingSoon.successMessage', "We'll notify you with exclusive early access on September 1st") : "We'll notify you with exclusive early access on September 1st"}</p>
                 </motion.div>
               )}
             </AnimatePresence>
           </motion.div>
         </div>
+        {/* Section divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       </section>
 
-      {/* Virtual Tour Preview Section */}
-      <section className="py-12 md:py-20 bg-slate-50">
-        <div className="w-full">
+      {/* Value Proposition Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
+        {/* Light background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-blue-500/5 rounded-full blur-3xl" />
+          {/* Subtle pattern overlay */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `radial-gradient(circle at 2px 2px, rgba(0,212,255,0.1) 1px, transparent 0)`,
+              backgroundSize: '60px 60px'
+            }} />
+          </div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
           {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
             viewport={{ once: true }}
-            className="text-center mb-8 md:mb-16 px-4"
+            className="text-center mb-16"
           >
-            <h2 className="text-2xl md:text-4xl lg:text-5xl font-bold text-slate-800 mb-4 md:mb-6">
-              {mounted ? t('comingSoon.sneakPeekTitle', 'Get a Sneak Peek') : 'Get a Sneak Peek'}
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6">
+              {mounted ? t('valueProposition.title', 'What We Do') : 'What We Do'}
             </h2>
-            <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
-              {mounted ? t('comingSoon.sneakPeekDescription', 'Experience our revolutionary virtual tour technology with these preview samples') : 'Experience our revolutionary virtual tour technology with these preview samples'}
+            <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
+              {mounted ? t('valueProposition.subtitle', 'We revolutionize property showcasing with cutting-edge technology that transforms how developers sell real estate') : 'We revolutionize property showcasing with cutting-edge technology that transforms how developers sell real estate'}
+            </p>
+          </motion.div>
+
+          {/* Value Proposition Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                icon: Video,
+                title: mounted ? t('valueProposition.benefit1.title', 'Free Professional 3D Virtual Tours') : 'Free Professional 3D Virtual Tours',
+                description: mounted ? t('valueProposition.benefit1.description', 'Complete property filming and 3D tour creation at no cost. Professional-grade immersive experiences that captivate buyers.') : 'Complete property filming and 3D tour creation at no cost. Professional-grade immersive experiences that captivate buyers.',
+                color: 'from-cyan-400 to-blue-500',
+                bgColor: 'from-cyan-500/20 to-blue-500/20'
+              },
+              {
+                icon: Brain,
+                title: mounted ? t('valueProposition.benefit2.title', '24/7 AI Property Assistant') : '24/7 AI Property Assistant',
+                description: mounted ? t('valueProposition.benefit2.description', 'Intelligent AI agent handles inquiries, qualifies leads, and provides detailed property information around the clock.') : 'Intelligent AI agent handles inquiries, qualifies leads, and provides detailed property information around the clock.',
+                color: 'from-purple-400 to-pink-500',
+                bgColor: 'from-purple-500/20 to-pink-500/20'
+              },
+              {
+                icon: Zap,
+                title: mounted ? t('valueProposition.benefit3.title', 'Instant Lead Qualification') : 'Instant Lead Qualification',
+                description: mounted ? t('valueProposition.benefit3.description', 'Advanced algorithms instantly identify and prioritize serious buyers, maximizing your time and conversion rates.') : 'Advanced algorithms instantly identify and prioritize serious buyers, maximizing your time and conversion rates.',
+                color: 'from-emerald-400 to-teal-500',
+                bgColor: 'from-emerald-500/20 to-teal-500/20'
+              }
+            ].map((benefit, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                viewport={{ once: true }}
+                className="group"
+              >
+                <Card className="bg-white/80 backdrop-blur-xl border border-slate-200 hover:border-slate-300 hover:shadow-xl transition-all duration-500 h-full group-hover:scale-105">
+                  <CardContent className="p-8">
+                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${benefit.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                      <benefit.icon className="w-full h-full text-white" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-4">{benefit.title}</h3>
+                    <p className="text-slate-600 leading-relaxed">{benefit.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+        {/* Section divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-300/50 to-transparent"></div>
+      </section>
+
+      {/* How It Works Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 to-blue-950 relative overflow-hidden">
+        {/* Background grid */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `linear-gradient(rgba(0,212,255,0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(0,212,255,0.3) 1px, transparent 1px)`,
+            backgroundSize: '50px 50px'
+          }} />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+              {mounted ? t('howItWorks.title', 'How It Works') : 'How It Works'}
+            </h2>
+            <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              {mounted ? t('howItWorks.subtitle', 'Three simple steps to transform your property marketing') : 'Three simple steps to transform your property marketing'}
+            </p>
+          </motion.div>
+
+          {/* Process Steps */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+            {[
+              {
+                step: '01',
+                icon: Camera,
+                title: mounted ? t('howItWorks.step1.title', 'We Film Your Property') : 'We Film Your Property',
+                subtitle: mounted ? t('howItWorks.step1.subtitle', '(Free)') : '(Free)',
+                description: mounted ? t('howItWorks.step1.description', 'Our professional photographers capture your property with advanced 3D scanning technology and high-resolution cameras.') : 'Our professional photographers capture your property with advanced 3D scanning technology and high-resolution cameras.',
+                color: 'from-cyan-400 to-blue-500'
+              },
+              {
+                step: '02',
+                icon: Video,
+                title: mounted ? t('howItWorks.step2.title', 'Create Immersive Virtual Tours') : 'Create Immersive Virtual Tours',
+                subtitle: '',
+                description: mounted ? t('howItWorks.step2.description', 'We transform the captured data into stunning 3D virtual tours with dollhouse views, floor plans, and interactive features.') : 'We transform the captured data into stunning 3D virtual tours with dollhouse views, floor plans, and interactive features.',
+                color: 'from-purple-400 to-pink-500'
+              },
+              {
+                step: '03',
+                icon: Brain,
+                title: mounted ? t('howItWorks.step3.title', 'AI Assistant Handles Inquiries') : 'AI Assistant Handles Inquiries',
+                subtitle: mounted ? t('howItWorks.step3.subtitle', '24/7') : '24/7',
+                description: mounted ? t('howItWorks.step3.description', 'Our AI agent engages visitors, answers questions, qualifies leads, and schedules appointments automatically.') : 'Our AI agent engages visitors, answers questions, qualifies leads, and schedules appointments automatically.',
+                color: 'from-emerald-400 to-teal-500'
+              }
+            ].map((step, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.2 }}
+                viewport={{ once: true }}
+                className="text-center group"
+              >
+                {/* Step number */}
+                <div className="text-6xl md:text-7xl font-black text-white/10 mb-4">
+                  {step.step}
+                </div>
+                
+                {/* Icon */}
+                <div className={`w-20 h-20 mx-auto rounded-3xl bg-gradient-to-r ${step.color} p-5 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-2xl`}>
+                  <step.icon className="w-full h-full text-white" />
+                </div>
+                
+                {/* Content */}
+                <h3 className="text-2xl font-bold text-white mb-2">{step.title}</h3>
+                {step.subtitle && (
+                  <Badge className={`bg-gradient-to-r ${step.color} text-white mb-4`}>
+                    {step.subtitle}
+                  </Badge>
+                )}
+                <p className="text-slate-300 leading-relaxed max-w-sm mx-auto">{step.description}</p>
+                
+                {/* Connector line (except for last item) */}
+                {index < 2 && (
+                  <div className="hidden md:block absolute top-1/2 left-full w-full h-0.5 bg-gradient-to-r from-white/20 to-transparent transform -translate-y-1/2 translate-x-8" />
+                )}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+        {/* Section divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+      </section>
+
+      {/* Enhanced Virtual Tour Preview Section */}
+      <section className="py-20 bg-gradient-to-br from-white to-slate-50 relative overflow-hidden">
+        {/* Light background effects */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
+          {/* Geometric pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `linear-gradient(rgba(0,212,255,0.1) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0,212,255,0.1) 1px, transparent 1px)`,
+              backgroundSize: '80px 80px'
+            }} />
+          </div>
+        </div>
+        <div className="w-full relative z-10">
+          {/* Enhanced Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-center mb-16 px-4"
+          >
+            <div className="inline-flex items-center gap-3 bg-cyan-500 text-white rounded-full px-6 py-3 mb-8 shadow-lg">
+              <Eye className="w-5 h-5" />
+              <span className="font-semibold text-sm tracking-wide">
+                {mounted ? t('comingSoon.sneakPeekBadge', 'EXPERIENCE THE DIFFERENCE') : 'EXPERIENCE THE DIFFERENCE'}
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6">
+              {mounted ? t('comingSoon.sneakPeekTitle', 'Preview Our Technology') : 'Preview Our Technology'}
+            </h2>
+            <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
+              {mounted ? t('comingSoon.sneakPeekDescription', 'Experience our revolutionary virtual tour technology with these interactive property previews') : 'Experience our revolutionary virtual tour technology with these interactive property previews'}
             </p>
           </motion.div>
 
@@ -441,9 +678,9 @@ export default function ComingSoonPage() {
                 viewport={{ once: true }}
                 className="group w-full"
               >
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <div 
-                    className="relative h-64 md:h-96 w-full overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                    className="relative h-64 md:h-96 w-full overflow-hidden rounded-2xl hover:shadow-2xl hover:shadow-cyan-500/20 transition-all duration-500 cursor-pointer group bg-white/5 backdrop-blur-xl border border-white/10"
                     onClick={() => handleTourClick(tour.id)}
                   >
                     {/* Embedded Virtual Tour - Only load when clicked */}
@@ -453,59 +690,61 @@ export default function ComingSoonPage() {
                           tourId={tour.id}
                           propertyId={tour.id}
                           tourUrl={tour.virtual_tour_url}
-                          className="w-full h-full rounded-lg"
+                          className="w-full h-full rounded-2xl"
                           hideRoomMenu={true}
                           hideConversationalAI={true}
                         />
 
-                        {/* Transparent Hover Overlay - Same as property details */}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-lg flex items-center justify-center">
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-full">
-                            <div className="flex items-center space-x-2 text-slate-800">
-                              <Maximize2 className="h-4 w-4" />
-                              <span className="text-sm font-medium">{mounted ? t('comingSoon.clickToExplore', 'Click to Explore') : 'Click to Explore'}</span>
+                        {/* Enhanced Hover Overlay */}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 rounded-2xl flex items-center justify-center">
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/10 backdrop-blur-xl border border-cyan-400/30 px-6 py-3 rounded-full">
+                            <div className="flex items-center space-x-2 text-white">
+                              <Maximize2 className="h-5 w-5 text-cyan-400" />
+                              <span className="text-sm font-semibold">{mounted ? t('comingSoon.clickToExplore', 'Click to Explore') : 'Click to Explore'}</span>
                             </div>
                           </div>
                         </div>
                       </>
                     ) : (
                       <>
-                        {/* Preview overlay before loading */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-100/50 to-purple-100/50 backdrop-blur-sm rounded-lg" />
+                        {/* Enhanced Preview overlay before loading */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm rounded-2xl" />
                         <div className="absolute inset-0 flex items-center justify-center px-4">
-                          <div className="text-center text-slate-700">
-                            <Eye className="w-12 md:w-16 h-12 md:h-16 mx-auto mb-2 md:mb-4 opacity-60" />
-                            <p className="text-base md:text-lg font-semibold mb-1 md:mb-2">{mounted ? t('comingSoon.clickToLoad', 'Click to Load Virtual Tour') : 'Click to Load Virtual Tour'}</p>
-                            <p className="text-xs md:text-sm opacity-70 px-2">{tour.title}</p>
+                          <div className="text-center text-white">
+                            <div className="w-16 h-16 mx-auto rounded-2xl bg-white/10 backdrop-blur-xl border border-cyan-400/30 flex items-center justify-center mb-4">
+                              <Eye className="w-8 h-8 text-cyan-400" />
+                            </div>
+                            <p className="text-lg font-bold mb-2">{mounted ? t('comingSoon.clickToLoad', 'Click to Load Virtual Tour') : 'Click to Load Virtual Tour'}</p>
+                            <p className="text-sm text-slate-300 px-2">{tour.title}</p>
                           </div>
                         </div>
                       </>
                     )}
 
-                    {/* Tour Badge */}
-                    <div className="absolute top-2 md:top-4 right-2 md:right-4 z-10">
-                      <Badge className="bg-blue-600/90 text-white backdrop-blur-sm text-xs md:text-sm">
-                        <Globe className="w-2 md:w-3 h-2 md:h-3 mr-1" />
+                    {/* Enhanced Tour Badge */}
+                    <div className="absolute top-4 right-4 z-10">
+                      <div className="bg-gradient-to-r from-cyan-500 to-blue-600 text-white backdrop-blur-xl border border-white/20 rounded-full px-3 py-2 text-xs font-bold flex items-center gap-2">
+                        <Globe className="w-3 h-3" />
                         {mounted ? t('comingSoon.liveTour', 'Live Tour') : 'Live Tour'}
-                      </Badge>
+                      </div>
                     </div>
 
-                    {/* Coming Soon Badge */}
-                    <div className="absolute top-2 md:top-4 left-2 md:left-4 z-10">
-                      <Badge className="bg-purple-600/90 text-white animate-pulse backdrop-blur-sm text-xs md:text-sm">
-                        <Clock className="w-2 md:w-3 h-2 md:h-3 mr-1" />
+                    {/* Enhanced Coming Soon Badge */}
+                    <div className="absolute top-4 left-4 z-10">
+                      <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white animate-pulse backdrop-blur-xl border border-white/20 rounded-full px-3 py-2 text-xs font-bold flex items-center gap-2">
+                        <Clock className="w-3 h-3" />
                         {mounted ? t('comingSoon.launchDateShort', 'Sept 1st') : 'Sept 1st'}
-                      </Badge>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Fullscreen Button - Same as property details */}
+                  {/* Enhanced Fullscreen Button */}
                   {loadedTours.includes(tour.id) && (
                     <button
                       onClick={() => setFullscreenTour(tour.id)}
-                      className="w-full mt-2 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-600 hover:text-gray-700 rounded-lg transition-all duration-200 border border-gray-200 hover:border-gray-300 text-sm font-medium flex items-center justify-center space-x-2 group"
+                      className="w-full mt-4 px-6 py-4 bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 hover:border-cyan-400 rounded-2xl transition-all duration-300 text-sm font-semibold flex items-center justify-center space-x-3 group shadow-lg"
                     >
-                      <Maximize2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                      <Maximize2 className="h-5 w-5 text-cyan-400 group-hover:scale-110 transition-transform" />
                       <span>{mounted ? t('comingSoon.viewInFullscreen', 'View in Fullscreen') : 'View in Fullscreen'}</span>
                     </button>
                   )}
@@ -514,8 +753,8 @@ export default function ComingSoonPage() {
             ))}
           </div>
 
-          {/* Free Virtual Tour CTA - Copied from Homepage */}
-          <section id="virtual-tour-cta" className="relative py-16 md:py-32 overflow-hidden bg-white">
+          {/* Free Virtual Tour CTA - Enhanced for light section */}
+          <section id="virtual-tour-cta" className="relative py-16 md:py-32 overflow-hidden bg-gradient-to-br from-slate-100 to-blue-100">
             <div className="container mx-auto px-4 relative z-10">
               {/* Premium Card Container */}
               <motion.div
@@ -728,12 +967,196 @@ export default function ComingSoonPage() {
             </div>
           </section>
         </div>
+        {/* Section divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-300/50 to-transparent"></div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-slate-800 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Developer Benefits Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 relative overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/3 left-1/5 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/3 right-1/5 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-3 bg-white/5 backdrop-blur-xl border border-emerald-400/30 rounded-full px-6 py-3 mb-8">
+              <TrendingUp className="w-5 h-5 text-emerald-400" />
+              <span className="text-white font-semibold text-sm tracking-wide">
+                {mounted ? t('developerBenefits.badge', 'BUILT FOR DEVELOPERS') : 'BUILT FOR DEVELOPERS'}
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+              {mounted ? t('developerBenefits.title', 'Why Developers Choose Us') : 'Why Developers Choose Us'}
+            </h2>
+            <p className="text-xl md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+              {mounted ? t('developerBenefits.subtitle', 'Proven results that transform your sales process and maximize revenue') : 'Proven results that transform your sales process and maximize revenue'}
+            </p>
+          </motion.div>
+
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+            {[
+              {
+                metric: '73%',
+                label: mounted ? t('developerBenefits.metric1.label', 'Faster Sales Cycle') : 'Faster Sales Cycle',
+                description: mounted ? t('developerBenefits.metric1.description', 'Virtual tours reduce the need for multiple site visits, accelerating decision-making') : 'Virtual tours reduce the need for multiple site visits, accelerating decision-making',
+                icon: TrendingUp,
+                color: 'from-emerald-400 to-teal-500'
+              },
+              {
+                metric: '50%',
+                label: mounted ? t('developerBenefits.metric2.label', 'Reduction in Site Visits') : 'Reduction in Site Visits',
+                description: mounted ? t('developerBenefits.metric2.description', 'Pre-qualified leads arrive ready to buy, saving time and resources') : 'Pre-qualified leads arrive ready to buy, saving time and resources',
+                icon: Users,
+                color: 'from-cyan-400 to-blue-500'
+              },
+              {
+                metric: '24/7',
+                label: mounted ? t('developerBenefits.metric3.label', 'Automated Responses') : 'Automated Responses',
+                description: mounted ? t('developerBenefits.metric3.description', 'AI assistant captures leads and provides information around the clock') : 'AI assistant captures leads and provides information around the clock',
+                icon: Brain,
+                color: 'from-purple-400 to-pink-500'
+              }
+            ].map((item, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center group"
+              >
+                <Card className="bg-white/5 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-500 h-full group-hover:scale-105">
+                  <CardContent className="p-8">
+                    {/* Icon */}
+                    <div className={`w-16 h-16 mx-auto rounded-2xl bg-gradient-to-r ${item.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <item.icon className="w-full h-full text-white" />
+                    </div>
+                    
+                    {/* Metric */}
+                    <div className={`text-5xl font-black mb-2 bg-gradient-to-r ${item.color} bg-clip-text text-transparent`}>
+                      {item.metric}
+                    </div>
+                    
+                    {/* Label */}
+                    <h3 className="text-xl font-bold text-white mb-4">{item.label}</h3>
+                    
+                    {/* Description */}
+                    <p className="text-slate-300 leading-relaxed">{item.description}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* Trust Indicators */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            viewport={{ once: true }}
+            className="flex flex-wrap justify-center items-center gap-6 md:gap-12"
+          >
+            {[
+              { icon: Shield, text: mounted ? t('developerBenefits.trust1', 'Enterprise Security') : 'Enterprise Security' },
+              { icon: Database, text: mounted ? t('developerBenefits.trust2', 'Data Protection') : 'Data Protection' },
+              { icon: CheckCircle, text: mounted ? t('developerBenefits.trust3', 'GDPR Compliant') : 'GDPR Compliant' }
+            ].map((item, index) => (
+              <div key={index} className="flex items-center gap-3 text-slate-300">
+                <item.icon className="w-5 h-5 text-emerald-400" />
+                <span className="text-sm font-medium">{item.text}</span>
+              </div>
+            ))}
+          </motion.div>
+        </div>
+        {/* Section divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+      </section>
+
+      {/* Tech Stack Preview Section */}
+      <section className="py-20 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden">
+        {/* Light tech background pattern */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 opacity-5" style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(0,212,255,0.2) 1px, transparent 0)`,
+            backgroundSize: '40px 40px'
+          }} />
+          {/* Subtle gradient overlays */}
+          <div className="absolute top-0 left-1/3 w-72 h-72 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Section Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <div className="inline-flex items-center gap-3 bg-purple-600 text-white rounded-full px-6 py-3 mb-8 shadow-lg">
+              <Cpu className="w-5 h-5" />
+              <span className="font-semibold text-sm tracking-wide">
+                {mounted ? t('techStack.badge', 'POWERED BY ADVANCED AI') : 'POWERED BY ADVANCED AI'}
+              </span>
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6">
+              {mounted ? t('techStack.title', 'Cutting-Edge Technology') : 'Cutting-Edge Technology'}
+            </h2>
+            <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
+              {mounted ? t('techStack.subtitle', 'Built with the latest technologies to deliver unmatched performance and reliability') : 'Built with the latest technologies to deliver unmatched performance and reliability'}
+            </p>
+          </motion.div>
+
+          {/* Tech Icons Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+            {[
+              { icon: Brain, name: 'AI & Machine Learning', color: 'from-purple-400 to-pink-500' },
+              { icon: Cloud, name: 'Cloud Infrastructure', color: 'from-cyan-400 to-blue-500' },
+              { icon: Video, name: '3D Rendering Engine', color: 'from-emerald-400 to-teal-500' },
+              { icon: Database, name: 'Real-time Analytics', color: 'from-orange-400 to-red-500' }
+            ].map((tech, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 + index * 0.1 }}
+                viewport={{ once: true }}
+                className="text-center group"
+              >
+                <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl p-6 hover:border-slate-300 hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                  <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-r ${tech.color} p-3 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
+                    <tech.icon className="w-full h-full text-white" />
+                  </div>
+                  <p className="text-slate-800 font-semibold text-sm">{tech.name}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+        {/* Section divider */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-300/50 to-transparent"></div>
+      </section>
+
+      {/* Enhanced Footer */}
+      <footer className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white py-16 relative overflow-hidden">
+        {/* Footer background elements */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl" />
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <svg width="32" height="32" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white">
@@ -743,17 +1166,17 @@ export default function ComingSoonPage() {
                 </svg>
                 <span className="text-2xl font-black font-montserrat tracking-tight">OpenBeit</span>
               </div>
-              <p className="text-slate-400 mb-4">
+              <p className="text-slate-300 mb-6 text-lg">
                 {mounted ? t('footer.description', 'Revolutionizing real estate with immersive virtual tours and AI assistance.') : 'Revolutionizing real estate with immersive virtual tours and AI assistance.'}
               </p>
               <div className="flex space-x-4">
-                <Button size="sm" variant="outline" className="border-slate-600 text-slate-400 hover:text-white">
+                <Button size="sm" variant="outline" className="border-white/20 text-slate-300 hover:text-white hover:border-cyan-400/50 bg-white/5 backdrop-blur-xl rounded-xl">
                   <Phone className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="outline" className="border-slate-600 text-slate-400 hover:text-white">
+                <Button size="sm" variant="outline" className="border-white/20 text-slate-300 hover:text-white hover:border-cyan-400/50 bg-white/5 backdrop-blur-xl rounded-xl">
                   <Mail className="h-4 w-4" />
                 </Button>
-                <Button size="sm" variant="outline" className="border-slate-600 text-slate-400 hover:text-white">
+                <Button size="sm" variant="outline" className="border-white/20 text-slate-300 hover:text-white hover:border-cyan-400/50 bg-white/5 backdrop-blur-xl rounded-xl">
                   <Calendar className="h-4 w-4" />
                 </Button>
               </div>
@@ -799,24 +1222,31 @@ export default function ComingSoonPage() {
               </ul>
             </div> */}
             <div>
-              <h4 className="font-semibold mb-4">{mounted ? t('footer.contact', 'Contact') : 'Contact'}</h4>
-              <ul className="space-y-2 text-slate-400">
+              <h4 className="font-bold text-xl mb-6 text-white">{mounted ? t('footer.contact', 'Contact') : 'Contact'}</h4>
+              <ul className="space-y-4 text-slate-300">
                 <li>
-                  <a href="tel:+201211164331" className="hover:text-white transition-colors">
+                  <a href="tel:+201211164331" className="hover:text-cyan-400 transition-colors flex items-center gap-2 text-lg">
+                    <Phone className="w-4 h-4" />
                     +20 121 116 4331
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:info@openbeit.com" className="hover:text-white transition-colors">
+                  <a href="mailto:info@openbeit.com" className="hover:text-cyan-400 transition-colors flex items-center gap-2 text-lg">
+                    <Mail className="w-4 h-4" />
                     info@openbeit.com
                   </a>
                 </li>
-                <li>{mounted ? t('footer.location', 'Cairo, Egypt') : 'Cairo, Egypt'}</li>
+                <li className="flex items-center gap-2 text-lg">
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
+                  {mounted ? t('footer.location', 'Cairo, Egypt') : 'Cairo, Egypt'}
+                </li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-slate-700 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2024 OpenBeit. {mounted ? t('footer.rights', 'All rights reserved.') : 'All rights reserved.'}</p>
+          <div className="border-t border-white/10 mt-12 pt-8 text-center text-slate-300">
+            <p className="text-lg">&copy; 2024 OpenBeit. {mounted ? t('footer.rights', 'All rights reserved.') : 'All rights reserved.'}</p>
           </div>
         </div>
       </footer>
