@@ -1185,13 +1185,13 @@ export default function ComingSoonPage() {
             </Button>
           </div>
           {(() => {
-            const isMobileSafari = typeof window !== 'undefined' && 
-              /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent);
+            const isMobile = typeof window !== 'undefined' && 
+              /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
             
             const tourUrl = sampleTours.find(tour => tour.id === fullscreenTour)?.virtual_tour_url;
             
-            if (isMobileSafari) {
-              // For mobile Safari, provide a launch screen instead of problematic iframe
+            if (isMobile) {
+              // For mobile devices, provide a launch screen instead of problematic iframe
               return (
                 <div className="flex items-center justify-center w-full h-full p-8">
                   <div className="text-center text-white max-w-md">
@@ -1200,7 +1200,7 @@ export default function ComingSoonPage() {
                       {sampleTours.find(tour => tour.id === fullscreenTour)?.title}
                     </h2>
                     <p className="text-slate-300 mb-8 text-lg">
-                      Experience this property in full interactive 3D. Opens in a new tab optimized for mobile viewing.
+                      This tour has interactive features including dollhouse view, floor plans, and 3D navigation. Opening in a new tab prevents crashes and provides the best mobile experience.
                     </p>
                     <Button
                       onClick={() => {
