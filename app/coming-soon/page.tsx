@@ -688,7 +688,7 @@ export default function ComingSoonPage() {
                     ) : (
                       <>
                         {/* Enhanced Preview overlay before loading */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 backdrop-blur-sm rounded-2xl" />
+                        <div className="absolute inset-0 bg-gradient-to-br from-slate-400/30 to-slate-500/30 backdrop-blur-sm rounded-2xl" />
                         <div className="absolute inset-0 flex items-center justify-center px-4">
                           <div className="text-center text-white">
                             <div className="w-16 h-16 mx-auto rounded-2xl bg-white/10 backdrop-blur-xl border border-cyan-400/30 flex items-center justify-center mb-4">
@@ -1027,13 +1027,7 @@ export default function ComingSoonPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           {/* Section Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-3 bg-purple-600 text-white rounded-full px-6 py-3 mb-8 shadow-lg">
               <Cpu className="w-5 h-5" />
               <span className="font-semibold text-sm tracking-wide">
@@ -1046,7 +1040,7 @@ export default function ComingSoonPage() {
             <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
               {mounted ? t('techStack.subtitle', 'Built with the latest technologies to deliver unmatched performance and reliability') : 'Built with the latest technologies to deliver unmatched performance and reliability'}
             </p>
-          </motion.div>
+          </div>
 
           {/* Tech Icons Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
@@ -1056,12 +1050,8 @@ export default function ComingSoonPage() {
               { icon: Video, name: '3D Rendering Engine', color: 'from-emerald-400 to-teal-500' },
               { icon: Database, name: 'Real-time Analytics', color: 'from-orange-400 to-red-500' }
             ].map((tech, index) => (
-              <motion.div
+              <div
                 key={index}
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3 + index * 0.1 }}
-                viewport={{ once: true }}
                 className="text-center group"
               >
                 <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl p-6 hover:border-slate-300 hover:shadow-xl transition-all duration-300 group-hover:scale-105">
@@ -1070,7 +1060,7 @@ export default function ComingSoonPage() {
                   </div>
                   <p className="text-slate-800 font-semibold text-sm">{tech.name}</p>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
