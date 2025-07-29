@@ -8,7 +8,8 @@ export function HomepageRedirect({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
-    if (pathname === '/') {
+    // Redirect all pages to coming-soon except the coming-soon page itself
+    if (pathname !== '/coming-soon' && !pathname.startsWith('/coming-soon')) {
       router.push('/coming-soon')
     }
   }, [pathname, router])
