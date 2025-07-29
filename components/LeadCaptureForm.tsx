@@ -238,7 +238,7 @@ export function LeadCaptureForm({
           <DialogDescription className="text-center text-lg">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Gift className="h-5 w-5 text-primary" />
-              <span className="font-semibold text-primary">Worth 5,000 EGP - Completely FREE!</span>
+              <span className="font-semibold text-primary">Worth 50,000 EGP - Completely FREE!</span>
             </div>
             Professional 3D virtual tour of your property for faster sales
           </DialogDescription>
