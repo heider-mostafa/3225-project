@@ -1,0 +1,36 @@
+User-agent: *
+Allow: /
+
+# Allow all property pages and main sections
+Allow: /properties
+Allow: /property/
+Allow: /auctions
+Allow: /about
+Allow: /contact
+Allow: /virtual-tours
+Allow: /coming-soon
+
+# Block admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /auth/
+Disallow: /debug/
+Disallow: /debug-admin/
+Disallow: /test-*
+Disallow: /photographer/
+Disallow: /broker/
+Disallow: /profile/
+Disallow: /settings/
+Disallow: /saved/
+Disallow: /unauthorized/
+
+# Block specific files
+Disallow: /*.json$
+Disallow: /*.xml$
+Disallow: /sitemap.xml
+
+# Allow sitemap
+Sitemap: https://openbeit.com/sitemap.xml
+
+# Crawl delay for respectful crawling
+Crawl-delay: 1

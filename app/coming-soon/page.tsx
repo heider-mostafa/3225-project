@@ -39,6 +39,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { TourViewer } from "@/components/tour-viewer"
 import { LeadCaptureForm } from "@/components/LeadCaptureForm"
+import { AutoPopupLeadCapture } from "@/components/AutoPopupLeadCapture"
 import Link from "next/link"
 
 export default function ComingSoonPage() {
@@ -233,6 +234,13 @@ export default function ComingSoonPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+      {/* Auto-popup for free 3D filming after 10 seconds */}
+      <AutoPopupLeadCapture 
+        delaySeconds={10}
+        utm_source="coming-soon-page"
+        utm_medium="auto-popup"
+        utm_campaign="free-virtual-tour-timed"
+      />
       {/* Hero Section */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-8">
         {/* Premium background with geometric patterns */}
@@ -342,6 +350,29 @@ export default function ComingSoonPage() {
             </motion.div>
           )}
 
+          {/* Urgency Banner with Consequences */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mb-8"
+          >
+            <div className="bg-gradient-to-r from-red-600 to-red-700 border border-red-500/30 rounded-2xl p-6 max-w-4xl mx-auto shadow-2xl">
+              <div className="text-center text-white">
+                <div className="flex items-center justify-center gap-2 mb-3">
+                  <span className="text-2xl">⚠️</span>
+                  <span className="font-black text-lg tracking-wide">{mounted ? t('comingSoon.urgencyWarning', 'WARNING') : 'WARNING'}</span>
+                </div>
+                <p className="text-lg font-bold mb-2">
+                  {mounted ? t('comingSoon.limitedSlots', 'Only 42 FREE virtual tour slots remaining this month') : 'Only 42 FREE virtual tour slots remaining this month'}
+                </p>
+                <p className="text-red-100 text-base">
+                  {mounted ? t('comingSoon.afterLaunchPrice', 'After September 1st, this service costs 50,000 EGP. Reserve your FREE slot now or pay full price.') : 'After September 1st, this service costs 50,000 EGP. Reserve your FREE slot now or pay full price.'}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Premium Main Headline */}
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
@@ -350,14 +381,14 @@ export default function ComingSoonPage() {
             className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black text-white mb-6 leading-[0.9] tracking-tight"
             style={{ fontFamily: 'Inter, -apple-system, sans-serif' }}
           >
-            {mounted ? t('comingSoon.heroTitle', 'The Future of') : 'The Future of'}
+            {mounted ? t('comingSoon.heroTitle', 'Sell Your Properties') : 'Sell Your Properties'}
             <br />
             <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-300 bg-clip-text text-transparent animate-pulse">
-              {mounted ? t('comingSoon.heroTitleHighlight', 'Real Estate') : 'Real Estate'}
+              {mounted ? t('comingSoon.heroTitleHighlight', '73% Faster') : '73% Faster'}
             </span>
             <br />
             <span className="text-slate-300">
-              {mounted ? t('comingSoon.heroTitleEnd', 'Development') : 'Development'}
+              {mounted ? t('comingSoon.heroTitleEnd', 'With FREE Virtual Tours') : 'With FREE Virtual Tours'}
             </span>
           </motion.h1>
 
@@ -368,7 +399,7 @@ export default function ComingSoonPage() {
             transition={{ delay: 0.6 }}
             className="text-xl sm:text-2xl md:text-3xl text-slate-300 mb-8 max-w-4xl mx-auto leading-relaxed font-light"
           >
-            {mounted ? t('comingSoon.heroDescription', 'Transform how you showcase and sell properties with AI-powered virtual tours, instant lead qualification, and immersive 3D experiences') : 'Transform how you showcase and sell properties with AI-powered virtual tours, instant lead qualification, and immersive 3D experiences'}
+            {mounted ? t('comingSoon.heroDescription', 'Our AI answers all client questions 24/7, and interested buyers can schedule viewings instantly. Sell faster with qualified leads.') : 'Our AI answers all client questions 24/7, and interested buyers can schedule viewings instantly. Sell faster with qualified leads.'}
           </motion.p>
 
           {/* Premium Features Preview */}
@@ -884,7 +915,7 @@ export default function ComingSoonPage() {
                       <div className="flex items-center justify-center gap-4 md:gap-6 text-xs md:text-sm">
                         <div className="flex items-center gap-2 text-slate-400">
                           <Clock className="h-4 w-4" />
-                          <span>{mounted ? t('cta.spotsLeft', 'Only 12 spots left') : 'Only 12 spots left'}</span>
+                          <span>{mounted ? t('cta.spotsLeft', 'Only 42 spots left') : 'Only 42 spots left'}</span>
                         </div>
                         <div className="w-px h-4 bg-white/30" />
                         <div className="flex items-center gap-2 text-slate-400">
@@ -896,9 +927,9 @@ export default function ComingSoonPage() {
                       {/* Progress Bar */}
                       <div className="max-w-xs mx-auto">
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full w-3/4" />
+                          <div className="h-full bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full w-1/6" />
                         </div>
-                        <p className="text-xs text-slate-400 mt-2">{mounted ? t('cta.claimedThisMonth', '38 of 50 claimed this month') : '38 of 50 claimed this month'}</p>
+                        <p className="text-xs text-slate-400 mt-2">{mounted ? t('cta.claimedThisMonth', '8 of 50 claimed this month') : '8 of 50 claimed this month'}</p>
                       </div>
                     </div>
                   </div>
