@@ -53,6 +53,7 @@ export default function ComingSoonPage() {
   const [activeTours, setActiveTours] = useState<string[]>([])
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [fullscreenTour, setFullscreenTour] = useState<string | null>(null)
+  const [bannerClosed, setBannerClosed] = useState(false)
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -234,6 +235,37 @@ export default function ComingSoonPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900">
+      {/* Premium Ribbon Banner - Below Navbar */}
+      {!bannerClosed && (
+        <div className="fixed top-[73px] left-0 right-0 z-40 bg-gradient-to-r from-cyan-600 via-blue-600 to-cyan-600 backdrop-blur-xl shadow-lg">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between py-3 text-white">
+              <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse flex-shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold text-center">
+                  {mounted ? t('comingSoon.limitedSlots', 'Only 42 FREE virtual tour slots remaining this month') : 'Only 42 FREE virtual tour slots remaining this month'}
+                </span>
+                <div className="hidden md:flex items-center gap-2 ml-2 text-xs text-cyan-100">
+                  <span>•</span>
+                  <span>Worth 50,000 EGP</span>
+                  <span>•</span>
+                  <span>100% FREE</span>
+                </div>
+              </div>
+              
+              {/* Close Button */}
+              <button
+                onClick={() => setBannerClosed(true)}
+                className="ml-2 p-1 hover:bg-white/10 rounded-full transition-colors flex-shrink-0"
+                aria-label="Close banner"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Auto-popup for free 3D filming after 10 seconds */}
       <AutoPopupLeadCapture 
         delaySeconds={10}
@@ -242,7 +274,7 @@ export default function ComingSoonPage() {
         utm_campaign="free-virtual-tour-timed"
       />
       {/* Hero Section */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden py-8">
+      <section className={`relative min-h-screen flex items-center justify-center overflow-hidden py-8 transition-all duration-300 ${bannerClosed ? 'pt-16' : 'pt-28'}`}>
         {/* Premium background with geometric patterns */}
         <div className="absolute inset-0">
           {/* Primary gradient overlay */}
@@ -350,28 +382,6 @@ export default function ComingSoonPage() {
             </motion.div>
           )}
 
-          {/* Urgency Banner with Consequences */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mb-8"
-          >
-            <div className="bg-gradient-to-r from-red-600 to-red-700 border border-red-500/30 rounded-2xl p-6 max-w-4xl mx-auto shadow-2xl">
-              <div className="text-center text-white">
-                <div className="flex items-center justify-center gap-2 mb-3">
-                  <span className="text-2xl">⚠️</span>
-                  <span className="font-black text-lg tracking-wide">{mounted ? t('comingSoon.urgencyWarning', 'WARNING') : 'WARNING'}</span>
-                </div>
-                <p className="text-lg font-bold mb-2">
-                  {mounted ? t('comingSoon.limitedSlots', 'Only 42 FREE virtual tour slots remaining this month') : 'Only 42 FREE virtual tour slots remaining this month'}
-                </p>
-                <p className="text-red-100 text-base">
-                  {mounted ? t('comingSoon.afterLaunchPrice', 'After September 1st, this service costs 50,000 EGP. Reserve your FREE slot now or pay full price.') : 'After September 1st, this service costs 50,000 EGP. Reserve your FREE slot now or pay full price.'}
-                </p>
-              </div>
-            </div>
-          </motion.div>
 
           {/* Premium Main Headline */}
           <motion.h1
@@ -1020,13 +1030,7 @@ export default function ComingSoonPage() {
           </div>
 
           {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6 }}
-            viewport={{ once: true }}
-            className="flex flex-wrap justify-center items-center gap-6 md:gap-12"
-          >
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-12">
             {[
               { icon: Shield, text: mounted ? t('developerBenefits.trust1', 'Enterprise Security') : 'Enterprise Security' },
               { icon: Database, text: mounted ? t('developerBenefits.trust2', 'Data Protection') : 'Data Protection' },
@@ -1037,67 +1041,12 @@ export default function ComingSoonPage() {
                 <span className="text-sm font-medium">{item.text}</span>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
         {/* Section divider */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       </section>
 
-      {/* Tech Stack Preview Section */}
-      <section className="py-20 bg-gradient-to-br from-slate-50 to-white relative overflow-hidden">
-        {/* Light tech background pattern */}
-        <div className="absolute inset-0">
-          <div className="absolute inset-0 opacity-5" style={{
-            backgroundImage: `radial-gradient(circle at 2px 2px, rgba(0,212,255,0.2) 1px, transparent 0)`,
-            backgroundSize: '40px 40px'
-          }} />
-          {/* Subtle gradient overlays */}
-          <div className="absolute top-0 left-1/3 w-72 h-72 bg-cyan-500/5 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="container mx-auto px-4 relative z-10">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-3 bg-purple-600 text-white rounded-full px-6 py-3 mb-8 shadow-lg">
-              <Cpu className="w-5 h-5" />
-              <span className="font-semibold text-sm tracking-wide">
-                {mounted ? t('techStack.badge', 'POWERED BY ADVANCED AI') : 'POWERED BY ADVANCED AI'}
-              </span>
-            </div>
-            <h2 className="text-4xl md:text-6xl font-black text-slate-900 mb-6">
-              {mounted ? t('techStack.title', 'Cutting-Edge Technology') : 'Cutting-Edge Technology'}
-            </h2>
-            <p className="text-xl md:text-2xl text-slate-700 max-w-3xl mx-auto leading-relaxed">
-              {mounted ? t('techStack.subtitle', 'Built with the latest technologies to deliver unmatched performance and reliability') : 'Built with the latest technologies to deliver unmatched performance and reliability'}
-            </p>
-          </div>
-
-          {/* Tech Icons Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
-            {[
-              { icon: Brain, name: 'AI & Machine Learning', color: 'from-purple-400 to-pink-500' },
-              { icon: Cloud, name: 'Cloud Infrastructure', color: 'from-cyan-400 to-blue-500' },
-              { icon: Video, name: '3D Rendering Engine', color: 'from-emerald-400 to-teal-500' },
-              { icon: Database, name: 'Real-time Analytics', color: 'from-orange-400 to-red-500' }
-            ].map((tech, index) => (
-              <div
-                key={index}
-                className="text-center group"
-              >
-                <div className="bg-white/80 backdrop-blur-xl border border-slate-200 rounded-2xl p-6 hover:border-slate-300 hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                  <div className={`w-12 h-12 mx-auto rounded-xl bg-gradient-to-r ${tech.color} p-3 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
-                    <tech.icon className="w-full h-full text-white" />
-                  </div>
-                  <p className="text-slate-800 font-semibold text-sm">{tech.name}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Section divider */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-slate-300/50 to-transparent"></div>
-      </section>
 
       {/* Enhanced Footer */}
       <footer className="bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white py-16 relative overflow-hidden">
