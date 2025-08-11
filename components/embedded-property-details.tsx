@@ -42,7 +42,6 @@ import { SavePropertyButton } from '@/components/save-property-button'
 import { usePropertyTranslation } from '@/components/PropertyTranslationWrapper'
 import MortgageCalculator from '@/components/mortgage-calculator'
 import SimilarProperties from '@/components/SimilarProperties'
-import LifestyleCompatibilityTool from '@/components/lifestyle/LifestyleCompatibilityTool'
 
 // Property interface matching our database schema
 interface Property {
@@ -963,30 +962,6 @@ export function EmbeddedPropertyDetails({ propertyId, onClose }: EmbeddedPropert
               </Card>
             )}
 
-            {/* Lifestyle Compatibility Tool - Interactive Map with Commute Analysis */}
-            {property.latitude && property.longitude && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    {t('propertyDetails.commuteAnalysis')}
-                  </CardTitle>
-                  <p className="text-sm text-slate-600 mt-2">
-                    {t('propertyDetails.commuteDescription')}
-                  </p>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <LifestyleCompatibilityTool
-                    propertyId={property.id}
-                    propertyLocation={{
-                      latitude: property.latitude,
-                      longitude: property.longitude,
-                      address: property.address
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            )}
 
             {/* Tour Section */}
             {(property.virtual_tour_url || property.video_tour_url) && (
