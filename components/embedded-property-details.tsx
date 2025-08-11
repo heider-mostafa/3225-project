@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion } from "framer-motion"
 import { useTranslation } from 'react-i18next'
 import { heygenManager } from '@/lib/heygen/HeygenAgentManager'
 import {
@@ -406,12 +405,7 @@ export function EmbeddedPropertyDetails({ propertyId, onClose }: EmbeddedPropert
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-slate-50 z-50 overflow-y-auto"
-    >
+    <div className="fixed inset-0 bg-slate-50 z-50 overflow-y-auto">
       {/* Header with close button */}
       <div className="bg-white shadow-sm border-b border-slate-200 sticky top-0 z-10">
         <div className="container mx-auto px-4 py-4">
@@ -1341,6 +1335,6 @@ export function EmbeddedPropertyDetails({ propertyId, onClose }: EmbeddedPropert
           isLoading={bookingLoading}
         />
       )}
-    </motion.div>
+    </div>
   )
 }
