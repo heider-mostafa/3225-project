@@ -40,6 +40,7 @@ import { Badge } from "@/components/ui/badge"
 import { TourViewer } from "@/components/tour-viewer"
 import { LeadCaptureForm } from "@/components/LeadCaptureForm"
 import { AutoPopupLeadCapture } from "@/components/AutoPopupLeadCapture"
+import { FeaturedPropertyShowcase } from "@/components/featured-property-showcase"
 import Link from "next/link"
 
 export default function ComingSoonPage() {
@@ -492,6 +493,9 @@ export default function ComingSoonPage() {
         {/* Section divider */}
         <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
       </section>
+
+      {/* Featured Property Showcase */}
+      <FeaturedPropertyShowcase />
 
       {/* Value Proposition Section */}
       <section className="py-20 bg-gradient-to-br from-slate-50 to-blue-50 relative overflow-hidden">
