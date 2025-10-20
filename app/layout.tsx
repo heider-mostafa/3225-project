@@ -195,7 +195,7 @@ export default function RootLayout({
                 var errorDiv = document.createElement('div');
                 errorDiv.id = 'pre-react-debug';
                 errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: red; color: white; padding: 10px; z-index: 99999; font-size: 12px;';
-                errorDiv.innerHTML = 'Mobile detected. Checking for errors...';
+                errorDiv.innerHTML = 'Mobile detected v2.0 - ' + new Date().toLocaleTimeString() + ' - Checking for errors...';
                 document.body.appendChild(errorDiv);
                 
                 // Catch errors before React loads
