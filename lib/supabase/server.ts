@@ -1,56 +1,15 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getSupabaseConfig } from '@/lib/env'
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
   
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const config = getSupabaseConfig()
+  const supabaseUrl = config.url
+  const supabaseAnonKey = config.anonKey
   
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase environment variables in createServerSupabaseClient:', { 
-      url: !!supabaseUrl, 
-      key: !!supabaseAnonKey 
-    })
-    
-    // Return a mock client that doesn't crash during build
-    return {
-      auth: {
-        getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
-        getSession: () => Promise.resolve({ data: { session: null }, error: new Error('Supabase not configured') }),
-      },
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
-            order: () => ({
-              limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
-            }),
-            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
-          }),
-          order: () => ({
-            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
-          }),
-          limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') }),
-          gte: () => ({
-            lte: () => ({
-              order: () => ({
-                limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
-              })
-            })
-          }),
-          in: () => ({
-            order: () => ({
-              limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
-            })
-          })
-        }),
-        insert: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-        update: () => Promise.resolve({ error: new Error('Supabase not configured') }),
-        delete: () => Promise.resolve({ error: new Error('Supabase not configured') })
-      })
-    } as any
-  }
+  console.log('🔧 Creating server Supabase client with configuration')
 
   return createServerClient(
     supabaseUrl,
@@ -160,7 +119,7 @@ export function createServiceSupabaseClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.error('Missing Supabase service environment variables:', { 
+    console.log('Supabase service environment variables not available in build context - using mock client:', { 
       url: !!supabaseUrl, 
       serviceKey: !!supabaseServiceKey 
     })
