@@ -319,10 +319,31 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
           setPropertyAppraiser(null)
         }
         
-        // Track property view
-        await fetch(`/api/properties/${resolvedParams.id}/view`, {
-          method: 'POST'
-        })
+        // Track property view with proper error handling
+        try {
+          console.log('👁️ Attempting to track view for property:', resolvedParams.id)
+          const viewResponse = await fetch(`/api/properties/${resolvedParams.id}/view`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            }
+          })
+          
+          if (viewResponse.ok) {
+            const viewData = await viewResponse.json()
+            console.log('✅ View tracked successfully:', viewData)
+          } else {
+            const errorText = await viewResponse.text()
+            console.warn('⚠️ View tracking failed:', {
+              status: viewResponse.status,
+              statusText: viewResponse.statusText,
+              error: errorText
+            })
+          }
+        } catch (viewError) {
+          console.error('❌ Error during view tracking:', viewError)
+          // Don't throw - view tracking failure shouldn't break the page
+        }
         
       } catch (error) {
         console.error('❌ Error fetching property:', error)

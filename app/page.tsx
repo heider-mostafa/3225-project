@@ -520,18 +520,28 @@ export default function HomePage() {
           // Hot Listings: Properties with recent activity
           const hot = properties
             .slice(0, 4)
-            .map((p: any) => ({
-              ...p,
-              location: `${p.city}, ${p.state}`,
-              beds: p.bedrooms,
-              baths: p.bathrooms,
-              sqm: p.square_meters,
-              priceChange: '+2.5%',
-              daysOnMarket: Math.floor(Math.random() * 30) + 1,
-              views: p.view_count || 0,  // Use real view count from database
-              image: p.property_photos?.[0]?.url || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
-              virtual_tour_url: p.virtual_tour_url // Also add to hot listings
-            }))
+            .map((p: any) => {
+              console.log('🔍 Processing property for hot listings:', {
+                id: p.id,
+                title: p.title,
+                view_count: p.view_count,
+                hasViewCount: 'view_count' in p,
+                rawProperty: p
+              })
+              return {
+                ...p,
+                location: `${p.city}, ${p.state}`,
+                beds: p.bedrooms,
+                baths: p.bathrooms,
+                sqm: p.square_meters,
+                priceChange: '+2.5%',
+                daysOnMarket: Math.floor(Math.random() * 30) + 1,
+                views: p.view_count || 0,  // Use real view count from database
+                image: p.property_photos?.[0]?.url || 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=800',
+                virtual_tour_url: p.virtual_tour_url // Also add to hot listings
+              }
+            })
+          console.log('📊 Hot listings with view counts:', hot.map(h => ({ id: h.id, title: h.title, views: h.views })))
           setHotListings(hot)
           
           // Count properties per area from database
@@ -1099,9 +1109,10 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="h-full"
               >
-                <Link href={`/property/${property.id}`} className="block">
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group relative">
+                <Link href={`/property/${property.id}`} className="block h-full">
+                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group relative h-full flex flex-col">
                     <div className="absolute top-4 left-4 z-10">
                       <Badge className="bg-red-500 text-white animate-pulse">
                         <TrendingUp className="h-3 w-3 mr-1" />
@@ -1120,31 +1131,35 @@ export default function HomePage() {
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     </div>
-                    <CardContent className="p-4">
-                      <h3 className="text-xl font-semibold text-slate-800 mb-2">{translatePropertyTitle(property.title)}</h3>
-                                              <div className="flex items-center text-slate-600 mb-3 text-sm">
+                    <CardContent className="p-4 flex-1 flex flex-col">
+                      <div className="flex-1">
+                        <h3 className="text-xl font-semibold text-slate-800 mb-2 line-clamp-2 min-h-[3.5rem]">
+                          {translatePropertyTitle(property.title)}
+                        </h3>
+                        <div className="flex items-center text-slate-600 mb-3 text-sm min-h-[1.25rem]">
                           <MapPin className="h-3 w-3 mr-1" />
                           {translateLocation(property.location, i18n.language === 'ar')}
                         </div>
-                      <div className="flex items-center gap-3 text-xs text-slate-600 mb-3">
-                        <div className="flex items-center">
-                          <Bed className="h-3 w-3 mr-1" />
-                          {isMounted ? translateText(property.beds?.toString() || '0') : (property.beds?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'غرف نوم' : 'beds'}
-                        </div>
-                        <div className="flex items-center">
-                          <Bath className="h-3 w-3 mr-1" />
-                          {isMounted ? translateText(property.baths?.toString() || '0') : (property.baths?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'حمامات' : 'baths'}
-                        </div>
-                        <div className="flex items-center">
-                          <Square className="h-3 w-3 mr-1" />
-                          {isMounted ? translateText(property.sqm?.toString() || '0') : (property.sqm?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'م²' : 'sqm'}
+                        <div className="flex items-center gap-3 text-xs text-slate-600 mb-3 min-h-[1rem]">
+                          <div className="flex items-center">
+                            <Bed className="h-3 w-3 mr-1" />
+                            {isMounted ? translateText(property.beds?.toString() || '0') : (property.beds?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'غرف نوم' : 'beds'}
+                          </div>
+                          <div className="flex items-center">
+                            <Bath className="h-3 w-3 mr-1" />
+                            {isMounted ? translateText(property.baths?.toString() || '0') : (property.baths?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'حمامات' : 'baths'}
+                          </div>
+                          <div className="flex items-center">
+                            <Square className="h-3 w-3 mr-1" />
+                            {isMounted ? translateText(property.sqm?.toString() || '0') : (property.sqm?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'م²' : 'sqm'}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between mt-auto">
                         <span className="text-lg font-bold text-slate-800">{formatPrice(property.price)}</span>
                         <div className="flex items-center text-xs text-slate-500">
                           <Eye className="h-3 w-3 mr-1" />
-                          {property.views}
+                          {property.views || property.view_count || 0}
                         </div>
                       </div>
                     </CardContent>
