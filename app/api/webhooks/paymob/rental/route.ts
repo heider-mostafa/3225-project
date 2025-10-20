@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
     }
 
+    // Check if rental payment service is available
+    if (!rentalPaymentService) {
+      console.error('Rental payment service not configured');
+      return NextResponse.json({ error: 'Payment service not configured' }, { status: 500 });
+    }
+
     // Process payment confirmation
     const confirmResult = await rentalPaymentService.confirmRentalPayment(
       booking.id,

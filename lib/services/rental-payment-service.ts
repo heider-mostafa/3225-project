@@ -53,7 +53,11 @@ interface PaymentResponse {
 }
 
 export class RentalPaymentService {
-  private supabase = createClient();
+  private supabase: ReturnType<typeof createClient>;
+  
+  constructor() {
+    this.supabase = createClient();
+  }
 
   /**
    * Create a rental payment using Paymob's new Intention API
@@ -518,5 +522,7 @@ export class RentalPaymentService {
   }
 }
 
-// Export singleton instance
-export default new RentalPaymentService();
+// Export singleton instance only if environment variables are available
+export default process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ? new RentalPaymentService()
+  : null;
