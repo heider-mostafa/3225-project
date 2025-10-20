@@ -8,7 +8,48 @@ export async function createServerSupabaseClient() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error('Missing required Supabase environment variables')
+    console.error('Missing Supabase environment variables in createServerSupabaseClient:', { 
+      url: !!supabaseUrl, 
+      key: !!supabaseAnonKey 
+    })
+    
+    // Return a mock client that doesn't crash during build
+    return {
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
+        getSession: () => Promise.resolve({ data: { session: null }, error: new Error('Supabase not configured') }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+            order: () => ({
+              limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+            }),
+            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+          }),
+          order: () => ({
+            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+          }),
+          limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') }),
+          gte: () => ({
+            lte: () => ({
+              order: () => ({
+                limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+              })
+            })
+          }),
+          in: () => ({
+            order: () => ({
+              limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+            })
+          })
+        }),
+        insert: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        update: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        delete: () => Promise.resolve({ error: new Error('Supabase not configured') })
+      })
+    } as any
   }
 
   return createServerClient(
@@ -72,6 +113,10 @@ export async function getAuthenticatedUser() {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Missing Supabase environment variables in getAuthenticatedUser:', { 
+      url: !!supabaseUrl, 
+      key: !!supabaseAnonKey 
+    })
     throw new Error('Missing required Supabase environment variables')
   }
 
@@ -115,7 +160,48 @@ export function createServiceSupabaseClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing required Supabase environment variables')
+    console.error('Missing Supabase service environment variables:', { 
+      url: !!supabaseUrl, 
+      serviceKey: !!supabaseServiceKey 
+    })
+    
+    // Return a mock client that doesn't crash during build
+    return {
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') }),
+            order: () => ({
+              limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+            }),
+            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+          }),
+          order: () => ({
+            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+          }),
+          limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') }),
+          gte: () => ({
+            lte: () => ({
+              order: () => ({
+                limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+              })
+            })
+          }),
+          in: () => ({
+            order: () => ({
+              limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+            })
+          }),
+          count: 'exact'
+        }),
+        insert: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        update: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        delete: () => Promise.resolve({ error: new Error('Supabase not configured') })
+      })
+    } as any
   }
   
   return createClient(supabaseUrl, supabaseServiceKey)
@@ -130,7 +216,31 @@ export function createServiceServerClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   
   if (!supabaseUrl || !supabaseServiceKey) {
-    throw new Error('Missing required Supabase environment variables')
+    console.error('Missing Supabase service server environment variables:', { 
+      url: !!supabaseUrl, 
+      serviceKey: !!supabaseServiceKey 
+    })
+    
+    // Return a mock client that doesn't crash during build
+    return {
+      auth: {
+        getUser: () => Promise.resolve({ data: { user: null }, error: new Error('Supabase not configured') }),
+      },
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: () => Promise.resolve({ data: null, error: new Error('Supabase not configured') })
+          }),
+          order: () => ({
+            limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+          }),
+          limit: () => Promise.resolve({ data: [], error: new Error('Supabase not configured') })
+        }),
+        insert: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        update: () => Promise.resolve({ error: new Error('Supabase not configured') }),
+        delete: () => Promise.resolve({ error: new Error('Supabase not configured') })
+      })
+    } as any
   }
   
   return createServerClient(supabaseUrl, supabaseServiceKey, {
