@@ -1,9 +1,10 @@
 import { MetadataRoute } from 'next'
-import { supabase } from '@/lib/supabase/config'
+import { createServiceSupabaseClient } from '@/lib/supabase/server'
 
 // Helper function to fetch all properties for sitemap
 async function getPropertiesForSitemap() {
   try {
+    const supabase = createServiceSupabaseClient()
     const { data: properties, error } = await supabase
       .from('properties')
       .select('id, updated_at, created_at, city, property_type, price, status')
