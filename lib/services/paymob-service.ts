@@ -615,9 +615,16 @@ export class PaymobService {
   ): Promise<void> {
     try {
       const { createClient } = require('@supabase/supabase-js');
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+      const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+      
+      if (!supabaseUrl || !supabaseServiceKey) {
+        throw new Error('Missing required Supabase environment variables')
+      }
+      
       const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!
+        supabaseUrl,
+        supabaseServiceKey
       );
 
       const status = webhookData.success ? 'paid' : 'failed';
@@ -843,5 +850,7 @@ export class PaymobService {
   }
 }
 
-// Export singleton instance
-export const paymobService = new PaymobService();
+// Export singleton instance only if environment variables are available
+export const paymobService = process.env.PAYMOB_API_KEY && process.env.PAYMOB_SECRET_KEY
+  ? new PaymobService()
+  : null;

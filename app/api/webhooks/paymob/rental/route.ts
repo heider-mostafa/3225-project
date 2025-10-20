@@ -16,6 +16,12 @@ export async function POST(request: NextRequest) {
       amount: webhookData.amount_cents
     });
 
+    // Check if Paymob service is available
+    if (!paymobService) {
+      console.error('Paymob service not configured');
+      return NextResponse.json({ error: 'Payment service not configured' }, { status: 500 });
+    }
+
     // Verify webhook signature using Paymob service
     const isValid = await paymobService.handleWebhook(webhookData, signature);
     if (!isValid) {
