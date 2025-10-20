@@ -61,6 +61,11 @@ export async function trackVirtualTourEngagement(params: {
   tracking: BaseTrackingParams
 }) {
   try {
+    if (!metaConversions) {
+      console.log('Meta tracking disabled - no API keys configured')
+      return { success: false, message: 'Meta tracking disabled' }
+    }
+    
     const result = await metaConversions.trackTourEngagement({
       userEmail: params.tracking.userEmail,
       propertyId: params.propertyId,

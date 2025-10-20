@@ -409,5 +409,7 @@ export class MetaConversionsService {
   }
 }
 
-// Export singleton instance
-export const metaConversions = new MetaConversionsService()
+// Export singleton instance only if environment variables are available
+export const metaConversions = process.env.META_CONVERSIONS_API_ACCESS_TOKEN && process.env.NEXT_PUBLIC_META_PIXEL_ID
+  ? new MetaConversionsService()
+  : null

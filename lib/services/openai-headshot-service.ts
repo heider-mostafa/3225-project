@@ -427,7 +427,10 @@ Image style: Premium corporate headshot, executive LinkedIn profile, professiona
 }
 
 // Export singleton instance
-export const replicateHeadshotService = new ReplicateHeadshotService();
+// Export singleton instance only if API token is available
+export const replicateHeadshotService = process.env.REPLICATE_API_TOKEN && process.env.REPLICATE_API_TOKEN !== 'disabled'
+  ? new ReplicateHeadshotService()
+  : null;
 export default replicateHeadshotService;
 
 // Export types
