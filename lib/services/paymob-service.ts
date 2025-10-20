@@ -217,16 +217,6 @@ export class PaymobService {
       hasWebhookSecret: !!this.config.webhookSecret
     });
 
-    // Validate required configuration
-    if (!this.config.apiKey) {
-      console.error('❌ PAYMOB_API_KEY is not set in environment variables');
-    }
-    if (!this.config.integrationId) {
-      console.error('❌ PAYMOB_INTEGRATION_ID is not set or invalid');
-    }
-    if (!this.config.iframeId) {
-      console.error('❌ PAYMOB_IFRAME_ID is not set or invalid');
-    }
   }
 
   // Authentication

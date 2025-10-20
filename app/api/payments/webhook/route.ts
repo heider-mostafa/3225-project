@@ -4,13 +4,28 @@ import { createClient } from '@supabase/supabase-js';
 import { paymobService } from '@/lib/services/paymob-service';
 
 // Initialize Supabase with service role key for webhook processing
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url || !key) {
+    throw new Error('Missing Supabase configuration');
+  }
+  
+  return createClient(url, key);
+}
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn('Supabase not configured, webhook processing disabled');
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Webhook received but processing disabled (missing config)' 
+      });
+    }
+
     // Get raw body and signature
     const body = await request.text();
     const signature = request.headers.get('x-paymob-signature') || '';
@@ -30,6 +45,7 @@ export async function POST(request: NextRequest) {
     console.log(`Received Paymob webhook: ${webhookData.type || 'unknown'} for transaction ${webhookData.id}`);
 
     // Store webhook in logs table first
+    const supabase = getSupabaseClient();
     const { data: logEntry, error: logError } = await supabase
       .from('paymob_webhook_logs')
       .insert({
@@ -58,7 +74,8 @@ export async function POST(request: NextRequest) {
       
       // Update log with error
       if (logEntry) {
-        await supabase
+        const supabaseForUpdate = getSupabaseClient();
+        await supabaseForUpdate
           .from('paymob_webhook_logs')
           .update({
             processing_attempts: 1,
@@ -76,7 +93,8 @@ export async function POST(request: NextRequest) {
 
     // Update log with processing result
     if (logEntry) {
-      await supabase
+      const supabaseForFinalUpdate = getSupabaseClient();
+      await supabaseForFinalUpdate
         .from('paymob_webhook_logs')
         .update({
           signature_verified: true,
@@ -130,6 +148,7 @@ async function processWebhookActions(webhookData: any) {
     }
 
     // Get payment record
+    const supabase = getSupabaseClient();
     const { data: payment, error } = await supabase
       .from('appraisal_payments')
       .select(`
@@ -166,7 +185,8 @@ async function handleSuccessfulPayment(payment: any) {
     if (payment.payment_category === 'booking') {
       // Update booking status to confirmed if it was pending payment
       if (payment.appraiser_bookings) {
-        await supabase
+        const supabaseUpdate = getSupabaseClient();
+        await supabaseUpdate
           .from('appraiser_bookings')
           .update({
             payment_status: 'paid',
