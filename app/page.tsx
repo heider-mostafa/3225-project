@@ -885,497 +885,196 @@ export default function HomePage() {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {/* Hero Section with 3D Tour */}
-      <section className="relative h-screen">
-        {/* 3D Tour Background */}
-        <div className="absolute inset-0 z-10">
-          <div 
-            className="relative h-full w-full"
-            onMouseDown={handleModelInteractionStart}
-            onMouseUp={handleModelInteractionEnd}
-            onTouchStart={handleModelInteractionStart}
-            onTouchEnd={handleModelInteractionEnd}
-          >
-            {/* Gradient overlays - with pointer-events: none to allow interaction with 3D tour */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-transparent z-10 pointer-events-none" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent z-10 pointer-events-none" />
-            <div className="absolute inset-0 bg-black/20 z-10 pointer-events-none" />
-            
-            {/* 3D Tour Viewer - higher z-index to be interactive */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentTourIndex}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 1.5, ease: "easeInOut" }}
-                className="absolute inset-0 z-20"
-                style={{ pointerEvents: 'auto' }}
-              >
-                <TourViewer
-                  propertyId={currentProperty?.id || 'demo'}
-                  tourId={currentProperty?.id || 'demo'}
-                  tourUrl={currentProperty?.virtual_tour_url || undefined}
-                  className="w-full h-full"
-                  autoRotate={true}
-                  hideRoomMenu={true}
-                />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Navigation Controls */}
-        <div className="absolute top-1/2 left-2 md:left-4 transform -translate-y-1/2 z-30">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={prevTour}
-            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 w-10 h-10 md:w-12 md:h-12"
-          >
-            <ChevronLeft className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-        </div>
-        <div className="absolute top-1/2 right-2 md:right-4 transform -translate-y-1/2 z-30">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={nextTour}
-            className="bg-white/20 backdrop-blur-md border-white/30 text-white hover:bg-white/30 w-10 h-10 md:w-12 md:h-12"
-          >
-            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-        </div>
-
-        {/* Property Information Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 md:p-8 z-30">
-          <div className="container mx-auto">
-            <motion.div
-              key={`info-${currentTourIndex}`}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 1, delay: 0.3 }}
-              className="bg-white/10 backdrop-blur-md rounded-xl md:rounded-2xl p-4 md:p-6 border border-white/20"
-            >
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 md:gap-6">
-                  <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-tight">{translatePropertyTitle(currentProperty.title)}</h1>
-                    {currentProperty.isHot && (
-                      <Badge className="bg-red-500 text-white animate-pulse text-xs">
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        {safeT('properties.hot', 'HOT')}
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center text-white/80 mb-3">
-                    <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="text-sm md:text-base">{translateLocation(currentProperty.location, i18n.language === 'ar')}</span>
-                  </div>
-                  <div className="hidden sm:flex sm:items-center gap-3 sm:gap-4 text-white/80">
-                    <div className="flex items-center">
-                      <Bed className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.beds?.toString() || '0') : (currentProperty.beds?.toString() || '0')} {safeT('common.bed', 'beds')}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Bath className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.baths?.toString() || '0') : (currentProperty.baths?.toString() || '0')} {safeT('common.bath', 'baths')}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Square className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.sqm?.toString() || '0') : (currentProperty.sqm?.toString() || '0')} {safeT('common.sqm', 'sqm')}
-                      </span>
-                    </div>
-                    <div className="flex items-center">
-                      <Eye className="h-4 w-4 mr-1 flex-shrink-0" />
-                      <span className="text-sm md:text-base">
-                        {isMounted ? translateText(currentProperty.views?.toString() || '0') : (currentProperty.views?.toString() || '0')} {isMounted && i18n.language === 'ar' ? 'مشาهدات' : 'views'}
-                      </span>
-                    </div>
-                  </div>
-                  </div>
-                  <div className="flex flex-col md:items-end gap-3">
-                    <div className="text-2xl sm:text-3xl font-bold text-white">{formatPrice(currentProperty.price)}</div>
-                    <div className="flex flex-col sm:flex-row md:flex-col gap-3">
-                      <div className="flex gap-2 justify-start md:justify-end">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                        >
-                          <Heart className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="bg-white/20 border-white/30 text-white hover:bg-white/30"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Link href={`/property/${currentProperty.id}`} className="w-full sm:w-auto">
-                        <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                          <Play className="h-4 w-4 mr-2" />
-                          <span className="text-sm md:text-base">{safeT('properties.startVirtualTour', 'Start Virtual Tour')}</span>
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-full max-w-2xl px-4 z-30">
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-white/10 backdrop-blur-md rounded-2xl p-2 border border-white/20"
-          >
-            <div className="flex items-center">
-              <Search className="h-5 w-5 text-white/60 ml-4" />
-              <Input
-                placeholder={safeT('properties.searchPlaceholder', 'Try: "3bdr apartment in Sheikh Zayed with pool"')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyPress}
-                disabled={isSearching}
-                className="border-0 bg-transparent text-white placeholder:text-white/60 focus-visible:ring-0 text-lg disabled:opacity-70"
-              />
-              <Button 
-                onClick={handleSmartSearch}
-                disabled={isSearching || !searchQuery.trim()}
-                className="bg-blue-600 hover:bg-blue-700 mr-2 disabled:opacity-50"
-              >
-                {isSearching ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    {safeT('search.searching', 'Searching...')}
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {safeT('search.smartSearch', 'Smart Search')}
-                  </>
-                )}
-              </Button>
-            </div>
-            {/* Smart Search Examples */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.8 }}
-              className="mt-3 px-4"
-            >
-              <div className="text-white/50 text-sm text-center">
-                {safeT('search.examples', 'Try: "3 bedroom villa in New Cairo" or "apartment under $500k with pool"')}
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-
-        {/* Tour Indicators */}
-        <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 flex space-x-2 z-30">
-          {featuredProperties.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => {
-                setIsAutoRotating(false)
-                setCurrentTourIndex(index)
-              }}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentTourIndex ? "bg-white scale-125" : "bg-white/40 hover:bg-white/60"
-              }`}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* Top Compounds */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
-            <div className="flex-1">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 mb-2 flex items-center">
-                <Building2 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600 mr-2 sm:mr-3" />
-                {safeT('properties.topCompounds', 'Top Compounds')}
-              </h2>
-              <p className="text-sm sm:text-base text-slate-600">{safeT('properties.topCompoundsDescription', 'Discover the most sought-after residential communities in Egypt')}</p>
-            </div>
-            <Link href="/compounds" className="shrink-0">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
-                {safeT('properties.viewAllCompounds', 'View All Compounds')}
-                <ArrowRight className="h-4 w-4 ml-2" />
-              </Button>
-            </Link>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {topCompounds.map((compound) => (
-              <Link 
-                key={compound.name} 
-                href={`/properties?compound=${compound.name.toLowerCase().replace(/\s+/g, '-')}`}
-                className="block"
-              >
-                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
-                  <div className="relative">
-                    <img 
-                      src={compound.image} 
-                      alt={compound.name} 
-                      className="w-full h-64 object-cover group-hover:scale-105 transition-transform duration-300" 
-                    />
-                    <div className="absolute top-4 left-4">
-                      <Badge className="bg-blue-600 text-white">
-                        <Building2 className="h-3 w-3 mr-1" />
-                        {compound.properties} Properties
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardContent className="p-6">
-                    <h3 className="text-xl font-semibold text-slate-800 mb-2 flex items-center gap-2">
-                      {translateCompoundName(compound.name)}
-                      <ShieldCheck className="h-5 w-5 text-blue-600" />
-                    </h3>
-                    <p className="text-slate-600 mb-4">{translateAreaName(compound.area)}</p>
-                    <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full">
-                      {t('properties.viewProperties', 'View Properties')}
-                    </Button>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Free Virtual Tour CTA */}
-        <section id="virtual-tour-cta" className="relative py-32 overflow-hidden bg-white">
-        <div className="container mx-auto px-4 relative z-10">
-          {/* Premium Card Container */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: true }}
-            className="relative max-w-5xl mx-auto"
-          >
-            {/* Animated Background Gradient */}
-            <div className="absolute inset-0 rounded-[2rem] overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 opacity-95" />
-              <div 
-                className="absolute inset-0 opacity-30"
-                style={{
-                  background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(59,130,246,0.5) 0%, transparent 50%)`,
-                }}
-              />
-              {/* Subtle grid pattern */}
-              <div className="absolute inset-0 opacity-5">
-                <div className="absolute inset-0" style={{
-                  backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-                                  linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-                  backgroundSize: '50px 50px'
-                }} />
-              </div>
-              {/* Animated particles */}
-              <div className="absolute inset-0">
-                {[...Array(15)].map((_, i) => {
-                  // Use index-based deterministic positioning to avoid hydration mismatch
-                  const x = (i * 13.7 + 7) % 100;
-                  const y = (i * 17.3 + 12) % 100;
-                  const scale = 0.5 + (i % 5) * 0.1;
-                  const duration = 15 + (i % 8) * 2;
-                  const delay = (i % 10);
-                  
-                  return (
-                    <motion.div
-                      key={i}
-                      className="absolute w-1 h-1 bg-blue-400 rounded-full opacity-50"
-                      initial={{ 
-                        x: x + "%",
-                        y: y + "%",
-                        scale: scale
-                      }}
-                      animate={{
-                        y: [null, "-20%", "120%"],
-                        opacity: [0, 0.8, 0]
-                      }}
-                      transition={{
-                        duration: duration,
-                        repeat: Infinity,
-                        delay: delay,
-                        ease: "linear"
-                      }}
-                    />
-                  );
-                }
-                )}
-              </div>
-            </div>
-
-            {/* Glass Morphism Content Container */}
-            <div className="relative bg-white/5 backdrop-blur-xl rounded-[2rem] p-12 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
-              {/* Premium Badge */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-                className="absolute -top-6 left-1/2 transform -translate-x-1/2"
-              >
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-xl flex items-center gap-2">
-                  <Sparkles className="w-5 h-5" />
-                  {t('cta.exclusiveOffer', 'EXCLUSIVE OFFER')}
-                  <Sparkles className="w-5 h-5" />
-                </div>
-              </motion.div>
-
-              {/* Main Content */}
-              <div className="text-center space-y-8 pt-8">
-                {/* Title */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.3 }}
-                >
-                  <h2 className="text-5xl md:text-6xl font-bold mb-6">
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-white">
-                      {t('cta.getYourFree', 'Get Your FREE')}
-                    </span>
-                    <br />
-                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 animate-pulse">
-                      {t('cta.virtualTour3D', '3D Virtual Tour')}
-                    </span>
-                  </h2>
-                </motion.div>
-
-                {/* Value Proposition */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.4 }}
-                  className="space-y-4"
-                >
-                  <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur px-6 py-3 rounded-full">
-                    <Star className="w-6 h-6 text-blue-400 fill-current" />
-                    <span className="text-2xl font-semibold text-white">
-                      {t('cta.worth', 'Worth')} <span className="text-cyan-400">{t('cta.priceEGP', '5,000 EGP')}</span>
-                    </span>
-                    <div className="w-px h-6 bg-white/30" />
-                    <span className="text-emerald-400 font-bold">{t('cta.hundredPercentFree', '100% FREE')}</span>
-                  </div>
-                  
-                  <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-                    {t('cta.sellFasterDescription', 'Sell your property 73% faster with immersive virtual tours that captivate serious buyers')}
-                  </p>
-                </motion.div>
-
-                {/* Features Grid */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10"
-                >
-                  {[
-                    { icon: Camera, title: t('cta.professionalPhotography', 'Professional Photography'), desc: t('cta.hdrDroneShots', 'HDR & Drone shots'), color: "from-blue-500 to-cyan-500" },
-                    { icon: TrendingUp, title: t('cta.interactive3DTour', 'Interactive 3D Tour'), desc: t('cta.dollhouseFloorPlans', 'Dollhouse & Floor plans'), color: "from-cyan-500 to-teal-500" },
-                    { icon: Users, title: t('cta.brokerNetwork', 'Broker Network'), desc: t('cta.activeAgents', '1000+ active agents'), color: "from-teal-500 to-blue-500" }
-                  ].map((feature, index) => (
-                    <motion.div
-                      key={index}
-                      whileHover={{ scale: 1.05, y: -5 }}
-                      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group"
-                    >
-                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} p-3 mb-4 group-hover:shadow-lg transition-shadow`}>
-                        <feature.icon className="w-full h-full text-white" />
-                      </div>
-                      <h3 className="text-white font-semibold text-lg mb-1">{feature.title}</h3>
-                      <p className="text-slate-400 text-sm">{feature.desc}</p>
-                    </motion.div>
-                  ))}
-                </motion.div>
-
-                {/* CTA Button */}
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.6 }}
-                >
-                  <LeadCaptureForm
-                    trigger={
-                      <Button 
-                        size="lg" 
-                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-6 sm:py-8 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
-                      >
-                        <span className="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
-                          <div className="flex items-center gap-2">
-                            <Gift className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
-                            <span className="block sm:hidden text-center leading-tight">
-                              {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').replace(' ', '\n')}
-                            </span>
-                            <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
-                          </div>
-                          <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 group-hover:translate-x-1 transition-transform flex-shrink-0 block sm:inline-block" />
-                        </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                      </Button>
-                    }
-                    utm_source="homepage"
-                    utm_medium="after_compounds"
-                    utm_campaign="free_virtual_tour"
-                  />
-                </motion.div>
-
-                {/* Urgency Indicators */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  whileInView={{ opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.7 }}
-                  className="space-y-3"
-                >
-                  <div className="flex items-center justify-center gap-6 text-sm">
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <Clock className="h-4 w-4" />
-                      <span>{t('cta.spotsLeft', 'Only 12 spots left')}</span>
-                    </div>
-                    <div className="w-px h-4 bg-white/30" />
-                    <div className="flex items-center gap-2 text-slate-400">
-                      <CheckCircle className="h-4 w-4 text-emerald-400" />
-                      <span>{t('cta.noCreditCard', 'No credit card required')}</span>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="max-w-xs mx-auto">
-                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                      <motion.div
-                        initial={{ width: "0%" }}
-                        whileInView={{ width: "76%" }}
-                        transition={{ duration: 1, delay: 0.8 }}
-                        className="h-full bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full"
-                      />
-                    </div>
-                    <p className="text-xs text-slate-400 mt-2">{t('cta.claimedThisMonth', '38 of 50 claimed this month')}</p>
-                  </div>
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </section>
+  // Add state for service demos
+  const [currentDemo, setCurrentDemo] = useState(0)
+  const demos = ['virtual-tour', 'appraisal', 'ai-furnishing', 'social-media']
   
+  // Auto-rotate demos
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDemo((prev) => (prev + 1) % demos.length)
+    }, 4000)
+    return () => clearInterval(interval)
+  }, [])
+
+  return (
+    <div className="min-h-screen">
+      {/* Botika-Inspired Hero Section */}
+      <section className="relative min-h-screen overflow-hidden">
+        {/* Sophisticated Blue Gradient Background */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900"></div>
+        
+        {/* Subtle Pattern Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 to-transparent"></div>
+
+        {/* Two-Column Layout */}
+        <div className="relative z-10 min-h-screen flex items-center">
+          <div className="container mx-auto px-4 py-20">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+              
+              {/* Left Column - Text Content + Search */}
+              <div className="space-y-8 lg:pr-8">
+                {/* Headlines */}
+                <div className="space-y-6">
+                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
+                    Explore{' '}
+                    <span className="italic font-light">properties</span>
+                    <br />
+                    like never before
+                  </h1>
+                  
+                  <p className="text-xl text-slate-300 leading-relaxed max-w-lg">
+                    Professional virtual tours, expert appraisals, and AI-powered recommendations.
+                  </p>
+                  
+                  <p className="text-xl font-bold text-white leading-relaxed" 
+                     style={{
+                       textShadow: '0 0 10px rgba(255, 255, 255, 0.2), 0 0 20px rgba(255, 255, 255, 0.1)'
+                     }}>
+                    Everything you need in one place.
+                  </p>
+                </div>
+
+                {/* Glass Morphism Search Bar */}
+                <div className="space-y-4 pt-4">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20 shadow-2xl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center flex-1 px-6 py-4">
+                        <Search className="h-5 w-5 text-white/70 mr-4" />
+                        <input 
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={handleSearchKeyPress}
+                          placeholder="Search by location, property type, or features..."
+                          className="flex-1 text-base text-white outline-none placeholder:text-white/60 bg-transparent"
+                        />
+                      </div>
+                      <Button 
+                        onClick={handleSmartSearch}
+                        disabled={isSearching}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                      >
+                        {isSearching ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          'Smart Search'
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  {/* Quick Search Examples */}
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      'Villa in New Capital',
+                      'Penthouse Zamalek', 
+                      'Apartment under 3M'
+                    ].map((example, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSearchQuery(example)}
+                        className="text-white/60 text-sm hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full border border-white/20 transition-colors backdrop-blur-sm"
+                      >
+                        {example}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Rotating Property Images */}
+              <div className="relative lg:pl-8">
+                <div className="relative h-[600px] w-full">
+                  {/* Property Image Carousel - Clickable */}
+                  <Link 
+                    href={`/property/${currentProperty?.id || 'demo-property'}`}
+                    className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl group cursor-pointer"
+                  >
+                    <div className="relative h-full w-full">
+                      {/* Featured Property Image */}
+                      <img 
+                        src={currentProperty?.image || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800&q=80"}
+                        alt="Featured Property"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                      
+                      {/* Property Info Overlay */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-8">
+                        <div className="text-white">
+                          <h3 className="text-2xl font-bold mb-2 group-hover:text-blue-200 transition-colors">
+                            {currentProperty?.title || "Luxury Villa in New Cairo"}
+                          </h3>
+                          <p className="text-slate-300 mb-3">
+                            {currentProperty?.location || "New Cairo, Egypt"}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-3xl font-bold">
+                              {formatPrice(currentProperty?.price || 8500000)}
+                            </span>
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="flex items-center gap-1">
+                                <Bed className="h-4 w-4" />
+                                {currentProperty?.beds || 4}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Bath className="h-4 w-4" />
+                                {currentProperty?.baths || 3}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <Square className="h-4 w-4" />
+                                {currentProperty?.sqm || 350}m²
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* View Property Hover Overlay */}
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                        <div className="bg-white/90 backdrop-blur-sm text-slate-800 px-6 py-3 rounded-full font-semibold shadow-lg">
+                          View Property Details
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                  
+                  {/* Navigation Dots */}
+                  <div className="absolute top-6 right-6 flex gap-2 z-10">
+                    {translatedFeatured.slice(0, 3).map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCurrentTourIndex(index);
+                        }}
+                        className={`w-3 h-3 rounded-full transition-colors ${
+                          currentTourIndex === index 
+                            ? 'bg-white' 
+                            : 'bg-white/50 hover:bg-white/70'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Floating 3D Tour Badge */}
+                  <div className="absolute top-6 left-6 bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg z-10">
+                    <Camera className="w-4 h-4 inline mr-2" />
+                    3D Virtual Tour
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+
+
+      </section>
 
       {/* Hottest Listings This Week */}
-      <section className="py-16 bg-white">
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-6 mb-12">
             <div className="flex-1">
@@ -1456,6 +1155,173 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Free Virtual Tour CTA */}
+        <section id="virtual-tour-cta" className="relative py-32 overflow-hidden bg-white">
+        <div className="container mx-auto px-4 relative z-10">
+          {/* Premium Card Container */}
+          <div className="relative max-w-5xl mx-auto">
+            {/* Animated Background Gradient */}
+            <div className="absolute inset-0 rounded-[2rem] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800 opacity-95" />
+              <div 
+                className="absolute inset-0 opacity-30"
+                style={{
+                  background: `radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(59,130,246,0.5) 0%, transparent 50%)`,
+                }}
+              />
+              {/* Subtle grid pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute inset-0" style={{
+                  backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+                                  linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+                  backgroundSize: '50px 50px'
+                }} />
+              </div>
+              {/* Static particles */}
+              <div className="absolute inset-0">
+                {[...Array(15)].map((_, i) => {
+                  // Use index-based deterministic positioning to avoid hydration mismatch
+                  const x = (i * 13.7 + 7) % 100;
+                  const y = (i * 17.3 + 12) % 100;
+                  const scale = 0.5 + (i % 5) * 0.1;
+                  
+                  return (
+                    <div
+                      key={i}
+                      className="absolute w-1 h-1 bg-blue-400 rounded-full opacity-30"
+                      style={{ 
+                        left: x + "%",
+                        top: y + "%",
+                        transform: `scale(${scale})`
+                      }}
+                    />
+                  );
+                }
+                )}
+              </div>
+            </div>
+
+            {/* Glass Morphism Content Container */}
+            <div className="relative bg-white/5 backdrop-blur-xl rounded-[2rem] p-12 border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.2)]">
+              {/* Premium Badge */}
+              <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-8 py-3 rounded-full font-bold shadow-xl flex items-center gap-2">
+                  <Sparkles className="w-5 h-5" />
+                  {t('cta.exclusiveOffer', 'EXCLUSIVE OFFER')}
+                  <Sparkles className="w-5 h-5" />
+                </div>
+              </div>
+
+              {/* Main Content */}
+              <div className="text-center space-y-8 pt-8">
+                {/* Title */}
+                <div>
+                  <h2 className="text-5xl md:text-6xl font-bold mb-6">
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-100 to-white">
+                      {t('cta.getYourFree', 'Get Your FREE')}
+                    </span>
+                    <br />
+                    <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-400 animate-pulse">
+                      {t('cta.virtualTour3D', '3D Virtual Tour')}
+                    </span>
+                  </h2>
+                </div>
+
+                {/* Value Proposition */}
+                <div className="space-y-4">
+                  <div className="inline-flex items-center gap-3 bg-white/10 backdrop-blur px-6 py-3 rounded-full">
+                    <Star className="w-6 h-6 text-blue-400 fill-current" />
+                    <span className="text-2xl font-semibold text-white">
+                      {t('cta.worth', 'Worth')} <span className="text-cyan-400">{t('cta.priceEGP', '5,000 EGP')}</span>
+                    </span>
+                    <div className="w-px h-6 bg-white/30" />
+                    <span className="text-emerald-400 font-bold">{t('cta.hundredPercentFree', '100% FREE')}</span>
+                  </div>
+                  
+                  <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+                    {t('cta.sellFasterDescription', 'Sell your property 73% faster with immersive virtual tours that captivate serious buyers')}
+                  </p>
+                </div>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-10">
+                  {[
+                    { icon: Camera, title: t('cta.professionalPhotography', 'Professional Photography'), desc: t('cta.hdrDroneShots', 'HDR & Drone shots'), color: "from-blue-500 to-cyan-500" },
+                    { icon: TrendingUp, title: t('cta.interactive3DTour', 'Interactive 3D Tour'), desc: t('cta.dollhouseFloorPlans', 'Dollhouse & Floor plans'), color: "from-cyan-500 to-teal-500" },
+                    { icon: Users, title: t('cta.brokerNetwork', 'Broker Network'), desc: t('cta.activeAgents', '1000+ active agents'), color: "from-teal-500 to-blue-500" }
+                  ].map((feature, index) => (
+                    <div
+                      key={index}
+                      className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group hover:scale-105 hover:-translate-y-1"
+                    >
+                      <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.color} p-3 mb-4 group-hover:shadow-lg transition-shadow`}>
+                        <feature.icon className="w-full h-full text-white" />
+                      </div>
+                      <h3 className="text-white font-semibold text-lg mb-1">{feature.title}</h3>
+                      <p className="text-slate-400 text-sm">{feature.desc}</p>
+                    </div>
+                  ))}
+                </div>
+
+                {/* CTA Button */}
+                <div>
+                  <LeadCaptureForm
+                    trigger={
+                      <Button 
+                        size="lg" 
+                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-6 sm:py-8 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
+                      >
+                        <span className="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
+                          <div className="flex items-center gap-2">
+                            <Gift className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
+                            <span className="block sm:hidden text-center leading-tight">
+                              {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').replace(' ', '\n')}
+                            </span>
+                            <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
+                          </div>
+                          <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 group-hover:translate-x-1 transition-transform flex-shrink-0 block sm:inline-block" />
+                        </span>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                      </Button>
+                    }
+                    utm_source="homepage"
+                    utm_medium="after_compounds"
+                    utm_campaign="free_virtual_tour"
+                  />
+                </div>
+
+                {/* Urgency Indicators */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center gap-6 text-sm">
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <Clock className="h-4 w-4" />
+                      <span>{t('cta.spotsLeft', 'Only 12 spots left')}</span>
+                    </div>
+                    <div className="w-px h-4 bg-white/30" />
+                    <div className="flex items-center gap-2 text-slate-400">
+                      <CheckCircle className="h-4 w-4 text-emerald-400" />
+                      <span>{t('cta.noCreditCard', 'No credit card required')}</span>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Bar */}
+                  <div className="max-w-xs mx-auto">
+                    <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-400 to-blue-400 rounded-full w-3/4"
+                      />
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2">{t('cta.claimedThisMonth', '38 of 50 claimed this month')}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+  
+
 
       {/* Premium Stats Section */}
       <section className="relative py-20 overflow-hidden">

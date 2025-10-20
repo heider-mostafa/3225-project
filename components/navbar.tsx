@@ -21,9 +21,21 @@ export default function Navbar() {
   const [userAppraiserData, setUserAppraiserData] = useState<any>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
+  }, [])
+
+  // Scroll detection for logo animation
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrolled = window.scrollY > 100
+      setIsScrolled(scrolled)
+    }
+
+    window.addEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   useEffect(() => {
@@ -63,17 +75,99 @@ export default function Navbar() {
   const isComingSoonPage = pathname === '/coming-soon'
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
+    <nav 
+      className={`sticky top-0 z-50 transition-all duration-500 ${
+        isScrolled 
+          ? 'bg-white/95 backdrop-blur-xl border-b border-slate-300 shadow-lg' 
+          : 'bg-white/80 backdrop-blur-md border-b border-slate-200'
+      }`}
+    >
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-3">
-            <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
+          {/* Animated Logo */}
+          <Link href="/" className="flex items-center space-x-3 overflow-hidden">
+            <motion.svg 
+              width="40" 
+              height="40" 
+              viewBox="0 0 64 64" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg" 
+              className="w-10 h-10 flex-shrink-0"
+              animate={{ 
+                scale: isScrolled ? 1.1 : 1 
+              }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
               <rect x="12" y="8" width="28" height="48" stroke="currentColor" strokeWidth="4"/>
               <polygon points="12,8 36,20 36,52 12,56" fill="currentColor"/>
               <circle cx="28" cy="32" r="2.5" fill="white"/>
-            </svg>
-            <span className="text-2xl font-black text-slate-800 font-montserrat tracking-tight">OpenBeit</span>
+            </motion.svg>
+            
+            {/* Animated Text */}
+            <div className="relative overflow-hidden">
+              <AnimatePresence mode="wait">
+                {!isScrolled ? (
+                  // Full text when not scrolled
+                  <motion.span
+                    key="full"
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ 
+                      opacity: 0, 
+                      x: -60,
+                      transition: { 
+                        duration: 0.6,
+                        staggerChildren: 0.04,
+                        staggerDirection: 1
+                      }
+                    }}
+                    className="text-2xl font-black text-slate-800 font-montserrat tracking-tight flex"
+                  >
+                    {/* Animate each letter escaping through the door */}
+                    {["O", "p", "e", "n", "B", "e", "i", "t"].map((letter, index) => (
+                      <motion.span
+                        key={`full-${index}`}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ 
+                          opacity: 0, 
+                          x: -45, // All letters escape left through the door
+                          y: 0,
+                          scale: 0.7,
+                          transition: { 
+                            duration: 0.4,
+                            delay: index * 0.04, // Staggered escape
+                            ease: "easeInOut"
+                          }
+                        }}
+                        transition={{ 
+                          duration: 0.4, 
+                          delay: index * 0.05,
+                          ease: "easeOut"
+                        }}
+                      >
+                        {letter}
+                      </motion.span>
+                    ))}
+                  </motion.span>
+                ) : (
+                  // Empty space when scrolled (just the door icon)
+                  <motion.span
+                    key="logo-only"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ 
+                      duration: 0.3,
+                      delay: 0.4 // After letters finish escaping
+                    }}
+                    className="text-2xl font-black font-montserrat tracking-tight text-transparent"
+                  >
+                    {/* Invisible placeholder to maintain layout */}
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
