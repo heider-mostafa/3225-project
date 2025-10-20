@@ -4,11 +4,15 @@ export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   
+  console.log('🔍 Supabase client creation debug:', {
+    url: !!supabaseUrl,
+    key: !!supabaseAnonKey,
+    urlValue: supabaseUrl?.substring(0, 20) + '...',
+    keyValue: supabaseAnonKey?.substring(0, 10) + '...'
+  })
+  
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase environment variables:', { 
-      url: !!supabaseUrl, 
-      key: !!supabaseAnonKey 
-    })
+    console.error('❌ Missing Supabase environment variables, using mock client')
     
     // Return a mock client that doesn't crash the app
     return {
@@ -37,5 +41,6 @@ export function createClient() {
     } as any
   }
   
+  console.log('✅ Creating real Supabase client with valid environment variables')
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
