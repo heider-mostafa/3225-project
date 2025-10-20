@@ -2090,5 +2090,21 @@ Now, analyze the following document and provide the extracted data in the specif
 }
 
 // Export singleton instance
-export const geminiDocumentExtractor = new GeminiDocumentExtractor();
+// Export factory function instead of instantiated service to avoid build-time environment variable requirements
+export const getGeminiDocumentExtractor = () => {
+  if (!geminiDocumentExtractorInstance) {
+    geminiDocumentExtractorInstance = new GeminiDocumentExtractor();
+  }
+  return geminiDocumentExtractorInstance;
+};
+
+// Singleton instance
+let geminiDocumentExtractorInstance: GeminiDocumentExtractor | null = null;
+
+// Legacy export for backward compatibility
+export const geminiDocumentExtractor = {
+  get instance() {
+    return getGeminiDocumentExtractor();
+  }
+};
 export default geminiDocumentExtractor;

@@ -876,7 +876,23 @@ class ValifyService {
 }
 
 // Export singleton instance
-export const valifyService = new ValifyService();
+// Export factory function instead of instantiated service to avoid build-time environment variable requirements
+export const getValifyService = () => {
+  if (!valifyServiceInstance) {
+    valifyServiceInstance = new ValifyService();
+  }
+  return valifyServiceInstance;
+};
+
+// Singleton instance
+let valifyServiceInstance: ValifyService | null = null;
+
+// Legacy export for backward compatibility
+export const valifyService = {
+  get instance() {
+    return getValifyService();
+  }
+};
 export default valifyService;
 
 // Export types for use in other files
