@@ -16,7 +16,7 @@ function getSupabaseClient() {
       url: !!url, 
       key: !!key 
     })
-    throw new Error('Supabase configuration is missing')
+    return null // Return null instead of throwing
   }
   
   return createBrowserClient(url, key)
@@ -47,6 +47,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
     try {
       const supabase = getSupabaseClient()
+
+      // If no Supabase client available, just set loading to false and continue
+      if (!supabase) {
+        console.log('Supabase client not available, continuing without auth')
+        setLoading(false)
+        return
+      }
 
       // Get initial session
       supabase.auth.getUser().then(({ data: { user } }) => {
