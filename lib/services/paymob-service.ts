@@ -208,14 +208,16 @@ export class PaymobService {
       baseUrl: process.env.PAYMOB_BASE_URL || 'https://accept.paymob.com/api'
     };
 
-    // Debug configuration
-    console.log('🔧 Paymob Configuration:', {
-      apiKey: this.config.apiKey ? `${this.config.apiKey.substring(0, 10)}...` : 'NOT SET',
-      integrationId: this.config.integrationId,
-      iframeId: this.config.iframeId,
-      baseUrl: this.config.baseUrl,
-      hasWebhookSecret: !!this.config.webhookSecret
-    });
+    // Configuration validation - only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Paymob Configuration:', {
+        apiKey: this.config.apiKey ? `${this.config.apiKey.substring(0, 10)}...` : 'NOT SET',
+        integrationId: this.config.integrationId,
+        iframeId: this.config.iframeId,
+        baseUrl: this.config.baseUrl,
+        hasWebhookSecret: !!this.config.webhookSecret
+      });
+    }
 
   }
 
