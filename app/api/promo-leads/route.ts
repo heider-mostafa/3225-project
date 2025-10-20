@@ -1,22 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase/config'
 import { createClient } from '@supabase/supabase-js'
 
 // Create service role client for admin operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
+function getSupabaseClient() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  
+  if (!url || !key) {
+    throw new Error('Missing Supabase configuration');
+  }
+  
+  return createClient(url, key, {
     auth: {
       autoRefreshToken: false,
       persistSession: false
     }
-  }
-)
+  });
+}
 
 export async function POST(request: NextRequest) {
   console.log('=== PROMO LEADS API CALLED ===')
   try {
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      console.warn('Supabase not configured, promo leads disabled');
+      return NextResponse.json({ 
+        message: 'Service temporarily unavailable',
+        subscribed: false
+      }, { status: 503 });
+    }
+
     const body = await request.json()
     console.log('Request body:', body)
     
@@ -53,6 +66,7 @@ export async function POST(request: NextRequest) {
     }
     console.log('Lead data to insert:', leadData)
 
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('promo_leads')
       .insert([leadData])
@@ -104,6 +118,15 @@ export async function POST(request: NextRequest) {
 
 export async function GET() {
   try {
+    // Check if Supabase is configured
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ 
+        error: 'Service not configured',
+        leads: []
+      }, { status: 503 });
+    }
+
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('promo_leads')
       .select('*')
