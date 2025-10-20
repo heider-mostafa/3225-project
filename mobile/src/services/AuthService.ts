@@ -128,7 +128,7 @@ class AuthService {
 
       // Store user data locally
       await AsyncStorage.setItem('user_data', JSON.stringify(this.currentUser))
-      await AsyncStorage.setItem('auth_token', user.aud || 'authenticated')
+      // No need to store auth_token separately as we use Supabase session
 
       console.log('✅ User session established:', this.currentUser.email)
     } catch (error) {
@@ -138,7 +138,7 @@ class AuthService {
 
   private async handleSignOut(): Promise<void> {
     this.currentUser = null
-    await AsyncStorage.multiRemove(['user_data', 'auth_token', 'biometric_enabled'])
+    await AsyncStorage.multiRemove(['user_data', 'biometric_enabled'])
     console.log('✅ User signed out')
   }
 

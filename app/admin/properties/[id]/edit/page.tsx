@@ -210,12 +210,15 @@ export default function EditProperty() {
   ]
 
   const propertyStatuses = [
-    { value: 'available', label: 'Available' },
-    { value: 'pending', label: 'Pending' },
-    { value: 'sold', label: 'Sold' },
-    { value: 'for_rent', label: 'For Rent' },
-    { value: 'for_sale', label: 'For Sale' },
-    { value: 'inactive', label: 'Inactive' }
+    { value: 'available', label: 'Available (Public)' },
+    { value: 'for_rent', label: 'For Rent (Public)' },
+    { value: 'for_sale', label: 'For Sale (Public)' },
+    { value: 'appraised_pending_review', label: 'Appraised - Pending Review (Hidden)' },
+    { value: 'awaiting_photos', label: 'Awaiting Photos (Hidden)' },
+    { value: 'pending_approval', label: 'Pending Approval (Hidden)' },
+    { value: 'inactive', label: 'Inactive (Hidden)' },
+    { value: 'pending', label: 'Pending (Hidden)' },
+    { value: 'sold', label: 'Sold (Hidden)' }
   ]
 
   const conditionOptions = [

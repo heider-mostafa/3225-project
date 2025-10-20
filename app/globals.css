@@ -24,6 +24,12 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
     --radius: 0.75rem;
+    
+    /* Performance Variables - Controlled by MobilePerformanceOptimizer */
+    --animation-duration: 300ms;
+    --transition-duration: 300ms;
+    --blur-amount: 4px;
+    --shadow-amount: 0 4px 6px rgba(0,0,0,0.1);
   }
 
   .dark {
@@ -67,7 +73,7 @@
   /* Custom gradients for stats */
   .bg-glass {
     background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(var(--blur-amount, 10px));
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
@@ -88,6 +94,46 @@
   .font-montserrat {
     font-family: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   }
+  
+  /* Mobile Performance Optimizations */
+  .perf-high * {
+    animation-duration: 0ms !important;
+    transition-duration: 0ms !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+  }
+  
+  .perf-medium * {
+    animation-duration: var(--animation-duration, 150ms);
+    transition-duration: var(--transition-duration, 200ms);
+    box-shadow: var(--shadow-amount, 0 1px 3px rgba(0,0,0,0.1));
+  }
+  
+  .perf-low * {
+    animation-duration: var(--animation-duration, 300ms);
+    transition-duration: var(--transition-duration, 300ms);
+  }
+  
+  /* Device-specific optimizations */
+  .device-mobile {
+    --scroll-behavior: auto; /* Disable smooth scrolling on mobile */
+  }
+  
+  .device-mobile .shadow-lg,
+  .device-mobile .shadow-xl {
+    box-shadow: var(--shadow-amount, 0 4px 6px rgba(0,0,0,0.1));
+  }
+  
+  /* Connection-specific optimizations */
+  .connection-slow-2g img,
+  .connection-2g img {
+    filter: none; /* Remove filters on slow connections */
+  }
+  
+  .connection-slow-2g .backdrop-blur,
+  .connection-2g .backdrop-blur {
+    backdrop-filter: none;
+  }
 }
 
 /* Custom animations */
@@ -103,7 +149,37 @@
 }
 
 .animate-fadeIn {
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn var(--animation-duration, 0.6s) ease-out;
+}
+
+/* Mobile-optimized animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase touch targets on mobile */
+  button, .btn, .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Remove hover effects on touch devices */
+  .hover\:scale-105:hover {
+    transform: none;
+  }
+  
+  .hover\:shadow-lg:hover {
+    box-shadow: var(--shadow-amount, 0 4px 6px rgba(0,0,0,0.1));
+  }
 }
 
 /* Tour viewer specific styles */

@@ -267,7 +267,7 @@ const NotificationPreferencesScreen: React.FC = () => {
     }
   };
 
-  const renderPreferenceItem = (item: PreferenceItem): React.ReactElement => {
+  const renderPreferenceItem = (item: PreferenceItem): React.ReactNode => {
     if (!preferences) return <View />;
 
     const value = preferences[item.key];
@@ -409,7 +409,11 @@ const NotificationPreferencesScreen: React.FC = () => {
           {t('notifications.preferences.notificationTypes')}
         </Text>
         
-        {preferenceItems.map(renderPreferenceItem)}
+        {preferenceItems.map((item, index) => (
+          <React.Fragment key={item.key || index}>
+            {renderPreferenceItem(item)}
+          </React.Fragment>
+        ))}
       </View>
 
       {/* Advanced Settings */}

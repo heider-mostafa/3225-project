@@ -147,6 +147,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { 
       lead_id,
+      property_id,
+      property_data,
       photographer_id,
       scheduled_time,
       duration_minutes = 120,
@@ -165,19 +167,45 @@ export async function POST(request: NextRequest) {
       }
     )
 
+    // Validate that either lead_id or property_id is provided (not both)
+    if (lead_id && property_id) {
+      return NextResponse.json(
+        { error: 'Cannot provide both lead_id and property_id' },
+        { status: 400 }
+      )
+    }
+
+    if (!lead_id && !property_id) {
+      return NextResponse.json(
+        { error: 'Either lead_id or property_id must be provided' },
+        { status: 400 }
+      )
+    }
+
     // If auto_assign is true, find best photographer
     let assignedPhotographerId = photographer_id
 
     if (auto_assign && !photographer_id) {
-      // Get lead location for matching
-      const { data: lead } = await supabase
-        .from('leads')
-        .select('location, property_type')
-        .eq('id', lead_id)
-        .single()
+      let location = ''
+      
+      if (lead_id) {
+        // Get lead location for matching
+        const { data: lead } = await supabase
+          .from('leads')
+          .select('location, property_type')
+          .eq('id', lead_id)
+          .single()
 
-      if (lead) {
-        assignedPhotographerId = await findBestPhotographer(supabase, lead.location, scheduled_time)
+        if (lead) {
+          location = lead.location
+        }
+      } else if (property_id && property_data) {
+        // Use property data for location matching
+        location = `${property_data.address}, ${property_data.city}`
+      }
+
+      if (location) {
+        assignedPhotographerId = await findBestPhotographer(supabase, location, scheduled_time)
       }
     }
 
@@ -203,18 +231,27 @@ export async function POST(request: NextRequest) {
       }, { status: 409 })
     }
 
-    // Create the assignment
+    // Create the assignment (following constraint: either lead_id OR property_id, not both)
+    const assignmentData = {
+      photographer_id: assignedPhotographerId,
+      assignment_date: new Date().toISOString(),
+      scheduled_time,
+      duration_minutes,
+      preparation_notes: preparation_notes || '',
+      status: 'assigned'
+    }
+
+    if (lead_id) {
+      assignmentData.lead_id = lead_id
+      assignmentData.property_id = null
+    } else if (property_id) {
+      assignmentData.lead_id = null
+      assignmentData.property_id = property_id
+    }
+
     const { data: assignment, error } = await supabase
       .from('photographer_assignments')
-      .insert({
-        lead_id,
-        photographer_id: assignedPhotographerId,
-        assignment_date: new Date().toISOString(),
-        scheduled_time,
-        duration_minutes,
-        preparation_notes: preparation_notes || '',
-        status: 'assigned'
-      })
+      .insert(assignmentData)
       .select(`
         *,
         photographer:photographer_id (
@@ -244,43 +281,59 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Update lead status and photographer_id
-    await supabase
-      .from('leads')
-      .update({
-        photographer_id: assignedPhotographerId,
-        shoot_scheduled_at: scheduled_time,
-        status: 'photographer_assigned',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', lead_id)
-
-    // Send WhatsApp notification to lead
-    try {
-      await fetch(`${request.nextUrl.origin}/api/whatsapp/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          to: assignment.lead.whatsapp_number,
-          message_type: 'photographer_scheduled',
-          variables: {
-            name: assignment.lead.name,
-            photographer_name: assignment.photographer.name,
-            scheduled_date: new Date(scheduled_time).toLocaleDateString('en-US', {
-              timeZone: 'Africa/Cairo',
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }),
-            scheduled_time: new Date(scheduled_time).toLocaleTimeString('en-US', {
-              timeZone: 'Africa/Cairo',
-              hour: '2-digit',
-              minute: '2-digit'
-            })
-          }
+    // Update lead status and photographer_id (only if this is a lead-based assignment)
+    if (lead_id) {
+      await supabase
+        .from('leads')
+        .update({
+          photographer_id: assignedPhotographerId,
+          shoot_scheduled_at: scheduled_time,
+          status: 'photographer_assigned',
+          updated_at: new Date().toISOString()
         })
-      })
+        .eq('id', lead_id)
+    }
+
+    // Update property status if this is a regular property assignment
+    if (property_id) {
+      await supabase
+        .from('properties')
+        .update({
+          status: 'awaiting_photos',
+          updated_at: new Date().toISOString(),
+          internal_notes: `Photographer assigned: ${new Date(scheduled_time).toLocaleDateString()}`
+        })
+        .eq('id', property_id)
+    }
+
+    // Send WhatsApp notification to lead (only for real leads with assignments)
+    try {
+      if (lead_id && assignment.lead && assignment.lead.whatsapp_number && assignment.lead.whatsapp_number !== '+20100000000') {
+        await fetch(`${request.nextUrl.origin}/api/whatsapp/send`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: assignment.lead.whatsapp_number,
+            message_type: 'photographer_scheduled',
+            variables: {
+              name: assignment.lead.name,
+              photographer_name: assignment.photographer.name,
+              scheduled_date: new Date(scheduled_time).toLocaleDateString('en-US', {
+                timeZone: 'Africa/Cairo',
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              }),
+              scheduled_time: new Date(scheduled_time).toLocaleTimeString('en-US', {
+                timeZone: 'Africa/Cairo',
+                hour: '2-digit',
+                minute: '2-digit'
+              })
+            }
+          })
+        })
+      }
     } catch (whatsappError) {
       console.error('WhatsApp notification failed:', whatsappError)
     }

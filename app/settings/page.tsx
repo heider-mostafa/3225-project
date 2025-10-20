@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useTranslation } from 'react-i18next'
 import { 
   Save, 
   Bell, 
@@ -82,6 +83,7 @@ const defaultSettings: Partial<UserSettings> = {
 }
 
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const router = useRouter()
   const [loading, setLoading] = useState(true)
@@ -147,7 +149,7 @@ export default function SettingsPage() {
 
       if (error) {
         console.error('Error saving settings:', error)
-        alert('Failed to save settings. Please try again.')
+        alert(t('settings.failedToSave'))
         return
       }
 
@@ -183,20 +185,20 @@ export default function SettingsPage() {
   }
 
   const propertyTypes = [
-    { value: 'apartment', label: 'Apartment' },
-    { value: 'villa', label: 'Villa' },
-    { value: 'townhouse', label: 'Townhouse' },
-    { value: 'studio', label: 'Studio' },
-    { value: 'duplex', label: 'Duplex' },
-    { value: 'penthouse', label: 'Penthouse' }
+    { value: 'apartment', label: t('settings.apartment') },
+    { value: 'villa', label: t('settings.villa') },
+    { value: 'townhouse', label: t('settings.townhouse') },
+    { value: 'studio', label: t('settings.studio') },
+    { value: 'duplex', label: t('settings.duplex') },
+    { value: 'penthouse', label: t('settings.penthouse') }
   ]
 
   const sections = [
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'privacy', label: 'Privacy & Security', icon: Shield },
-    { id: 'appearance', label: 'Appearance', icon: Palette },
-    { id: 'preferences', label: 'Preferences', icon: User },
-    { id: 'search', label: 'Search Defaults', icon: Search }
+    { id: 'notifications', label: t('settings.notifications'), icon: Bell },
+    { id: 'privacy', label: t('settings.privacySecurity'), icon: Shield },
+    { id: 'appearance', label: t('settings.appearance'), icon: Palette },
+    { id: 'preferences', label: t('settings.preferences'), icon: User },
+    { id: 'search', label: t('settings.searchDefaults'), icon: Search }
   ]
 
   if (loading) {
@@ -211,12 +213,12 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-4">Unable to load settings.</p>
+          <p className="text-gray-600 mb-4">{t('settings.unableToLoad')}</p>
           <button
             onClick={loadSettings}
             className="text-blue-600 hover:text-blue-700 font-medium"
           >
-            Try Again
+            {t('settings.tryAgain')}
           </button>
         </div>
       </div>
@@ -227,8 +229,8 @@ export default function SettingsPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-          <p className="text-gray-600">Manage your account preferences and settings</p>
+          <h1 className="text-3xl font-bold text-gray-900">{t('settings.title')}</h1>
+          <p className="text-gray-600">{t('settings.description')}</p>
         </div>
 
         <div className="flex space-x-6">
@@ -264,19 +266,19 @@ export default function SettingsPage() {
                 {activeSection === 'notifications' && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Notification Preferences</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('settings.notificationPreferences')}</h2>
                       
                       {/* Email Notifications */}
                       <div className="bg-gray-50 p-4 rounded-lg mb-6">
                         <h3 className="font-medium text-gray-900 mb-3 flex items-center">
                           <Bell className="w-4 h-4 mr-2" />
-                          Email Notifications
+                          {t('settings.emailNotifications')}
                         </h3>
                         <div className="space-y-3">
                           {Object.entries(settings.email_notifications).map(([key, value]) => (
                             <div key={key} className="flex items-center justify-between">
                               <label className="text-gray-700 capitalize">
-                                {key.replace(/_/g, ' ')}
+                                {t(`settings.${key}`)}
                               </label>
                               <button
                                 onClick={() => updateNestedSettings('email_notifications', key, !value)}
@@ -297,12 +299,12 @@ export default function SettingsPage() {
 
                       {/* SMS Notifications */}
                       <div className="bg-gray-50 p-4 rounded-lg mb-6">
-                        <h3 className="font-medium text-gray-900 mb-3">SMS Notifications</h3>
+                        <h3 className="font-medium text-gray-900 mb-3">{t('settings.smsNotifications')}</h3>
                         <div className="space-y-3">
                           {Object.entries(settings.sms_notifications).map(([key, value]) => (
                             <div key={key} className="flex items-center justify-between">
                               <label className="text-gray-700 capitalize">
-                                {key.replace(/_/g, ' ')}
+                                {t(`settings.${key}`)}
                               </label>
                               <button
                                 onClick={() => updateNestedSettings('sms_notifications', key, !value)}
@@ -323,12 +325,12 @@ export default function SettingsPage() {
 
                       {/* Push Notifications */}
                       <div className="bg-gray-50 p-4 rounded-lg">
-                        <h3 className="font-medium text-gray-900 mb-3">Push Notifications</h3>
+                        <h3 className="font-medium text-gray-900 mb-3">{t('settings.pushNotifications')}</h3>
                         <div className="space-y-3">
                           {Object.entries(settings.push_notifications).map(([key, value]) => (
                             <div key={key} className="flex items-center justify-between">
                               <label className="text-gray-700 capitalize">
-                                {key.replace(/_/g, ' ')}
+                                {t(`settings.${key}`)}
                               </label>
                               <button
                                 onClick={() => updateNestedSettings('push_notifications', key, !value)}
@@ -353,31 +355,31 @@ export default function SettingsPage() {
                 {activeSection === 'privacy' && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Privacy & Security</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('settings.privacySecurity')}</h2>
                       
                       <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Profile Visibility
+                            {t('settings.profileVisibility')}
                           </label>
                           <select
                             value={settings.profile_visibility}
                             onChange={(e) => updateSettings({ profile_visibility: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="public">Public</option>
-                            <option value="private">Private</option>
-                            <option value="contacts_only">Contacts Only</option>
+                            <option value="public">{t('settings.public')}</option>
+                            <option value="private">{t('settings.private')}</option>
+                            <option value="contacts_only">{t('settings.contactsOnly')}</option>
                           </select>
                           <p className="text-sm text-gray-500 mt-1">
-                            Control who can see your profile information
+                            {t('settings.profileVisibilityDesc')}
                           </p>
                         </div>
 
                         <div className="flex items-center justify-between">
                           <div>
-                            <label className="font-medium text-gray-900">Show Activity</label>
-                            <p className="text-sm text-gray-500">Allow others to see your property viewing activity</p>
+                            <label className="font-medium text-gray-900">{t('settings.showActivity')}</label>
+                            <p className="text-sm text-gray-500">{t('settings.showActivityDesc')}</p>
                           </div>
                           <button
                             onClick={() => updateSettings({ show_activity: !settings.show_activity })}
@@ -395,8 +397,8 @@ export default function SettingsPage() {
 
                         <div className="flex items-center justify-between">
                           <div>
-                            <label className="font-medium text-gray-900">Allow Contact</label>
-                            <p className="text-sm text-gray-500">Allow agents and other users to contact you</p>
+                            <label className="font-medium text-gray-900">{t('settings.allowContact')}</label>
+                            <p className="text-sm text-gray-500">{t('settings.allowContactDesc')}</p>
                           </div>
                           <button
                             onClick={() => updateSettings({ allow_contact: !settings.allow_contact })}
@@ -419,12 +421,12 @@ export default function SettingsPage() {
                 {activeSection === 'appearance' && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Appearance</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('settings.appearance')}</h2>
                       
                       <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Theme
+                            {t('settings.theme')}
                           </label>
                           <div className="grid grid-cols-3 gap-3">
                             {['light', 'dark', 'auto'].map((theme) => (
@@ -437,7 +439,7 @@ export default function SettingsPage() {
                                     : 'border-gray-300 hover:border-gray-400'
                                 }`}
                               >
-                                {theme}
+                                {t(`settings.${theme}`)}
                               </button>
                             ))}
                           </div>
@@ -445,30 +447,30 @@ export default function SettingsPage() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Language
+                            {t('settings.language')}
                           </label>
                           <select
                             value={settings.language}
                             onChange={(e) => updateSettings({ language: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="en">English</option>
-                            <option value="ar">العربية</option>
+                            <option value="en">{t('settings.english')}</option>
+                            <option value="ar">{t('settings.arabic')}</option>
                           </select>
                         </div>
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Currency
+                            {t('settings.currency')}
                           </label>
                           <select
                             value={settings.currency}
                             onChange={(e) => updateSettings({ currency: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           >
-                            <option value="EGP">Egyptian Pound (EGP)</option>
-                            <option value="USD">US Dollar (USD)</option>
-                            <option value="EUR">Euro (EUR)</option>
+                            <option value="EGP">{t('settings.egp')}</option>
+                            <option value="USD">{t('settings.usd')}</option>
+                            <option value="EUR">{t('settings.eur')}</option>
                           </select>
                         </div>
                       </div>
@@ -479,12 +481,12 @@ export default function SettingsPage() {
                 {activeSection === 'search' && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Search Defaults</h2>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('settings.searchDefaults')}</h2>
                       
                       <div className="space-y-6">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Default Search Radius (km)
+                            {t('settings.defaultSearchRadius')}
                           </label>
                           <input
                             type="number"
@@ -498,7 +500,7 @@ export default function SettingsPage() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Default Property Types
+                            {t('settings.defaultPropertyTypes')}
                           </label>
                           <div className="grid grid-cols-2 gap-3">
                             {propertyTypes.map((type) => (
@@ -526,14 +528,14 @@ export default function SettingsPage() {
 
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Default Price Range
+                            {t('settings.defaultPriceRange')}
                           </label>
                           <div className="grid grid-cols-2 gap-3">
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Minimum</label>
+                              <label className="block text-xs text-gray-500 mb-1">{t('settings.minimum')}</label>
                               <input
                                 type="number"
-                                placeholder="Min price"
+                                placeholder={t('settings.minPrice')}
                                 value={settings.price_range_preference?.min || ''}
                                 onChange={(e) => updateSettings({
                                   price_range_preference: {
@@ -545,10 +547,10 @@ export default function SettingsPage() {
                               />
                             </div>
                             <div>
-                              <label className="block text-xs text-gray-500 mb-1">Maximum</label>
+                              <label className="block text-xs text-gray-500 mb-1">{t('settings.maximum')}</label>
                               <input
                                 type="number"
-                                placeholder="Max price"
+                                placeholder={t('settings.maxPrice')}
                                 value={settings.price_range_preference?.max || ''}
                                 onChange={(e) => updateSettings({
                                   price_range_preference: {
@@ -573,7 +575,7 @@ export default function SettingsPage() {
                       {saved && (
                         <div className="flex items-center space-x-2 text-green-600">
                           <Check className="w-4 h-4" />
-                          <span className="text-sm">Settings saved successfully</span>
+                          <span className="text-sm">{t('settings.settingsSaved')}</span>
                         </div>
                       )}
                     </div>
@@ -584,7 +586,7 @@ export default function SettingsPage() {
                       className="flex items-center space-x-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50"
                     >
                       <Save className="w-4 h-4" />
-                      <span>{saving ? 'Saving...' : 'Save Changes'}</span>
+                      <span>{saving ? t('settings.saving') : t('settings.saveChanges')}</span>
                     </button>
                   </div>
                 </div>

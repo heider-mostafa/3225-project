@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { sendCommonEmail } from '@/lib/email/mailgun';
+import { metaConversions } from '@/lib/services/meta-conversions';
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -18,7 +19,12 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       viewing_type = 'in_person',
       special_requests,
       booking_source = 'website',
-      metadata = {}
+      metadata = {},
+      fbclid,
+      fbp,
+      utm_source,
+      utm_medium,
+      utm_campaign
     } = await request.json();
 
     // Validate required fields
@@ -160,35 +166,139 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       );
     }
 
-    // Check for existing bookings at the same time
-    const { data: existingBookings } = await supabase
+    // ENHANCED: Check for broker conflicts across ALL properties they're assigned to
+    console.log('🔍 Checking broker conflicts across all properties for broker:', broker_id);
+    
+    // Calculate end time string for this booking
+    const [hours, minutes] = viewing_time.split(':').map(Number);
+    const endTime = new Date();
+    endTime.setHours(hours, minutes + duration_minutes, 0, 0);
+    const endTimeString = endTime.toTimeString().substring(0, 5);
+    
+    // Calculate booking time windows
+    const bookingStartTime = `${viewing_date}T${viewing_time}:00`;
+    const bookingEndTime = new Date(new Date(bookingStartTime).getTime() + duration_minutes * 60000)
+      .toISOString().substring(0, 16).replace('T', ' ') + ':00';
+    
+    console.log('⏰ Requested booking window:', { 
+      start: bookingStartTime, 
+      end: bookingEndTime,
+      duration: duration_minutes + ' minutes'
+    });
+    
+    // Check for ANY existing bookings across ALL properties where this broker is assigned
+    const { data: allBrokerBookings, error: conflictError } = await supabase
       .from('property_viewings')
-      .select('id')
+      .select(`
+        id,
+        property_id,
+        viewing_date,
+        viewing_time,
+        end_time,
+        duration_minutes,
+        properties (
+          id,
+          title,
+          address
+        )
+      `)
       .eq('broker_id', broker_id)
       .eq('viewing_date', viewing_date)
-      .eq('viewing_time', viewing_time)
       .eq('status', 'scheduled');
 
-    console.log('📊 Existing bookings for', viewing_time, ':', existingBookings);
-    console.log('🎯 Max bookings allowed:', availability.max_bookings);
-
-    if (existingBookings && existingBookings.length >= availability.max_bookings) {
-      console.log('❌ Time slot fully booked:', existingBookings.length, 'bookings, max:', availability.max_bookings);
+    if (conflictError) {
+      console.error('❌ Error checking broker conflicts:', conflictError);
       return NextResponse.json(
-        { success: false, error: 'Time slot is fully booked' },
+        { success: false, error: 'Failed to check broker availability' },
+        { status: 500 }
+      );
+    }
+
+    console.log('📊 All broker bookings on', viewing_date, ':', allBrokerBookings);
+
+    // Check for time conflicts with existing bookings
+    const requestedStart = new Date(`${viewing_date}T${viewing_time}:00`);
+    const requestedEnd = new Date(requestedStart.getTime() + duration_minutes * 60000);
+    
+    const timeConflicts = allBrokerBookings?.filter(booking => {
+      const bookingStart = new Date(`${booking.viewing_date}T${booking.viewing_time}:00`);
+      const bookingEnd = new Date(`${booking.viewing_date}T${booking.end_time}:00`);
+      
+      // Check if times overlap (includes buffer time consideration)
+      const overlap = requestedStart < bookingEnd && requestedEnd > bookingStart;
+      
+      if (overlap) {
+        console.log('⚠️ Time conflict detected:', {
+          conflictingProperty: booking.properties?.title,
+          conflictingTime: `${booking.viewing_time} - ${booking.end_time}`,
+          requestedTime: `${viewing_time} - ${endTimeString}`
+        });
+      }
+      
+      return overlap;
+    }) || [];
+
+    // If there are time conflicts, reject the booking
+    if (timeConflicts.length > 0) {
+      const conflict = timeConflicts[0];
+      console.log('❌ Broker double-booking prevented:', {
+        broker_id,
+        conflictingProperty: conflict.properties?.title,
+        conflictingTime: `${conflict.viewing_time} - ${conflict.end_time}`,
+        requestedProperty: propertyId,
+        requestedTime: `${viewing_time} - ${endTimeString}`
+      });
+      
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: `Broker is not available at this time. They have another viewing scheduled from ${conflict.viewing_time} to ${conflict.end_time} at ${conflict.properties?.title}`,
+          conflictDetails: {
+            conflictingProperty: conflict.properties?.title,
+            conflictingAddress: conflict.properties?.address,
+            conflictingTime: `${conflict.viewing_time} - ${conflict.end_time}`
+          }
+        },
+        { status: 409 } // 409 Conflict status code
+      );
+    }
+
+    // Check availability slot capacity (existing logic)
+    const samePropertyBookings = allBrokerBookings?.filter(booking => 
+      booking.property_id === propertyId && 
+      booking.viewing_time === viewing_time
+    ) || [];
+
+    console.log('📊 Same property bookings for', viewing_time, ':', samePropertyBookings);
+    console.log('🎯 Max bookings allowed per slot:', availability.max_bookings);
+
+    if (samePropertyBookings.length >= availability.max_bookings) {
+      console.log('❌ Time slot fully booked for this property:', samePropertyBookings.length, 'bookings, max:', availability.max_bookings);
+      return NextResponse.json(
+        { success: false, error: 'Time slot is fully booked for this property' },
         { status: 400 }
       );
     }
     
     console.log('✅ Time slot available for booking');
 
-    // Calculate end time
-    const [hours, minutes] = viewing_time.split(':').map(Number);
-    const endTime = new Date();
-    endTime.setHours(hours, minutes + duration_minutes, 0, 0);
-    const endTimeString = endTime.toTimeString().substring(0, 5);
+    // Calculate lead quality score based on viewing characteristics
+    const calculateLeadQuality = (): number => {
+      let score = 30; // Base score for booking a viewing
+      
+      if (viewing_type === 'in_person') score += 15; // Higher intent
+      if (party_size >= 2) score += 10; // Family/couple viewing
+      if (visitor_phone) score += 5; // Provided contact info
+      if (special_requests) score += 5; // Engaged user
+      if (property.price > 5000000) score += 10; // Luxury property
+      
+      return Math.min(score, 65); // Cap at 65 (your scoring system)
+    };
 
-    // Create the viewing booking
+    const leadQualityScore = calculateLeadQuality();
+    const conversionProbability = Math.min(leadQualityScore * 1.4, 100); // Convert to probability
+
+    // Create the viewing booking with Meta tracking fields
     const viewingData = {
       property_id: propertyId,
       broker_id: broker_id,
@@ -205,6 +315,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       special_requests,
       status: 'scheduled',
       booking_source,
+      lead_quality_score: leadQualityScore,
+      conversion_probability: conversionProbability,
+      facebook_click_id: fbclid || null,
+      facebook_browser_id: fbp || null,
+      utm_source: utm_source || null,
+      utm_medium: utm_medium || null,
+      utm_campaign: utm_campaign || null,
       metadata: {
         ...metadata,
         property_title: property.title,
@@ -261,6 +378,40 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
     
     console.log('✅ Property viewing inserted successfully!');
+
+    // Send Meta Conversion Event (Highest Intent Event - Property Viewing Booking)
+    try {
+      const metaResult = await metaConversions.trackPropertyViewing({
+        userEmail: visitor_email,
+        userPhone: visitor_phone || undefined,
+        propertyId: propertyId,
+        propertyValue: property.price || 0,
+        viewingType: viewing_type,
+        partySize: party_size,
+        leadQualityScore: leadQualityScore,
+        brokerId: broker_id,
+        ipAddress: request.headers.get('x-forwarded-for') || undefined,
+        userAgent: request.headers.get('user-agent') || undefined
+      });
+
+      if (metaResult.success) {
+        // Update viewing record with Meta event success
+        await supabase
+          .from('property_viewings')
+          .update({ 
+            meta_event_sent: true,
+            meta_event_id: `viewing_${viewing.id}_${Date.now()}`
+          })
+          .eq('id', viewing.id);
+
+        console.log('✅ Meta property viewing event sent successfully');
+      } else {
+        console.error('❌ Meta property viewing event failed:', metaResult.error);
+      }
+    } catch (metaError) {
+      console.error('❌ Meta conversion error:', metaError);
+      // Don't fail the booking if Meta fails - booking is still valid
+    }
 
     // Note: We don't update current_bookings counter since we're tracking individual time slots
     // The actual booking count is determined by querying property_viewings for specific times

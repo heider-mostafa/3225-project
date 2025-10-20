@@ -68,6 +68,8 @@ class NotificationService {
           shouldShowAlert: true,
           shouldPlaySound: true,
           shouldSetBadge: true,
+          shouldShowBanner: true,
+          shouldShowList: true,
           priority: Notifications.AndroidNotificationPriority.HIGH,
         }),
       });
@@ -123,7 +125,10 @@ class NotificationService {
             { text: 'لاحقاً', style: 'cancel' },
             { 
               text: 'الإعدادات', 
-              onPress: () => Notifications.openSettingsAsync() 
+              onPress: () => {
+                // Note: openSettingsAsync is not available in all Expo versions
+                Alert.alert('الإعدادات', 'يرجى فتح إعدادات الجهاز يدوياً وتفعيل الإشعارات');
+              } 
             }
           ]
         );
@@ -565,6 +570,65 @@ class NotificationService {
     } catch (error) {
       console.error('❌ Error checking notification status:', error);
       return false;
+    }
+  }
+
+  /**
+   * Send a test notification (for development/testing)
+   */
+  async sendTestNotification(): Promise<boolean> {
+    try {
+      if (!this.pushToken) {
+        console.warn('⚠️ No push token available for test notification');
+        return false;
+      }
+
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🏠 مرحباً بك في تطبيق العقارات المصرية!',
+          body: 'تم تفعيل الإشعارات بنجاح. ستحصل على إشعارات فورية للعقارات الجديدة.',
+          data: {
+            type: 'test_notification',
+            deep_link: 'property://home'
+          },
+        },
+        trigger: { seconds: 2 } as any, // Type workaround for expo-notifications
+      });
+
+      console.log('✅ Test notification scheduled successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error sending test notification:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Check if notifications are properly enabled and configured
+   */
+  async getNotificationStatus(): Promise<{
+    isInitialized: boolean;
+    hasPermissions: boolean;
+    hasToken: boolean;
+    isPhysicalDevice: boolean;
+  }> {
+    try {
+      const permissions = await Notifications.getPermissionsAsync();
+      
+      return {
+        isInitialized: this.isInitialized,
+        hasPermissions: permissions.status === 'granted',
+        hasToken: !!this.pushToken,
+        isPhysicalDevice: Device.isDevice
+      };
+    } catch (error) {
+      console.error('❌ Error getting notification status:', error);
+      return {
+        isInitialized: false,
+        hasPermissions: false,
+        hasToken: false,
+        isPhysicalDevice: false
+      };
     }
   }
 

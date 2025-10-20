@@ -1,11 +1,52 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase/config'
+
 interface StructuredDataProps {
   type: 'organization' | 'property' | 'website'
   data?: any
+  propertyId?: string
 }
 
-export function StructuredData({ type, data }: StructuredDataProps) {
+export function StructuredData({ type, data, propertyId }: StructuredDataProps) {
+  const [propertyData, setPropertyData] = useState(null)
+
+  // Fetch property data if propertyId is provided and type is 'property'
+  useEffect(() => {
+    if (type === 'property' && propertyId && !data) {
+      const fetchPropertyData = async () => {
+        try {
+          const { data: property, error } = await supabase
+            .from('properties')
+            .select(`
+              *,
+              property_photos (
+                url,
+                is_primary
+              ),
+              property_appraisals (
+                market_value_estimate,
+                appraisal_date
+              )
+            `)
+            .eq('id', propertyId)
+            .single()
+
+          if (!error && property) {
+            setPropertyData(property)
+          }
+        } catch (error) {
+          console.error('Error fetching property data for structured data:', error)
+        }
+      }
+
+      fetchPropertyData()
+    }
+  }, [type, propertyId, data])
+
+  // Use provided data or fetched propertyData
+  const currentData = data || propertyData
   const getStructuredData = () => {
     switch (type) {
       case 'organization':
@@ -33,51 +74,86 @@ export function StructuredData({ type, data }: StructuredDataProps) {
         }
 
       case 'property':
+        if (!currentData) return null
+        
+        const primaryImage = currentData.property_photos?.find((photo: any) => photo.is_primary)?.url || 
+                            currentData.property_photos?.[0]?.url ||
+                            currentData.images?.[0] ||
+                            '/placeholder-property.jpg'
+        
         return {
           '@context': 'https://schema.org',
           '@type': 'RealEstateListing',
-          name: data?.title || 'Property Listing',
-          description: data?.description,
-          url: `https://openbeit.com/property/${data?.id}`,
-          image: data?.images?.[0],
-          datePosted: data?.created_at,
-          validThrough: data?.valid_until,
+          name: currentData.title || 'Property Listing',
+          description: currentData.description,
+          url: `https://openbeit.com/property/${currentData.id}`,
+          image: [primaryImage],
+          datePosted: currentData.created_at,
+          validThrough: currentData.valid_until,
           price: {
             '@type': 'PriceSpecification',
-            price: data?.price,
-            priceCurrency: 'EGP'
+            price: currentData.price,
+            priceCurrency: 'USD'
           },
           address: {
             '@type': 'PostalAddress',
-            streetAddress: data?.address,
-            addressLocality: data?.city,
-            addressRegion: data?.region,
+            streetAddress: currentData.address,
+            addressLocality: currentData.city || currentData.neighborhood,
+            addressRegion: currentData.region || currentData.state,
             addressCountry: 'EG'
           },
-          geo: data?.latitude && data?.longitude ? {
+          geo: currentData.latitude && currentData.longitude ? {
             '@type': 'GeoCoordinates',
-            latitude: data.latitude,
-            longitude: data.longitude
+            latitude: currentData.latitude,
+            longitude: currentData.longitude
           } : undefined,
           floorSize: {
             '@type': 'QuantitativeValue',
-            value: data?.area,
+            value: currentData.square_meters || currentData.area,
             unitCode: 'MTK'
           },
-          numberOfRooms: data?.bedrooms,
-          numberOfBathroomsTotal: data?.bathrooms,
-          yearBuilt: data?.year_built,
-          propertyID: data?.id,
-          category: data?.property_type,
+          numberOfRooms: currentData.bedrooms,
+          numberOfBathroomsTotal: currentData.bathrooms,
+          yearBuilt: currentData.year_built,
+          propertyID: currentData.id,
+          category: currentData.property_type,
+          amenityFeature: currentData.features ? currentData.features.map((feature: string) => ({
+            '@type': 'LocationFeatureSpecification',
+            name: feature
+          })) : undefined,
+          additionalProperty: [
+            ...(currentData.amenities ? currentData.amenities.map((amenity: string) => ({
+              '@type': 'PropertyValue',
+              name: 'amenity',
+              value: amenity
+            })) : []),
+            ...(currentData.property_type ? [{
+              '@type': 'PropertyValue',
+              name: 'propertyType',
+              value: currentData.property_type
+            }] : []),
+            ...(currentData.status ? [{
+              '@type': 'PropertyValue',
+              name: 'listingStatus',
+              value: currentData.status
+            }] : [])
+          ],
           offers: {
             '@type': 'Offer',
-            price: data?.price,
-            priceCurrency: 'EGP',
-            availability: 'https://schema.org/InStock',
+            price: currentData.price,
+            priceCurrency: 'USD',
+            availability: currentData.status === 'Available' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+            priceValidUntil: currentData.valid_until,
             seller: {
               '@type': 'RealEstateAgent',
-              name: 'OpenBeit'
+              name: 'OpenBeit',
+              url: 'https://openbeit.com'
             }
+          },
+          potentialAction: {
+            '@type': 'ViewAction',
+            target: `https://openbeit.com/property/${currentData.id}`,
+            name: 'View Property Details'
           }
         }
 

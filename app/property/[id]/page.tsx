@@ -28,15 +28,49 @@ import {
   Globe
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { toast } from "@/components/ui/use-toast"
 import Link from "next/link"
-import { TourViewer } from "@/components/tour-viewer"
+import dynamic from "next/dynamic"
 import { AIAssistant } from "@/components/ai-assistant"
+
+// Dynamic import for TourViewer - MASSIVE bundle size savings (500KB+ of 3D libraries)
+const TourViewer = dynamic(() => import("@/components/tour-viewer").then(mod => ({ default: mod.TourViewer })), {
+  loading: () => (
+    <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden flex items-center justify-center min-h-[400px]">
+      <div className="text-center text-white">
+        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold mb-2">Loading 3D Tour</h3>
+        <p className="text-slate-300">Preparing virtual experience...</p>
+      </div>
+    </div>
+  ),
+  ssr: false // 3D components can't be server-side rendered
+})
 import { useTourState } from "@/hooks/use-tour-state"
-import { ChatBot } from "@/components/ChatBot"
+
+// Dynamic import for ChatBot - includes AI and animation libraries
+const ChatBot = dynamic(() => import("@/components/ChatBot").then(mod => ({ default: mod.ChatBot })), {
+  loading: () => (
+    <div className="w-full max-w-xl mx-auto h-[600px] flex flex-col rounded-2xl shadow-2xl border bg-white">
+      <div className="flex items-center justify-between px-6 py-4 border-b">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-full bg-slate-200 animate-pulse" />
+          <div className="space-y-2">
+            <div className="w-32 h-4 bg-slate-200 animate-pulse rounded" />
+            <div className="w-24 h-3 bg-slate-200 animate-pulse rounded" />
+          </div>
+        </div>
+      </div>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-slate-500">Loading AI Assistant...</p>
+      </div>
+    </div>
+  ),
+  ssr: false
+})
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import BrokerAvailabilityCalendar from '@/components/calendar/BrokerAvailabilityCalendar'
 import ViewingBookingModal from '@/components/calendar/ViewingBookingModal'
@@ -102,6 +136,7 @@ interface Property {
   water_source?: string
   sewer_type?: string
   internet_speed?: string
+  infrastructure_analysis?: any
   
   // Availability
   available_date?: string
@@ -129,6 +164,10 @@ interface Property {
     url: string
     is_primary: boolean
     order_index: number
+    source?: string
+    appraisal_id?: string
+    original_category?: string
+    document_page?: number
   }>
   // Additional fields for compatibility
   nearbyServices?: Array<{
@@ -145,6 +184,15 @@ interface Property {
   tourId?: string
   location?: string
   images?: string[]
+  
+  // Additional appraisal fields that come from the API
+  property_appraisals?: Array<{
+    id: string
+    form_data?: any
+    calculation_results?: any
+    appraiser?: any
+  }>
+  appraisal_calculation_results?: any
 }
 
 export default function PropertyPage({ params }: { params: Promise<{ id: string }> }) {
@@ -162,6 +210,10 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   const [primaryBroker, setPrimaryBroker] = useState<Broker | null>(null)
   const [brokersLoading, setBrokersLoading] = useState(true)
 
+  // Appraiser data state
+  const [propertyAppraiser, setPropertyAppraiser] = useState<any>(null)
+  const [appraisalData, setAppraisalData] = useState<any>(null)
+
   // Broker calendar system state
   const [showBookingModal, setShowBookingModal] = useState(false)
   const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null)
@@ -174,6 +226,56 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
   // Use enhanced property translation system
   const { translatedProperty, isTranslating } = usePropertyTranslation(property)
 
+  // Refresh function to refetch property data
+  const refreshPropertyData = async () => {
+    try {
+      setLoading(true)
+      console.log('🔄 Refreshing property data for ID:', resolvedParams.id)
+      
+      const response = await fetch(`/api/properties/${resolvedParams.id}?t=${Date.now()}`, {
+        cache: 'no-cache',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          setError(t('propertyDetails.propertyNotFound'))
+        } else {
+          setError(t('propertyDetails.failedToLoadProperty'))
+        }
+        return
+      }
+      
+      const data = await response.json()
+      console.log('✅ Property refreshed:', data)
+      setProperty(data.property)
+      
+      // Extract appraiser data if available
+      if (data.property.property_appraisals && data.property.property_appraisals.length > 0) {
+        const appraisal = data.property.property_appraisals[0] // Get the first (and likely only) appraisal
+        setAppraisalData(appraisal)
+        if (appraisal.appraiser) {
+          console.log('🔍 Appraiser data received:', appraisal.appraiser)
+          setPropertyAppraiser(appraisal.appraiser)
+        } else {
+          setPropertyAppraiser(null)
+        }
+      } else {
+        setAppraisalData(null)
+        setPropertyAppraiser(null)
+      }
+      
+    } catch (error) {
+      console.error('❌ Error refreshing property:', error)
+      setError(t('propertyDetails.failedToLoadProperty'))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   // Fetch property data from API
   useEffect(() => {
     const fetchProperty = async () => {
@@ -181,7 +283,14 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         setLoading(true)
         console.log('🔍 Fetching property with ID:', resolvedParams.id)
         
-        const response = await fetch(`/api/properties/${resolvedParams.id}`)
+        const response = await fetch(`/api/properties/${resolvedParams.id}?t=${Date.now()}&bust=${Math.random()}`, {
+          cache: 'no-cache',
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        })
         
         if (!response.ok) {
           if (response.status === 404) {
@@ -195,6 +304,20 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
         const data = await response.json()
         console.log('✅ Property loaded:', data)
         setProperty(data.property)
+        
+        // Extract appraiser data if available
+        if (data.property.property_appraisals && data.property.property_appraisals.length > 0) {
+          const appraisal = data.property.property_appraisals[0] // Get the first (and likely only) appraisal
+          setAppraisalData(appraisal)
+          if (appraisal.appraiser) {
+            setPropertyAppraiser(appraisal.appraiser)
+          } else {
+            setPropertyAppraiser(null)
+          }
+        } else {
+          setAppraisalData(null)
+          setPropertyAppraiser(null)
+        }
         
         // Track property view
         await fetch(`/api/properties/${resolvedParams.id}/view`, {
@@ -246,9 +369,50 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
       }
     }
 
+
     fetchProperty()
     fetchPropertyBrokers()
   }, [resolvedParams.id])
+
+  // Refresh data when page becomes visible (user returns from other pages)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && property) {
+        console.log('📱 Page became visible, refreshing property data')
+        refreshPropertyData()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [property, resolvedParams.id])
+
+  // Listen for cache invalidation from admin panel (when images are deleted)
+  useEffect(() => {
+    const cacheKey = `property_cache_invalidated_${resolvedParams.id}`
+    let lastKnownTimestamp = localStorage.getItem(cacheKey)
+
+    const checkForCacheInvalidation = () => {
+      const currentTimestamp = localStorage.getItem(cacheKey)
+      if (currentTimestamp && currentTimestamp !== lastKnownTimestamp) {
+        console.log('🔄 Cache invalidation detected, refreshing property data')
+        lastKnownTimestamp = currentTimestamp
+        refreshPropertyData()
+      }
+    }
+
+    // Check every 2 seconds for cache invalidation
+    const interval = setInterval(checkForCacheInvalidation, 2000)
+    
+    return () => {
+      clearInterval(interval)
+    }
+  }, [resolvedParams.id])
+
+  // No longer needed - appraiser data comes with property data
 
   useEffect(() => {
     // Load property knowledge for HeyGen agent
@@ -316,12 +480,29 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     ).join(' ') })
   }
 
-  // Get property images (with fallback) - sorted by order_index
-  const propertyImages = property.property_photos?.length 
-    ? property.property_photos
-        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-        .map(photo => photo.url)
-    : ["/placeholder.svg?height=400&width=600"]
+  // Get property images from database only (single source of truth)
+  const getPropertyImages = () => {
+    if (!property.property_photos?.length) {
+      return ["/placeholder.svg?height=400&width=600"]
+    }
+
+    // Sort by order_index and map to URLs - includes both manual and appraisal-extracted images
+    const allImages = property.property_photos
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      .map(photo => photo.url)
+    
+    console.log('🖼️ Property images from database:', {
+      totalImages: allImages.length,
+      sources: property.property_photos.reduce((acc: any, photo: any) => {
+        acc[photo.source || 'manual'] = (acc[photo.source || 'manual'] || 0) + 1
+        return acc
+      }, {})
+    });
+
+    return allImages.length > 0 ? allImages : ["/placeholder.svg?height=400&width=600"];
+  };
+
+  const propertyImages = getPropertyImages();
 
   const nextImage = () => {
     setCurrentImageIndex((prev) => (prev + 1) % propertyImages.length)
@@ -408,6 +589,20 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
     }
   }
 
+  // Appraiser booking handler
+  const handleBookAppraiser = (appraiser: any) => {
+    if (!appraiser) return
+    
+    // For now, redirect to appraiser profile with booking intent
+    // In the future, we can open a booking modal directly on property page
+    window.open(`/appraisers/${appraiser.id}?booking=true&property_id=${resolvedParams.id}`, '_blank')
+    
+    toast({
+      title: "Redirecting to Booking",
+      description: `Opening ${appraiser.full_name}'s profile to schedule your appraisal.`
+    })
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-4">
@@ -456,7 +651,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             <div className="mb-6">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-slate-800 mb-2 rtl:text-right ltr:text-left property-title">
+                  <h1 className="text-3xl font-bold text-slate-800 mb-2 text-right property-title">
                     {translatedProperty?.title}
                   </h1>
                   <div className="flex items-center text-slate-600 mb-4">
@@ -710,7 +905,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                 )}
 
                 {/* Amenities & Features */}
-                {(property.furnished || property.has_pool || property.has_garden || property.has_security || property.has_gym || property.has_elevator) && (
+                {(property.furnished || property.has_pool || property.has_garden || property.has_security || property.has_gym || property.has_elevator || (translatedProperty?.amenities && translatedProperty.amenities.length > 0)) && (
                   <div className="border-t pt-4">
                     <h4 className="font-semibold text-slate-800 mb-3">{t('propertyDetails.premiumAmenities')}</h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -774,11 +969,20 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                           {t('propertyDetails.maidsRoom')}
                         </div>
                       )}
+                      
+                      {/* Extracted Amenities from Appraisal Data */}
+                      {translatedProperty?.amenities && translatedProperty.amenities.map((amenity, index) => (
+                        <div key={`appraisal-${index}`} className="flex items-center text-sm text-slate-600">
+                          <div className="w-2 h-2 bg-green-600 rounded-full mr-2"></div>
+                          <span>{amenity}</span>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 )}
               </CardContent>
             </Card>
+
 
             {/* Features */}
             {translatedProperty?.features && translatedProperty.features.length > 0 && (
@@ -841,63 +1045,142 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             </Card>
             )}
 
-            {/* Location & Infrastructure Details */}
+            {/* Location & Infrastructure Details - Enhanced with calculated distances */}
             {(property.distance_to_metro || property.distance_to_airport || property.distance_to_mall || property.distance_to_hospital || 
-              property.heating_type || property.cooling_type || property.water_source || property.internet_speed || property.pet_policy) && (
+              property.infrastructure_analysis || property.heating_type || property.cooling_type || property.water_source || property.internet_speed || property.pet_policy) && (
               <Card className="mb-8">
                 <CardHeader>
-                  <CardTitle>{t('propertyDetails.locationInfrastructure')}</CardTitle>
+                  <CardTitle className="flex items-center justify-between">
+                    <span>{t('propertyDetails.locationInfrastructure')}</span>
+                  </CardTitle>
+                  {property.infrastructure_analysis && (
+                    <CardDescription>
+                      Distances calculated using real-time data • Last updated: {new Date(property.infrastructure_analysis.last_updated).toLocaleDateString()}
+                    </CardDescription>
+                  )}
                 </CardHeader>
                 <CardContent>
-                  {/* Distance Information */}
-                  {(property.distance_to_metro || property.distance_to_airport || property.distance_to_mall || property.distance_to_hospital) && (
+                  {/* Enhanced Distance Information with calculated data */}
+                  {(property.distance_to_metro || property.distance_to_airport || property.distance_to_mall || property.distance_to_hospital || property.infrastructure_analysis) && (
                     <div className="mb-6">
                       <h4 className="font-semibold text-slate-800 mb-3">{t('propertyDetails.distanceToKeyLocations')}</h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                        {property.distance_to_metro && (
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-blue-600 text-xs font-bold">M</span>
+                        {(property.distance_to_metro || property.infrastructure_analysis?.distances?.metro) && (() => {
+                          const calculatedDistance = property.infrastructure_analysis?.distances?.metro;
+                          const staticDistance = property.distance_to_metro;
+                          const distance = calculatedDistance?.distance_km || staticDistance;
+                          const isCalculated = !!calculatedDistance;
+                          
+                          return (
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <span className="text-blue-600 text-xs font-bold">M</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-800 flex items-center gap-1">
+                                  {t('propertyDetails.metroStation')}
+                                  {isCalculated && <span className="text-xs text-green-600">●</span>}
+                                </p>
+                                <p className="text-slate-600">
+                                  {distance} {t('propertyDetails.km')}
+                                  {calculatedDistance?.duration_text && (
+                                    <span className="text-xs text-slate-500 ml-1">({calculatedDistance.duration_text})</span>
+                                  )}
+                                </p>
+                                {isCalculated && calculatedDistance.destination.name && (
+                                  <p className="text-xs text-slate-500">{calculatedDistance.destination.name}</p>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{t('propertyDetails.metroStation')}</p>
-                              <p className="text-slate-600">{property.distance_to_metro} {t('propertyDetails.km')}</p>
+                          );
+                        })()}
+                        {(property.distance_to_airport || property.infrastructure_analysis?.distances?.airport) && (() => {
+                          const calculatedDistance = property.infrastructure_analysis?.distances?.airport;
+                          const staticDistance = property.distance_to_airport;
+                          const distance = calculatedDistance?.distance_km || staticDistance;
+                          const isCalculated = !!calculatedDistance;
+                          
+                          return (
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <span className="text-green-600 text-xs font-bold">✈</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-800 flex items-center gap-1">
+                                  {t('propertyDetails.airport')}
+                                  {isCalculated && <span className="text-xs text-green-600">●</span>}
+                                </p>
+                                <p className="text-slate-600">
+                                  {distance} {t('propertyDetails.km')}
+                                  {calculatedDistance?.duration_text && (
+                                    <span className="text-xs text-slate-500 ml-1">({calculatedDistance.duration_text})</span>
+                                  )}
+                                </p>
+                                {isCalculated && calculatedDistance.destination.name && (
+                                  <p className="text-xs text-slate-500">{calculatedDistance.destination.name}</p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {property.distance_to_airport && (
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-green-600 text-xs font-bold">✈</span>
+                          );
+                        })()}
+                        {(property.distance_to_mall || property.infrastructure_analysis?.distances?.mall) && (() => {
+                          const calculatedDistance = property.infrastructure_analysis?.distances?.mall;
+                          const staticDistance = property.distance_to_mall;
+                          const distance = calculatedDistance?.distance_km || staticDistance;
+                          const isCalculated = !!calculatedDistance;
+                          
+                          return (
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                <span className="text-purple-600 text-xs font-bold">🛍</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-800 flex items-center gap-1">
+                                  {t('propertyDetails.shoppingMall')}
+                                  {isCalculated && <span className="text-xs text-green-600">●</span>}
+                                </p>
+                                <p className="text-slate-600">
+                                  {distance} {t('propertyDetails.km')}
+                                  {calculatedDistance?.duration_text && (
+                                    <span className="text-xs text-slate-500 ml-1">({calculatedDistance.duration_text})</span>
+                                  )}
+                                </p>
+                                {isCalculated && calculatedDistance.destination.name && (
+                                  <p className="text-xs text-slate-500">{calculatedDistance.destination.name}</p>
+                                )}
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{t('propertyDetails.airport')}</p>
-                              <p className="text-slate-600">{property.distance_to_airport} {t('propertyDetails.km')}</p>
+                          );
+                        })()}
+                        {(property.distance_to_hospital || property.infrastructure_analysis?.distances?.hospital) && (() => {
+                          const calculatedDistance = property.infrastructure_analysis?.distances?.hospital;
+                          const staticDistance = property.distance_to_hospital;
+                          const distance = calculatedDistance?.distance_km || staticDistance;
+                          const isCalculated = !!calculatedDistance;
+                          
+                          return (
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
+                                <span className="text-red-600 text-xs font-bold">+</span>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-800 flex items-center gap-1">
+                                  {t('propertyDetails.hospital')}
+                                  {isCalculated && <span className="text-xs text-green-600">●</span>}
+                                </p>
+                                <p className="text-slate-600">
+                                  {distance} {t('propertyDetails.km')}
+                                  {calculatedDistance?.duration_text && (
+                                    <span className="text-xs text-slate-500 ml-1">({calculatedDistance.duration_text})</span>
+                                  )}
+                                </p>
+                                {isCalculated && calculatedDistance.destination.name && (
+                                  <p className="text-xs text-slate-500">{calculatedDistance.destination.name}</p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        )}
-                        {property.distance_to_mall && (
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-purple-600 text-xs font-bold">🛍</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{t('propertyDetails.shoppingMall')}</p>
-                              <p className="text-slate-600">{property.distance_to_mall} {t('propertyDetails.km')}</p>
-                            </div>
-                          </div>
-                        )}
-                        {property.distance_to_hospital && (
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-red-600 text-xs font-bold">+</span>
-                            </div>
-                            <div>
-                              <p className="font-medium text-slate-800">{t('propertyDetails.hospital')}</p>
-                              <p className="text-slate-600">{property.distance_to_hospital} {t('propertyDetails.km')}</p>
-                            </div>
-                          </div>
-                        )}
+                          );
+                        })()}
                       </div>
                     </div>
                   )}
@@ -958,66 +1241,83 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
             )}
 
             {/* Lifestyle Compatibility Tool - Interactive Map with Commute Analysis */}
-            {property.latitude && property.longitude && (
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MapPin className="h-5 w-5" />
-                    {t('propertyDetails.commuteAnalysis')}
-                  </CardTitle>
-                  <p className="text-sm text-slate-600 mt-2">
-                    {t('propertyDetails.commuteDescription')}
-                  </p>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <LifestyleCompatibilityTool
-                    propertyId={property.id}
-                    propertyLocation={{
-                      latitude: property.latitude,
-                      longitude: property.longitude,
-                      address: property.address
-                    }}
-                  />
-                </CardContent>
-              </Card>
-            )}
+            {(() => {
+              // Get coordinates from property or appraisal data
+              const latitude = property.latitude || 
+                (property.property_appraisals?.[0]?.form_data?.location_data?.latitude) ||
+                (property.appraisal_calculation_results?.location_data?.latitude);
+              const longitude = property.longitude || 
+                (property.property_appraisals?.[0]?.form_data?.location_data?.longitude) ||
+                (property.appraisal_calculation_results?.location_data?.longitude);
+              
+              if (latitude && longitude) {
+                return (
+                  <Card className="mb-8">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2">
+                        <MapPin className="h-5 w-5" />
+                        {t('propertyDetails.commuteAnalysis')}
+                      </CardTitle>
+                      <p className="text-sm text-slate-600 mt-2">
+                        {t('propertyDetails.commuteDescription')}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <LifestyleCompatibilityTool
+                        propertyId={property.id}
+                        propertyLocation={{
+                          latitude: latitude,
+                          longitude: longitude,
+                          address: property.address
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                );
+              }
+              return null;
+            })()}
 
             {/* Tour Section */}
             {(property.virtual_tour_url || property.video_tour_url) && (
-              <div className="bg-white rounded-xl shadow-sm p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
-                  <PlayCircle className="w-6 h-6 mr-3 text-blue-600" />
-                  Virtual Tours
-                </h2>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {property.virtual_tour_url && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">3D Virtual Tour</h3>
-                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                        <iframe
-                          src={property.virtual_tour_url}
-                          className="w-full h-full"
-                          allowFullScreen
-                          title="Virtual Tour"
-                        />
+              <Card className="mb-8">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-3">
+                    <PlayCircle className="w-6 h-6 text-blue-600" />
+                    {t('propertyDetails.virtualTours', 'Virtual Tours')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                    {property.virtual_tour_url && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('propertyDetails.threeDVirtualTour', '3D Virtual Tour')}</h3>
+                        <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                          <iframe
+                            src={property.virtual_tour_url}
+                            className="w-full h-full"
+                            allowFullScreen
+                            title={t('propertyDetails.virtualTourTitle', 'Virtual Tour')}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {property.video_tour_url && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Video Tour</h3>
-                      <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                        <iframe
-                          src={property.video_tour_url}
-                          className="w-full h-full"
-                          allowFullScreen
-                          title="Video Tour"
-                        />
+                    )}
+                    {property.video_tour_url && (
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-3">{t('propertyDetails.videoTour', 'Video Tour')}</h3>
+                        <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden">
+                          <iframe
+                            src={property.video_tour_url}
+                            className="w-full h-full"
+                            allowFullScreen
+                            title={t('propertyDetails.videoTourTitle', 'Video Tour')}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Mortgage Calculator */}
@@ -1037,7 +1337,7 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
 
           {/* Right Column - Property Info and Contact (1/4 width) */}
           <div className="lg:col-span-1">
-            <div className="lg:sticky lg:top-24 space-y-6">
+            <div className="space-y-6">
               {/* Price and Contact */}
               <Card>
                 <CardContent className="p-6">
@@ -1185,6 +1485,135 @@ export default function PropertyPage({ params }: { params: Promise<{ id: string 
                       <User className="h-8 w-8 text-slate-400 mx-auto mb-2" />
                       <p className="text-sm text-slate-600">{t('propertyDetails.noBrokersAssigned')}</p>
                       <p className="text-xs text-slate-500">{t('propertyDetails.contactUsForAssistance')}</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Professional Appraiser */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Building2 className="h-5 w-5" />
+                    {t('propertyDetails.professionalAppraiser')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <Separator className="my-6" />
+
+                  {/* Appraiser Info */}
+                  {propertyAppraiser ? (
+                    <div 
+                      className="cursor-pointer hover:bg-slate-50 p-2 rounded-lg transition-colors"
+                      onClick={() => window.open(`/appraisers/${propertyAppraiser.id}`, '_blank')}
+                    >
+                      <div className="flex items-center space-x-3 mb-4">
+                        <img
+                          src={propertyAppraiser.professional_headshot_url || "/placeholder.svg"}
+                          alt={propertyAppraiser.full_name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-slate-800">{propertyAppraiser.full_name}</p>
+                            {propertyAppraiser.valify_status === 'verified' && (
+                              <Badge className="bg-green-100 text-green-800 text-xs">Verified</Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-slate-600">{t('propertyDetails.licensedPropertyAppraiser')}</p>
+                          {propertyAppraiser.average_rating && (
+                            <div className="flex items-center mt-1">
+                              <Heart className="h-3 w-3 text-yellow-400 fill-current" />
+                              <span className="text-xs text-slate-600 ml-1">
+                                {propertyAppraiser.average_rating.toFixed(1)} ({propertyAppraiser.total_reviews} reviews)
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Appraiser Details */}
+                      <div className="space-y-2 text-sm">
+                        {propertyAppraiser.years_of_experience && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Experience:</span>
+                            <span className="font-medium">{propertyAppraiser.years_of_experience}+ years</span>
+                          </div>
+                        )}
+                        {propertyAppraiser.property_specialties && propertyAppraiser.property_specialties.length > 0 && (
+                          <div>
+                            <span className="text-slate-600">Specialties:</span>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {propertyAppraiser.property_specialties.slice(0, 2).map((type: string) => (
+                                <Badge key={type} variant="outline" className="text-xs">
+                                  {type.replace('_', ' ')}
+                                </Badge>
+                              ))}
+                              {propertyAppraiser.property_specialties.length > 2 && (
+                                <Badge variant="outline" className="text-xs">
+                                  +{propertyAppraiser.property_specialties.length - 2} more
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        {propertyAppraiser.service_areas && propertyAppraiser.service_areas.length > 0 && (
+                          <div className="flex justify-between">
+                            <span className="text-slate-600">Service Areas:</span>
+                            <span className="font-medium">{propertyAppraiser.service_areas.join(', ')}</span>
+                          </div>
+                        )}
+
+                        {/* Appraisal Data */}
+                        {appraisalData && (
+                          <>
+                            {appraisalData.market_value_estimate && (
+                              <div className="flex justify-between">
+                                <span className="text-slate-600">Market Value:</span>
+                                <span className="font-medium text-green-600">
+                                  ${appraisalData.market_value_estimate.toLocaleString()}
+                                </span>
+                              </div>
+                            )}
+                            {appraisalData.appraisal_date && (
+                              <div className="flex justify-between">
+                                <span className="text-slate-600">Appraisal Date:</span>
+                                <span className="font-medium">
+                                  {new Date(appraisalData.appraisal_date).toLocaleDateString()}
+                                </span>
+                              </div>
+                            )}
+                            {appraisalData.status && (
+                              <div className="flex justify-between">
+                                <span className="text-slate-600">Status:</span>
+                                <Badge variant={appraisalData.status === 'completed' ? 'default' : 'outline'} className="text-xs">
+                                  {appraisalData.status}
+                                </Badge>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {/* Book Appraiser Button */}
+                      <div className="mt-4 pt-4 border-t border-slate-100">
+                        <Button 
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleBookAppraiser(propertyAppraiser)
+                          }}
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          <Calendar className="h-4 w-4 mr-2" />
+                          {t('propertyDetails.bookAppraisal')}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4">
+                      <Building2 className="h-8 w-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-sm text-slate-600">{t('propertyDetails.noAppraiserAssigned')}</p>
+                      <p className="text-xs text-slate-500">{t('propertyDetails.contactForAppraisal')}</p>
                     </div>
                   )}
                 </CardContent>

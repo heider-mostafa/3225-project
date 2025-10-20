@@ -159,11 +159,41 @@ export async function GET(
       .gte('start_datetime', startOfDay)
       .lte('end_datetime', endOfDay);
 
+    // Get existing bookings for all brokers across ALL their properties on this date
+    console.log('🔍 Checking existing bookings for cross-property conflicts...');
+    const { data: existingBookings, error: bookingsError } = await supabase
+      .from('property_viewings')
+      .select(`
+        broker_id,
+        viewing_time,
+        end_time,
+        duration_minutes,
+        property_id,
+        properties (
+          id,
+          title
+        )
+      `)
+      .eq('viewing_date', date)
+      .in('broker_id', finalBrokerIds)
+      .eq('status', 'scheduled');
+
+    if (bookingsError) {
+      console.error('Error fetching existing bookings:', bookingsError);
+      return NextResponse.json(
+        { success: false, error: 'Failed to check existing bookings' },
+        { status: 500 }
+      );
+    }
+
+    console.log('📊 Existing bookings for conflict check:', existingBookings);
+
     // Process availability into time slots
     const slotsResponse = brokers.map(broker => {
       const propertyBroker = propertyBrokers.find(pb => pb.broker_id === broker.id);
       const brokerAvailability = availableSlots.filter(a => a.broker_id === broker.id);
       const brokerBlockedTimes = blockedTimes?.filter(bt => bt.broker_id === broker.id) || [];
+      const brokerBookings = existingBookings?.filter(booking => booking.broker_id === broker.id) || [];
 
       const timeSlots = brokerAvailability.map(avail => {
         // Check if this time slot is blocked
@@ -198,16 +228,59 @@ export async function GET(
           if (slotEndTime <= endTime) {
             const timeString = currentTime.toTimeString().substring(0, 5); // HH:MM format
             
+            // Check for conflicts with existing bookings across ALL properties
+            const hasConflict = brokerBookings.some(booking => {
+              const bookingStart = new Date(`${date}T${booking.viewing_time}:00`);
+              const bookingEnd = new Date(`${date}T${booking.end_time}:00`);
+              
+              // Check if this time slot overlaps with any existing booking
+              const overlap = currentTime < bookingEnd && slotEndTime > bookingStart;
+              
+              if (overlap && booking.property_id !== propertyId) {
+                console.log('⚠️ Cross-property conflict detected:', {
+                  broker: broker.full_name,
+                  conflictTime: timeString,
+                  conflictingProperty: booking.properties?.title,
+                  conflictingBooking: `${booking.viewing_time} - ${booking.end_time}`
+                });
+              }
+              
+              return overlap;
+            });
+            
+            // Count current bookings for this specific time slot on this property
+            const currentPropertyBookings = brokerBookings.filter(booking => 
+              booking.property_id === propertyId && booking.viewing_time === timeString
+            ).length;
+            
+            // Determine availability
+            const isAvailable = !hasConflict && currentPropertyBookings < (avail.max_bookings || 1);
+            
+            // Create conflict details for UI display
+            const conflictDetails = hasConflict ? brokerBookings.find(booking => {
+              const bookingStart = new Date(`${date}T${booking.viewing_time}:00`);
+              const bookingEnd = new Date(`${date}T${booking.end_time}:00`);
+              return currentTime < bookingEnd && slotEndTime > bookingStart;
+            }) : null;
+            
             slots.push({
               time: timeString,
-              available: true, // Each time slot can be booked independently
+              available: isAvailable,
               maxBookings: avail.max_bookings || 1,
-              currentBookings: 0, // We'd need to count actual bookings for this specific time
+              currentBookings: currentPropertyBookings,
               broker_id: avail.broker_id,
               availability_id: avail.id,
               duration_minutes: duration,
               booking_type: avail.booking_type,
-              notes: avail.notes
+              notes: avail.notes,
+              // Enhanced conflict information
+              hasConflict: hasConflict,
+              conflictReason: hasConflict ? 'broker_busy_other_property' : null,
+              conflictDetails: conflictDetails ? {
+                conflictingProperty: conflictDetails.properties?.title,
+                conflictingTime: `${conflictDetails.viewing_time} - ${conflictDetails.end_time}`,
+                propertyId: conflictDetails.property_id
+              } : null
             });
           }
 

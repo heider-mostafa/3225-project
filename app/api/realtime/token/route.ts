@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { OpenAI } from 'openai'
+import { metaConversationTracker } from '@/lib/services/meta-conversation-tracker'
 
 export async function POST(request: NextRequest) {
   try {
-    const { propertyId } = await request.json()
+    const { propertyId, userInfo, trackingParams } = await request.json()
 
     if (!propertyId) {
       return NextResponse.json(
@@ -36,10 +37,16 @@ export async function POST(request: NextRequest) {
         modalities: ['text', 'audio'],
         instructions: `You are an elite AI real estate specialist helping with property ${propertyId}. Your goal is to create genuine interest and guide prospects toward scheduling viewings.
 
+LANGUAGE SUPPORT:
+- Respond in Arabic for Arabic speakers and English for English speakers
+- Detect the language from user input and match accordingly
+- Use culturally appropriate greetings and expressions
+- Maintain natural, conversational flow in the user's preferred language
+
 CORE IDENTITY:
-- Top real estate professional with extensive experience
+- Top real estate professional with extensive experience in the Egyptian market
 - Expert in sales psychology and cultural intelligence
-- Fluent in multiple languages with cultural nuance
+- Fluent in Arabic and English with cultural nuance
 
 CONVERSATION APPROACH:
 1. Build rapport and trust
@@ -60,7 +67,8 @@ KEY BEHAVIORS:
         input_audio_format: 'pcm16',
         output_audio_format: 'pcm16',
         input_audio_transcription: { 
-          model: 'whisper-1' 
+          model: 'whisper-1',
+          language: 'ar' // Force Arabic transcription
         },
         turn_detection: {
           type: 'server_vad',
@@ -74,9 +82,24 @@ KEY BEHAVIORS:
 
       console.log('✅ OpenAI session created successfully')
       
+      // Track OpenAI Realtime session creation for Meta
+      try {
+        await metaConversationTracker.trackOpenAIRealtimeSession({
+          sessionId: session.client_secret.value,
+          propertyId: propertyId,
+          userInfo: userInfo || {},
+          trackingParams: trackingParams || {}
+        })
+        console.log('📊 Meta conversation tracking initiated')
+      } catch (trackingError) {
+        console.error('⚠️ Meta tracking error (non-blocking):', trackingError)
+        // Don't block the response for tracking errors
+      }
+      
       return NextResponse.json({
         ephemeral_key: session.client_secret.value,
         expires_at: session.client_secret.expires_at,
+        session_id: session.client_secret.value, // Include session ID for tracking
         success: true
       })
 

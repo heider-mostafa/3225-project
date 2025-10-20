@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
 import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
+import { supabase } from './supabase';
 
 // Temporary types until shared types are available
 interface Property {
@@ -80,9 +81,20 @@ class ApiClient {
     // Request interceptor - Add auth token
     this.client.interceptors.request.use(
       async (config: InternalAxiosRequestConfig) => {
-        const token = await AsyncStorage.getItem('auth_token');
-        if (token) {
-          config.headers.set('Authorization', `Bearer ${token}`);
+        try {
+          // Get Supabase session token instead of AsyncStorage token
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
+          if (error) {
+            console.warn('⚠️ Auth session error:', error);
+          } else if (session?.access_token) {
+            config.headers.set('Authorization', `Bearer ${session.access_token}`);
+            console.log('🔑 API request authenticated with Supabase session');
+          } else {
+            console.log('🔓 API request without authentication (no session)');
+          }
+        } catch (error) {
+          console.error('❌ Error getting auth session for API request:', error);
         }
         
         // Add request timestamp for analytics
@@ -177,9 +189,18 @@ class ApiClient {
 
   private async handleTokenExpiration() {
     console.log('🔄 Handling token expiration...');
-    await AsyncStorage.removeItem('auth_token');
-    await AsyncStorage.removeItem('user_data');
-    // Navigation to login screen would be handled by auth context
+    // Let Supabase handle token refresh automatically
+    // If that fails, the auth state change listener will handle sign out
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Session is truly expired, sign out
+        await supabase.auth.signOut();
+      }
+    } catch (error) {
+      console.error('❌ Error during token expiration handling:', error);
+      await supabase.auth.signOut();
+    }
   }
 
   private async processQueuedRequests() {
@@ -200,7 +221,7 @@ class ApiClient {
     try {
       const response = await this.client.get('/api/properties', { params: filters });
       // API returns {properties: [...], pagination: {...}}
-      return { success: true, data: response.data.properties || [] };
+      return { success: true, data: response.data.properties || response.data || [] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -209,7 +230,7 @@ class ApiClient {
   async getProperty(id: string): Promise<ApiResponse<Property>> {
     try {
       const response = await this.client.get(`/api/properties/${id}`);
-      return { success: true, data: response.data.property };
+      return { success: true, data: response.data.property || response.data };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -221,7 +242,7 @@ class ApiClient {
         params: { q: query, ...filters }
       });
       // API returns {properties: [...], pagination: {...}}
-      return { success: true, data: response.data.properties || [] };
+      return { success: true, data: response.data.properties || response.data || [] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -231,7 +252,7 @@ class ApiClient {
   async getBrokers(): Promise<ApiResponse<Broker[]>> {
     try {
       const response = await this.client.get('/api/brokers');
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.brokers || response.data || [] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -240,7 +261,7 @@ class ApiClient {
   async getBroker(id: string): Promise<ApiResponse<Broker>> {
     try {
       const response = await this.client.get(`/api/brokers/${id}`);
-      return { success: true, data: response.data };
+      return { success: true, data: response.data.broker || response.data };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
@@ -249,39 +270,27 @@ class ApiClient {
   async getPropertyBrokers(propertyId: string): Promise<ApiResponse<Broker[]>> {
     try {
       const response = await this.client.get(`/api/properties/${propertyId}/brokers`);
-      return { success: true, data: response.data.brokers };
+      return { success: true, data: response.data.brokers || response.data || [] };
     } catch (error: any) {
       return { success: false, error: error.message };
     }
   }
 
-  // Authentication API
+  // Note: Authentication is now handled by AuthService using Supabase
+  // These methods are kept for backward compatibility but should use Supabase auth
   async login(email: string, password: string): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.post('/api/auth/login', { email, password });
-      
-      if (response.data.token) {
-        await AsyncStorage.setItem('auth_token', response.data.token);
-        await AsyncStorage.setItem('user_data', JSON.stringify(response.data.user));
-      }
-      
-      return { success: true, data: response.data };
-    } catch (error: any) {
-      return { success: false, error: error.response?.data?.message || error.message };
-    }
+    console.warn('⚠️ Direct API login is deprecated. Use AuthService.signIn() instead.');
+    return { success: false, error: 'Use AuthService for authentication' };
   }
 
   async register(userData: any): Promise<ApiResponse<any>> {
-    try {
-      const response = await this.client.post('/api/auth/register', userData);
-      return { success: true, data: response.data };
-    } catch (error: any) {
-      return { success: false, error: error.response?.data?.message || error.message };
-    }
+    console.warn('⚠️ Direct API register is deprecated. Use AuthService.signUp() instead.');
+    return { success: false, error: 'Use AuthService for authentication' };
   }
 
   async logout(): Promise<void> {
-    await AsyncStorage.multiRemove(['auth_token', 'user_data']);
+    console.warn('⚠️ Direct API logout is deprecated. Use AuthService.signOut() instead.');
+    // Don't remove user_data here as it's managed by AuthService
   }
 
   // Media Upload API
@@ -321,30 +330,28 @@ class ApiClient {
     }
   }
 
-  // Favorites API
+  // Favorites API - Note: These endpoints may not exist, mobile app uses direct Supabase
   async getSavedProperties(): Promise<ApiResponse<Property[]>> {
-    try {
-      const response = await this.client.get('/api/profile/saved-properties');
-      return { success: true, data: response.data };
-    } catch (error: any) {
-      return { success: false, error: error.message };
-    }
+    console.warn('⚠️ getSavedProperties via API is deprecated. Mobile app uses ProfileService with Supabase.');
+    return { success: false, error: 'Use ProfileService.getSavedProperties() instead' };
   }
 
   async saveProperty(propertyId: string): Promise<ApiResponse<any>> {
     try {
-      const response = await this.client.post('/api/profile/save-property', { propertyId });
+      const response = await this.client.post(`/api/properties/${propertyId}/save`);
       return { success: true, data: response.data };
     } catch (error: any) {
+      console.warn('⚠️ API save failed, consider using ProfileService.toggleSaveProperty()');
       return { success: false, error: error.message };
     }
   }
 
   async unsaveProperty(propertyId: string): Promise<ApiResponse<any>> {
     try {
-      const response = await this.client.delete(`/api/profile/save-property/${propertyId}`);
+      const response = await this.client.delete(`/api/properties/${propertyId}/save`);
       return { success: true, data: response.data };
     } catch (error: any) {
+      console.warn('⚠️ API unsave failed, consider using ProfileService.toggleSaveProperty()');
       return { success: false, error: error.message };
     }
   }
@@ -377,7 +384,7 @@ const isDevelopment = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NOD
 const apiConfig: ApiConfig = {
   baseURL: isDevelopment 
     ? 'http://10.0.2.2:3000'  // Android emulator localhost (was http://localhost:3000)
-    : 'https://pupqcchcdwawgyxbcbeb.supabase.co', // Use Supabase URL for production
+    : 'https://your-deployed-domain.vercel.app', // Replace with actual production URL
   timeout: 15000, // 15 seconds
   retries: 3,
   cacheEnabled: true,

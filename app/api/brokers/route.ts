@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 
 import { createServerSupabaseClient } from '@/lib/supabase/server'
@@ -9,14 +10,10 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url)
     const includeInactive = searchParams.get('include_inactive') === 'true'
 
-    const supabase = createServerClient(
+    // Use anon key for public broker listings (respects RLS policies)
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get() { return undefined },
-        },
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
     let query = supabase
@@ -178,7 +175,12 @@ export async function PUT(request: Request) {
       years_experience,
       commission_rate,
       profile_image_url,
-      is_active
+      is_active,
+      // Appraiser-specific fields
+      appraiser_license_number,
+      appraiser_certification_authority,
+      property_specialties,
+      max_property_value_limit
     } = body
 
     if (!id) {
@@ -212,6 +214,11 @@ export async function PUT(request: Request) {
     if (commission_rate !== undefined) updateData.commission_rate = commission_rate
     if (profile_image_url !== undefined) updateData.profile_image_url = profile_image_url
     if (is_active !== undefined) updateData.is_active = is_active
+    // Appraiser-specific fields
+    if (appraiser_license_number !== undefined) updateData.appraiser_license_number = appraiser_license_number
+    if (appraiser_certification_authority !== undefined) updateData.appraiser_certification_authority = appraiser_certification_authority
+    if (property_specialties !== undefined) updateData.property_specialties = property_specialties
+    if (max_property_value_limit !== undefined) updateData.max_property_value_limit = max_property_value_limit
 
     const { data: broker, error } = await supabase
       .from('brokers')

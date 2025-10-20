@@ -26,6 +26,10 @@ export async function POST(request: Request) {
     const property_id = formData.get('property_id') as string
     const is_primary = formData.get('is_primary') === 'true'
     const category = formData.get('category') as string || 'general' // general, exterior, interior, amenities
+    
+    // New source tracking fields
+    const source = formData.get('source') as string || 'manual'
+    const appraisal_id = formData.get('appraisal_id') as string || null
 
     if (!files || files.length === 0) {
       return NextResponse.json(
@@ -138,6 +142,21 @@ export async function POST(request: Request) {
 
         // Save image metadata to database
         console.log(`💾 Saving to database: ${file.name}`)
+        
+        // Get source-specific metadata for this file
+        const document_page = formData.get(`document_page_${i}`)
+        const original_category = formData.get(`original_category_${i}`)
+        const extraction_metadata_raw = formData.get(`extraction_metadata_${i}`)
+        
+        let extraction_metadata = {}
+        if (extraction_metadata_raw) {
+          try {
+            extraction_metadata = JSON.parse(extraction_metadata_raw as string)
+          } catch (e) {
+            console.warn('Failed to parse extraction metadata:', e)
+          }
+        }
+        
         const insertData = {
           property_id,
           url: urlData.publicUrl,
@@ -147,7 +166,13 @@ export async function POST(request: Request) {
           is_primary: is_primary && i === 0,
           category,
           order_index: nextOrderIndex,
-          storage_path: uploadData.path
+          storage_path: uploadData.path,
+          // New source tracking fields
+          source,
+          appraisal_id: appraisal_id || null,
+          document_page: document_page ? parseInt(document_page as string) : null,
+          original_category: original_category as string || null,
+          extraction_metadata: Object.keys(extraction_metadata).length > 0 ? extraction_metadata : null
         }
         console.log(`📝 Insert data:`, insertData)
 

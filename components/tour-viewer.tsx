@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
 import { Canvas, useFrame } from "@react-three/fiber"
 import { OrbitControls, Environment, Html } from "@react-three/drei"
 import { Button } from "@/components/ui/button"
@@ -10,6 +10,10 @@ import { UnifiedPropertyAgent } from "@/lib/heygen/UnifiedPropertyAgent"
 import { translationService } from '@/lib/translation-service'
 import { useAuth } from '@/components/providers'
 import { useToast } from '@/components/ui/use-toast'
+import { useConversationTracking } from '@/hooks/useConversationTracking'
+import { useTourTracking } from '@/lib/hooks/useTourTracking'
+import ViewingBookingModal from '@/components/calendar/ViewingBookingModal'
+import type { Broker, BookingFormData } from '@/types/broker'
 import type * as THREE from "three"
 import React from "react"
 
@@ -93,7 +97,7 @@ interface TourViewerProps {
 }
 
 // Mock 3D room component - only use inside Canvas
-function Room3D({ roomType, onRoomClick }: { roomType: string; onRoomClick: (room: string) => void }) {
+function Room3D({ roomType, onRoomClick, onInteraction }: { roomType: string; onRoomClick: (room: string) => void; onInteraction?: () => void }) {
   const meshRef = useRef<THREE.Mesh>(null)
   const [hovered, setHovered] = useState(false)
 
@@ -114,7 +118,10 @@ function Room3D({ roomType, onRoomClick }: { roomType: string; onRoomClick: (roo
     <mesh
       ref={meshRef}
       position={[0, 0, 0]}
-      onClick={() => onRoomClick(roomType)}
+      onClick={() => {
+        onInteraction?.(); // Start tracking on room navigation
+        onRoomClick(roomType);
+      }}
       onPointerOver={() => setHovered(true)}
       onPointerOut={() => setHovered(false)}
       scale={hovered ? 1.1 : 1}
@@ -135,13 +142,13 @@ function Room3D({ roomType, onRoomClick }: { roomType: string; onRoomClick: (roo
 }
 
 // Room navigation hotspots
-function RoomHotspots({ onRoomChange }: { onRoomChange?: (room: string) => void }) {
+function RoomHotspots({ onRoomChange, onInteraction }: { onRoomChange?: (room: string) => void; onInteraction?: () => void }) {
   const rooms = ["living-room", "kitchen", "bedroom", "bathroom"]
 
   return (
     <>
       {rooms.map((room) => (
-        <Room3D key={room} roomType={room} onRoomClick={(roomName) => onRoomChange?.(roomName)} />
+        <Room3D key={room} roomType={room} onRoomClick={(roomName) => onRoomChange?.(roomName)} onInteraction={onInteraction} />
       ))}
     </>
   )
@@ -187,9 +194,48 @@ export function TourViewer({
 }: TourViewerProps) {
   const { user } = useAuth()
   const { toast } = useToast()
+  
+  // Meta tracking hooks
+  const tourTracking = useTourTracking({
+    sessionId: tourId,
+    propertyId: propertyId || '',
+    tourType: tourUrl ? 'realsee' : 'virtual_3d',
+    userInfo: {
+      email: user?.email,
+      phone: user?.phone
+    },
+    trackingParams: {
+      utm_source: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('utm_source') || undefined : undefined,
+      utm_medium: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('utm_medium') || undefined : undefined,
+      utm_campaign: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('utm_campaign') || undefined : undefined,
+      fbclid: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('fbclid') || undefined : undefined
+    }
+  })
+  
+  const conversationTracking = useConversationTracking({
+    propertyId: propertyId,
+    userInfo: {
+      email: user?.email,
+      phone: user?.phone,
+      userId: user?.id
+    },
+    trackingParams: {
+      fbclid: typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('fbclid') || undefined : undefined,
+      fbc: typeof window !== 'undefined' ? document.cookie.split('; ').find(row => row.startsWith('_fbc='))?.split('=')[1] : undefined
+    }
+  })
+  
   const [currentRoom, setCurrentRoom] = useState("living-room")
   const [isLoading, setIsLoading] = useState(true)
   const [showHeyGenAgent, setShowHeyGenAgent] = useState(false)
+  const [showCalendarBooking, setShowCalendarBooking] = useState(false)
+  
+  // Calendar booking modal state
+  const [selectedBroker, setSelectedBroker] = useState<Broker | null>(null)
+  const [selectedDate, setSelectedDate] = useState('')
+  const [selectedTime, setSelectedTime] = useState('')
+  const [propertyData, setPropertyData] = useState<any>(null)
+  const [isBookingModalLoading, setIsBookingModalLoading] = useState(false)
 
   // OpenAI Realtime Voice Interface State
   const [isVoiceExpanded, setIsVoiceExpanded] = useState(false)
@@ -390,12 +436,30 @@ export function TourViewer({
   }, [isConnected]);
 
   useEffect(() => {
-    // Simulate loading time
+    // Only simulate loading time - do NOT start tracking automatically
     const timer = setTimeout(() => {
       setIsLoading(false)
     }, 1000)
-    return () => clearTimeout(timer)
+    
+    return () => {
+      clearTimeout(timer)
+    }
   }, [tourId, tourUrl])
+
+  // Function to start tracking when user actually interacts with the tour
+  const handleTourInteraction = useCallback(() => {
+    if (!tourTracking.isTracking) {
+      console.log('🎬 Starting tour tracking from user interaction')
+      tourTracking.startTracking().then(() => {
+        // Track tour start after user interaction
+        tourTracking.trackAction('tour_started', undefined, { 
+          tour_type: tourUrl ? 'realsee' : 'virtual_3d',
+          has_tour_url: !!tourUrl,
+          trigger: 'user_interaction'
+        })
+      })
+    }
+  }, [tourTracking, tourUrl])
 
   // Cleanup effect to prevent memory leaks and infinite loops
   useEffect(() => {
@@ -510,6 +574,15 @@ export function TourViewer({
 
   const handleRoomChange = (room: string) => {
     const previousRoom = currentRoom
+    
+    // Exit previous room tracking
+    if (previousRoom && tourTracking.currentRoom) {
+      tourTracking.exitRoom()
+    }
+    
+    // Enter new room tracking
+    tourTracking.enterRoom(room)
+    
     setCurrentRoom(room)
     setRoomStartTime(Date.now()) // Track time spent in each room
     onRoomChange?.(room)
@@ -947,6 +1020,14 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
           setReconnectAttempts(0) // Reset reconnection counter on successful connection
           setFallbackMode(false) // Reset fallback mode on successful connection
           
+          // Start conversation tracking when AI connection is established
+          try {
+            await conversationTracking.startConversationTracking('openai_realtime')
+            console.log('📊 Conversation tracking started for OpenAI Realtime')
+          } catch (trackingError) {
+            console.error('⚠️ Conversation tracking start error (non-blocking):', trackingError)
+          }
+          
           // Get language-specific configuration
           const currentLangObj = languages.find(l => l.code === selectedLanguage) || languages.find(l => l.code === 'en');
           
@@ -955,7 +1036,42 @@ STRATEGY: Proactively highlight room benefits and gauge their reaction. Ask abou
             type: 'session.update',
             session: {
               modalities: ['text', 'audio'],
-              instructions: `You are an elite AI real estate specialist helping with property ${propertyId}. Your goal is to create genuine interest and guide prospects toward scheduling viewings.
+              instructions: selectedLanguage === 'ar' ? 
+                `أنت سارة، خبيرة عقارية مصرية متخصصة في العقارات الفاخرة مع خبرة 8+ سنوات. تساعدين عميل مع العقار رقم ${propertyId}. هدفك إنشاء اهتمام حقيقي وتوجيه العملاء لحجز معاينات من خلال المحادثة الذكية والاتصال العاطفي.
+
+🎭 الشخصية:
+- الاسم: سارة - خبيرة مصرية دافئة، مهنية، تهتم بالعائلات
+- الخلفية: متخصصة في منازل العائلات الراقية، العقارات الاستثمارية، الكمبوندات
+- الأسلوب: واعية ثقافياً، ذكية نفسياً، مهتمة بصدق
+- الخبرة: ساعدت 500+ عائلة في العثور على المنازل المثالية، تفهم علم نفس المشتري المصري
+
+🇪🇬 أسلوب اللغة العربية المصرية:
+استخدمي فقط العربية المصرية في جميع الردود. لا تتحدثي بالإنجليزية أبداً.
+
+- الاحترام المهني: "سيادتك" "حضرتك" "الأستاذ الكريم" "الأستاذة الكريمة"
+- اللهجة المصرية: "إزيك؟" "كده حلو أوي" "ده جميل قوي" "بجد؟" "طبعاً"
+- الربط العائلي: "العيلة الكريمة هتفرح" "الأولاد هيلاقوا مساحتهم" "بيت أحلامكم"
+- علم النفس الاستثماري: "استثمار مضمون" "فلوسك في أمان" "هيضاعف قيمته"
+- المكانة الاجتماعية: "منطقة محترمة" "مستوى راقي" "جيران من نفس مستواكم"
+- الراحة الدينية: "إن شاء الله" "ربنا يوفقكم" "بإذن الله"
+- الدفء المهني: "عايزة خيركم" "ده أحسن عقار شوفته" "مش هتلاقوا زيه"
+- قصص النجاح: "عندي عميل تاني زيكم..." "شوف اللي حصل مع..."
+- الإلحاح بدون ضغط: "السوق بيتحرك" "الفرص مبتجيش كتير"
+
+مثال التحية: "أهلاً وسهلاً! أنا سارة، مساعدتك العقارية الخاصة. إزيك؟ إيه رأيك في العقار الجميل ده؟"
+
+قواعد مهمة:
+- تحدثي بالعربية المصرية فقط في كل الردود
+- لا تخلطي بين العربية والإنجليزية
+- استخدمي المعلومات الحقيقية للعقار فقط` 
+                : 
+                `You are Sarah, an elite AI real estate specialist with 8+ years experience in Egyptian luxury properties. You're helping with property ${propertyId}. Your goal is to create genuine interest and guide prospects toward scheduling viewings through intelligent conversation and emotional connection.
+
+🎭 PERSONALITY PROFILE:
+- Name: Sarah - Warm, professional, family-oriented Egyptian expert
+- Background: Specializes in high-end family homes, investment properties, compounds
+- Style: Culturally aware, psychologically intelligent, genuinely caring
+- Experience: Helped 500+ families find perfect homes, understands Egyptian buyer psychology
 
 CURRENT LANGUAGE: ${currentLangObj?.name} (${selectedLanguage})
 CULTURAL STYLE: ${currentLangObj?.salesStyle}
@@ -963,48 +1079,63 @@ CULTURAL STYLE: ${currentLangObj?.salesStyle}
 CULTURAL CONTEXT:
 ${currentLangObj?.culturalNotes}
 
-${selectedLanguage === 'ar' ? `
-🇪🇬 EGYPTIAN ARABIC SPECIFICS:
-- Use warm Egyptian dialect: "إزيك؟" "كده حلو" "ده جميل قوي"
-- Family focus: "مناسب للعيلة الكريمة" "الأولاد هيفرحوا"
-- Investment angle: "استثمار ممتاز" "فلوسك في أمان"
-- Prestige mention: "منطقة محترمة" "مستوى راقي"
-- Religious comfort: "إن شاء الله" "ربنا يوفقك"
-- Genuine warmth: "عايز خيرك" "حبيبي ده أحسن عقار"
+INITIAL GREETING: Start with warm, culturally-appropriate greeting in ${currentLangObj?.name}. Introduce yourself as Sarah.
 
-GREETING: Start with "أهلاً وسهلاً! مرحباً بيك في جولة العقار الراقي ده. إزيك؟ هل ده أول مرة تشوف العقار؟"
-` : `
-INITIAL GREETING: Start with a warm, culturally-appropriate greeting in ${currentLangObj?.name} and immediately ask about their interest in the property.
-`}
+🧠 ENHANCED CONVERSATION INTELLIGENCE:
+1. MIRROR user's energy and communication style
+2. LISTEN for emotional triggers (family, investment, timeline, concerns)
+3. ADAPT responses based on their reactions and questions
+4. SHARE relevant success stories: "I had another client similar to you..."
+5. BUILD emotional connection to specific spaces they're viewing
+6. ADDRESS unspoken concerns proactively
+7. CREATE appropriate urgency without being pushy
 
-INITIAL ENGAGEMENT STRATEGY:
-1. Start with a warm greeting in their language
-2. Ask about their timeline and family situation
-3. Identify their priorities and preferences
-4. Guide them through the property features
-5. Build emotional connection to the space
+📊 BUYING SIGNAL DETECTION:
+- Questions about price/financing = HIGH INTENT
+- Family/children mentions = EMOTIONAL TRIGGER
+- Timeline inquiries = URGENCY ASSESSMENT
+- Comparison questions = COMPETITIVE ANALYSIS NEEDED
+- Location concerns = HIGHLIGHT BENEFITS
+- Multiple room focus = STRONG ENGAGEMENT
 
-SALES APPROACH:
-- Emphasize family-friendly features
-- Highlight investment potential
-- Focus on prestige and community
-- Address security and privacy
-- Discuss payment plans and financing
+🏡 EGYPTIAN REAL ESTATE EXPERTISE:
+- School districts: "المدارس المحترمة في المنطقة"
+- Transportation: "مواصلات سهلة للقاهرة الجديدة"
+- Security: "أمان 24 ساعة، كاميرات، حراسة"
+- Investment trends: "المنطقة دي بتنمو بسرعة"
+- Financing options: "التقسيط متاح، البنوك موافقة"
+- Community: "كومباوند محترم، جيران كويسين"
 
-RESPONSE FRAMEWORK:
-1. Acknowledge their interests with empathy
-2. Provide specific, relevant information
-3. Create emotional connection
-4. Bridge to next logical step
-5. Ask qualifying questions
+🎯 ADVANCED SALES PSYCHOLOGY:
+- Use assumptive language: "When you move in..." "After you purchase..."
+- Create scarcity: "Only 2 units left like this one"
+- Social proof: "Most families in this compound are professionals like you"
+- Loss aversion: "Properties like this don't stay on the market long"
+- Authority: "Based on my 8 years experience..."
+- Reciprocity: "Let me help you get the best deal possible"
 
-Remember: This is a high-end property in Egypt. Focus on prestige, family values, and investment potential. Communicate in ${currentLangObj?.name} with ${currentLangObj?.salesStyle} approach.`,
-              voice: selectedLanguage === 'ar' ? 'alloy' : selectedLanguage === 'fr' ? 'alloy' : selectedLanguage === 'es' ? 'alloy' : selectedLanguage === 'de' ? 'alloy' : 'alloy',
+💬 RESPONSE FRAMEWORK:
+1. EMPATHY: "I understand exactly what you're looking for..."
+2. EXPERTISE: "In my experience with Egyptian families..."
+3. EMOTION: "Imagine your children playing here every day..."
+4. EVIDENCE: "Here are the specific numbers/facts..."
+5. ENGAGEMENT: "What's most important to you in your next home?"
+
+🎪 CALENDAR BOOKING TRIGGERS:
+After 3+ meaningful questions, if user mentions: viewing, visit, schedule, appointment, زيارة, موعد - offer calendar booking immediately.
+
+Remember: You're not just selling property, you're helping families find their perfect home. Be genuinely helpful, psychologically intelligent, and culturally sensitive. Build trust through expertise and warmth.`,
+              voice: selectedLanguage === 'ar' ? 'nova' : selectedLanguage === 'fr' ? 'alloy' : selectedLanguage === 'es' ? 'shimmer' : selectedLanguage === 'de' ? 'echo' : 'alloy',
               input_audio_format: 'pcm16',
               output_audio_format: 'pcm16',
               input_audio_transcription: { 
                 model: 'whisper-1',
-                language: selectedLanguage === 'ar' ? 'ar' : selectedLanguage === 'fr' ? 'fr' : selectedLanguage === 'es' ? 'es' : selectedLanguage === 'de' ? 'de' : 'en'
+                language: selectedLanguage === 'ar' ? 'ar' : selectedLanguage === 'fr' ? 'fr' : selectedLanguage === 'es' ? 'es' : selectedLanguage === 'de' ? 'de' : 'en',
+                prompt: selectedLanguage === 'ar' ? 'النص الصوتي التالي باللغة العربية المصرية فقط. محادثة عقارية مع مساعد ذكي. يجب نسخ الكلام بالعربية المصرية بدقة. المستخدم يتكلم عربي مصري.' : 
+                       selectedLanguage === 'fr' ? 'Transcription en français. Conversation immobilière avec assistant IA en français uniquement.' :
+                       selectedLanguage === 'es' ? 'Transcripción en español. Conversación inmobiliaria en español con asistente IA.' :
+                       selectedLanguage === 'de' ? 'Transkription auf Deutsch. Immobiliengespräch auf Deutsch mit KI-Assistent.' :
+                       'Real estate conversation with AI assistant in English.'
               },
               turn_detection: {
                 type: 'server_vad',
@@ -1181,6 +1312,26 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
     console.log('🔌 Disconnecting from Realtime API...')
     console.trace('🕵️ Disconnect called from:') // This will show what's calling disconnect
     
+    // Complete conversation tracking when disconnecting
+    if (conversationTracking.getCurrentSession()) {
+      try {
+        // Get conversation history from the conversationHistory state
+        const transcript = conversationHistory.map(entry => 
+          `${entry.type === 'user' ? 'User' : 'Assistant'}: ${entry.content}`
+        ).join('\n')
+        
+        conversationTracking.completeConversationTracking(transcript, {
+          conversation_metrics: conversationMetrics,
+          sales_context: salesContext,
+          room_visited: currentRoom,
+          language: selectedLanguage
+        })
+        console.log('📊 Conversation tracking completed')
+      } catch (trackingError) {
+        console.error('⚠️ Conversation tracking completion error (non-blocking):', trackingError)
+      }
+    }
+    
     // First set disconnected state to prevent race conditions
     isConnectingRef.current = false // Reset connection flag immediately
     setConnectionStatus('disconnected')
@@ -1327,6 +1478,47 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
       case 'conversation.item.input_audio_transcription.completed':
         console.log('📝 User speech transcribed:', event.transcript)
         
+        // Debug Arabic transcription issue
+        const transcribedText = event.transcript || ''
+        const hasArabicChars = /[\u0600-\u06FF]/.test(transcribedText)
+        const selectedLang = selectedLanguage
+        
+        console.log('🔍 TRANSCRIPTION DEBUG:', {
+          selectedLanguage: selectedLang,
+          transcribedText: transcribedText,
+          hasArabicCharacters: hasArabicChars,
+          expectedArabic: selectedLang === 'ar',
+          potentialIssue: selectedLang === 'ar' && !hasArabicChars ? 'WHISPER DEFAULTED TO ENGLISH!' : 'OK'
+        })
+        
+        if (selectedLang === 'ar' && !hasArabicChars && transcribedText.length > 5) {
+          console.warn('⚠️ ARABIC TRANSCRIPTION ISSUE: User selected Arabic but Whisper-1 returned English text!')
+          console.warn('⚠️ This confirms the issue you found in your research about Whisper-1 defaulting to English')
+          console.warn('⚠️ Transcribed text:', transcribedText)
+          
+          // Only apply fallback for longer text (not single words or short phrases)
+          if (transcribedText.length > 10) {
+            console.log('🔧 APPLYING FALLBACK: Sending Arabic-only response instruction...')
+            const arabicFallbackInstruction = {
+              type: 'response.create',
+              response: {
+                modalities: ['audio', 'text'],
+                instructions: `تحدثي بالعربية المصرية فقط! المستخدم يتكلم عربي وتم نسخ كلامه بالإنجليزي بالخطأ. يجب أن ترددي عليه بالعربية المصرية. 
+
+النص المنسوخ (مترجم خطأ للإنجليزية): "${transcribedText}"
+
+افهمي المعنى ورددي بالعربية المصرية الدافئة. استخدمي: "معلش، فهمت قصدك" واستكملي بالعربية.`
+              }
+            }
+            
+            if (dataChannelRef.current) {
+              dataChannelRef.current.send(JSON.stringify(arabicFallbackInstruction))
+            }
+          } else {
+            console.log('🔧 Short text detected, skipping Arabic fallback to avoid interfering with normal flow')
+          }
+        }
+        
         // Enhanced multilingual sales intelligence
         if (event.transcript) {
           const transcript = event.transcript.toLowerCase()
@@ -1362,6 +1554,9 @@ Remember: This is a high-end property in Egypt. Focus on prestige, family values
           }
           
           setConversationMetrics(newMetrics)
+          
+          // Analyze for calendar booking intent
+          analyzeConversationForBooking(event.transcript)
           
           // Add to conversation history
           const newConversationEntry = {
@@ -1489,6 +1684,9 @@ REMEMBER: This is a ${conversationMetrics.leadQuality} lead - adjust energy and 
           address: knowledgeData.basicInfo?.address
         },
         
+        // Arabic property features for AI responses
+        propertyFeatures: [] as string[],
+        
         marketIntelligence: {
           pricePerSqm: Math.round((knowledgeData.basicInfo?.price || 0) / (knowledgeData.basicInfo?.sqm || 1)),
           appreciationRate: '5.2% annually in this area',
@@ -1538,7 +1736,134 @@ REMEMBER: This is a ${conversationMetrics.leadQuality} lead - adjust energy and 
           inventory: 'Only 2 units left in this development',
           timing: 'Perfect time to buy before peak season pricing',
           competition: 'Multiple clients have shown serious interest'
+        },
+        
+        // Initialize investment intelligence - will be populated if real data is available
+        investmentIntelligence: {} as any
+      }
+      
+      // Fetch real-time property data and investment metrics from your platform
+      try {
+        console.log('🏠 Fetching property data for ID:', propertyId)
+        
+        // Get property details to extract actual specifications
+        const propertyResponse = await fetch(`/api/properties/${propertyId}`);
+        console.log('🏠 Property API response status:', propertyResponse.status)
+        
+        const propertyDetails = propertyResponse.ok ? await propertyResponse.json() : null;
+        console.log('🏠 Property details received:', propertyDetails?.property ? 'SUCCESS' : 'NO DATA')
+        
+        if (propertyDetails?.property) {
+          const property = propertyDetails.property;
+          console.log('🏠 Property specs:', {
+            bedrooms: property.bedrooms,
+            bathrooms: property.bathrooms,
+            price: property.price,
+            sqm: property.built_area_sqm || property.area_sqm,
+            type: property.property_type
+          })
+          
+          // Update salesContext with REAL property data
+          salesContext.propertyHighlights = {
+            bedrooms: property.bedrooms || 0,
+            bathrooms: property.bathrooms || 0,
+            squareMeters: property.built_area_sqm || property.area_sqm || 0,
+            price: property.price || 0,
+            propertyType: property.property_type || 'apartment',
+            yearBuilt: property.year_built || new Date().getFullYear(),
+            title: property.title || `${property.property_type} في ${property.city}`,
+            address: property.address || `${property.district || property.city || 'Cairo'}`
+          }
+          
+          // Add features as a separate context for Arabic AI responses
+          salesContext.propertyFeatures = [
+            property.has_pool ? 'مسبح خاص' : null,
+            property.has_garden ? 'حديقة' : null,
+            property.has_parking ? 'جراج خاص' : null,
+            property.has_elevator ? 'أسانسير' : null,
+            property.has_security ? 'أمن 24 ساعة' : null
+          ].filter((feature): feature is string => Boolean(feature))
+          
+          // Extract location data for APIs
+          const { city, district, price, property_type } = property;
+          
+          // Only make investment API calls if we have proper location data
+          const [marketIntelResponse, mortgageResponse, appraisalResponse] = await Promise.all([
+            city && district ? fetch(`/api/market-intelligence?compound=${district}&area_analysis=true&city=${city}`) : Promise.resolve(null),
+            price ? fetch(`/api/mortgage-eligibility?property_value=${price}&quick_calc=true`) : Promise.resolve(null),
+            property_type && district ? fetch(`/api/appraisals/formulas?property_type=${property_type}&district=${district}`) : Promise.resolve(null)
+          ]);
+
+          // Only process responses that succeeded
+          const marketData = marketIntelResponse?.ok ? await marketIntelResponse.json() : null;
+          const mortgageData = mortgageResponse?.ok ? await mortgageResponse.json() : null;
+          const appraisalData = appraisalResponse?.ok ? await appraisalResponse.json() : null;
+
+          // Only add investment intelligence if we have real data
+          if (marketData || mortgageData || appraisalData) {
+            salesContext.investmentIntelligence = {};
+            
+            // Market metrics - only if market data exists
+            if (marketData && Object.keys(marketData).length > 0) {
+              salesContext.investmentIntelligence.marketMetrics = {
+                pricePerSqm: marketData.average_price_per_sqm,
+                marketGrowth: marketData.price_trends?.['1_year_growth'],
+                rentalYield: marketData.rental_yield_percentage,
+                investmentScore: marketData.investment_score,
+                marketVelocity: marketData.market_velocity_score,
+                areaRating: marketData.area_rating
+              };
+              // Remove any null/undefined values
+              salesContext.investmentIntelligence.marketMetrics = Object.fromEntries(
+                Object.entries(salesContext.investmentIntelligence.marketMetrics).filter(([_, v]) => v != null)
+              );
+            }
+            
+            // Financial projections - only if mortgage data exists
+            if (mortgageData && Object.keys(mortgageData).length > 0) {
+              salesContext.investmentIntelligence.financialProjections = {
+                monthlyPayment: mortgageData.monthly_installment,
+                downPayment: mortgageData.down_payment_required,
+                totalInterest: mortgageData.total_interest,
+                payoffPeriod: mortgageData.loan_term,
+                bankApprovalOdds: mortgageData.approval_probability
+              };
+              // Remove any null/undefined values
+              salesContext.investmentIntelligence.financialProjections = Object.fromEntries(
+                Object.entries(salesContext.investmentIntelligence.financialProjections).filter(([_, v]) => v != null)
+              );
+            }
+            
+            // Valuation data - only if appraisal data exists
+            if (appraisalData && Object.keys(appraisalData).length > 0) {
+              salesContext.investmentIntelligence.valuationData = {
+                currentMarketValue: appraisalData.market_value_range,
+                appreciationForecast: appraisalData.appreciation_forecast,
+                comparableProperties: appraisalData.recent_sales,
+                investmentGrade: appraisalData.investment_grade,
+                liquidityRating: appraisalData.liquidity_score
+              };
+              // Remove any null/undefined values
+              salesContext.investmentIntelligence.valuationData = Object.fromEntries(
+                Object.entries(salesContext.investmentIntelligence.valuationData).filter(([_, v]) => v != null)
+              );
+            }
+            
+            // Only add Egyptian context if we have some investment data
+            if (salesContext.investmentIntelligence.marketMetrics || salesContext.investmentIntelligence.financialProjections) {
+              salesContext.investmentIntelligence.egyptianMarketContext = {
+                inflationHedge: 'Real estate historically outperforms Egyptian inflation rates',
+                currencyStability: 'Property values provide EGP volatility protection',
+                governmentIncentives: 'CBE mortgage programs with subsidized rates available',
+                taxBenefits: 'Investment property tax advantages under Egyptian law',
+                exitStrategy: 'Strong international and domestic buyer interest'
+              };
+            }
+          }
         }
+      } catch (error) {
+        console.error('Error fetching real-time investment data:', error);
+        // No fallback - if API fails, no investment intelligence is shown
       }
       
       // Combine all knowledge with sales context
@@ -1565,12 +1890,36 @@ REMEMBER: This is a ${conversationMetrics.leadQuality} lead - adjust energy and 
       
       dataChannelRef.current?.send(JSON.stringify(functionResult))
       
-      // Enhanced response generation with sales psychology
+      // Enhanced response generation with sales psychology (language-aware)
       const responseCommand = {
         type: 'response.create',
         response: {
           modalities: ['text', 'audio'],
-          instructions: `SALES RESPONSE FRAMEWORK:
+          instructions: selectedLanguage === 'ar' ? 
+            `إطار الاستجابة المبيعية باللغة العربية المصرية فقط:
+
+معلومات العقار (استخدمي بالضبط):
+- ${enhancedKnowledge.salesContext.propertyHighlights.bedrooms} غرف نوم
+- ${enhancedKnowledge.salesContext.propertyHighlights.bathrooms} حمامات
+- ${enhancedKnowledge.salesContext.propertyHighlights.squareMeters} متر مربع
+- ${enhancedKnowledge.salesContext.propertyHighlights.price?.toLocaleString()} جنيه مصري
+
+استراتيجية الرد لـ ${args.knowledgeType}:
+1. ابدئي بالتعاطف والفهم
+2. قدمي إجابة واقعية محددة
+3. أضيفي فائدة عاطفية أو ميزة في أسلوب الحياة
+4. اذكري معلومات السوق للإلحاح
+5. وجهي نحو الخطوة التالية
+
+النبرة: خبيرة واثقة تهتم حقاً بمصالحهم
+المدة: 15-25 ثانية من الكلام الطبيعي
+الختام: أنهي دائماً بسؤال أو اقتراح عمل
+
+استخدمي السياق المبيعي ومعالجات الاعتراضات لصياغة رد مقنع يقربهم من الالتزام.
+
+قاعدة مهمة: تحدثي بالعربية المصرية فقط، لا تخلطي مع الإنجليزية.` 
+            :
+            `SALES RESPONSE FRAMEWORK:
 
 PROPERTY FACTS (Use exactly):
 - ${enhancedKnowledge.salesContext.propertyHighlights.bedrooms} bedrooms
@@ -1677,10 +2026,15 @@ Use the sales context and objection handlers to craft a compelling response that
       const sessionUpdate = {
         type: 'session.update',
         session: {
-          voice: langCode === 'ar' ? 'sage' : langCode === 'fr' ? 'alloy' : langCode === 'es' ? 'shimmer' : langCode === 'de' ? 'echo' : 'alloy',
+          voice: langCode === 'ar' ? 'nova' : langCode === 'fr' ? 'alloy' : langCode === 'es' ? 'shimmer' : langCode === 'de' ? 'echo' : 'alloy',
           input_audio_transcription: { 
             model: 'whisper-1',
-            language: langCode === 'ar' ? 'ar' : langCode === 'fr' ? 'fr' : langCode === 'es' ? 'es' : langCode === 'de' ? 'de' : 'en'
+            language: langCode === 'ar' ? 'ar' : langCode === 'fr' ? 'fr' : langCode === 'es' ? 'es' : langCode === 'de' ? 'de' : 'en',
+            prompt: langCode === 'ar' ? 'محادثة عقارية باللغة العربية المصرية مع مساعد ذكي' : 
+                   langCode === 'fr' ? 'Conversation immobilière en français avec assistant IA' :
+                   langCode === 'es' ? 'Conversación inmobiliaria en español con asistente IA' :
+                   langCode === 'de' ? 'Immobiliengespräch auf Deutsch mit KI-Assistent' :
+                   'Real estate conversation with AI assistant'
           },
           instructions: `🌍 LANGUAGE SWITCH: Now communicating in ${selectedLang?.name}
 
@@ -1711,19 +2065,19 @@ ${selectedLang?.code === 'ar' ? `
             type: 'conversation.item.create',
             item: {
               type: 'message',
-              role: 'assistant',
+              role: 'system',
               content: [
                 {
                   type: 'input_text',
                   text: langCode === 'ar' ? 
-                    `أهلاً وسهلاً! أنا مساعدك العقاري الخاص. إيه رأيك في العقار الجميل ده؟ هل تبحث عن مكان مناسب للعيلة الكريمة؟` :
+                    `IMPORTANT: Immediately speak this exact Arabic greeting with warm Egyptian tone: "أهلاً وسهلاً! أنا سارة، مساعدتك العقارية الخاصة. إزيك؟ إيه رأيك في العقار الجميل ده؟ هل بتدور على مكان مناسب للعيلة الكريمة؟" Wait for their response naturally.` :
                     langCode === 'fr' ?
-                    `Parfait! Je suis votre assistant immobilier personnel. Que pensez-vous de cette magnifique propriété? Cherchez-vous un espace adapté à votre famille?` :
+                    `IMPORTANT: Immediately speak this French greeting: "Parfait! Je suis Sarah, votre assistante immobilière personnelle. Que pensez-vous de cette magnifique propriété? Cherchez-vous un espace adapté à votre famille?" Wait for their response.` :
                     langCode === 'es' ?
-                    `¡Perfecto! Soy su asistente inmobiliario personal. ¿Qué opina de esta hermosa propiedad? ¿Busca un espacio adecuado para su familia?` :
+                    `IMPORTANT: Immediately speak this Spanish greeting: "¡Perfecto! Soy Sarah, su asistente inmobiliaria personal. ¿Qué opina de esta hermosa propiedad? ¿Busca un espacio adecuado para su familia?" Wait for their response.` :
                     langCode === 'de' ?
-                    `Ausgezeichnet! Ich bin Ihr persönlicher Immobilienassistent. Was denken Sie über diese wunderbare Immobilie? Suchen Sie einen familienfreundlichen Raum?` :
-                    `Perfect! I'm your personal real estate assistant. What do you think of this beautiful property? Are you looking for a family-friendly space?`
+                    `IMPORTANT: Immediately speak this German greeting: "Ausgezeichnet! Ich bin Sarah, Ihre persönliche Immobilienassistentin. Was denken Sie über diese wunderbare Immobilie? Suchen Sie einen familienfreundlichen Raum?" Wait for their response.` :
+                    `IMPORTANT: Immediately speak this English greeting: "Perfect! I'm Sarah, your personal real estate assistant. What do you think of this beautiful property? Are you looking for a family-friendly space?" Wait for their response.`
                 }
               ]
             }
@@ -1834,6 +2188,173 @@ ${selectedLang?.code === 'ar' ? `
       console.log('📊 Lead intelligence saved to user account')
     } catch (error) {
       console.log('⚠️ Could not save lead intelligence (user may not be authenticated):', error)
+    }
+  }
+
+  // Calendar booking intent detection
+  const detectBookingIntent = (userMessage: string) => {
+    const bookingTriggers = [
+      'viewing', 'visit', 'see', 'schedule', 'appointment', 'book', 'tour', 'showing',
+      'زيارة', 'شوف', 'موعد', 'اشوف', 'احجز', 'أزور', 'أشوف', 'ميعاد'
+    ];
+    
+    const message = userMessage.toLowerCase();
+    return bookingTriggers.some(trigger => message.includes(trigger));
+  }
+
+  // Enhanced conversation analysis for booking triggers
+  const analyzeConversationForBooking = (userMessage: string) => {
+    const hasBookingIntent = detectBookingIntent(userMessage);
+    const hasHighEngagement = conversationMetrics.totalQuestions >= 3;
+    const hasStrongInterest = conversationMetrics.buyingSignals >= 2;
+    
+    // Auto-trigger scheduling after 3 questions even without explicit booking intent
+    if (conversationMetrics.totalQuestions >= 3 || (hasBookingIntent && (hasHighEngagement || hasStrongInterest))) {
+      console.log('🎪 AI scheduling triggered! Client answered 3+ questions - time to suggest viewing');
+      
+      // Trigger AI to offer specific viewing dates using 3-step approach
+      triggerAIViewingScheduling(userMessage);
+      
+      // Track booking intent for analytics
+      if (propertyId) {
+        fetch(`/api/properties/${propertyId}/analytics`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event_type: 'ai_scheduling_triggered',
+            event_data: {
+              trigger_message: userMessage,
+              conversation_metrics: conversationMetrics,
+              room: currentRoom,
+              language: selectedLanguage,
+              questions_answered: conversationMetrics.totalQuestions,
+              explicit_booking_intent: hasBookingIntent
+            }
+          })
+        }).catch(console.error);
+      }
+    }
+  }
+
+  // Function to trigger AI-powered viewing scheduling with 3-step approach
+  const triggerAIViewingScheduling = async (userMessage: string) => {
+    try {
+      // Fetch available broker schedules for this property
+      const availabilityResponse = await fetch(`/api/properties/${propertyId}/broker-availability`);
+      const availabilityData = await availabilityResponse.json();
+      
+      if (availabilityData.success && dataChannelRef.current) {
+        // Get tomorrow and next 2 days availability
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        const dayAfter = new Date();
+        dayAfter.setDate(dayAfter.getDate() + 2);
+        const thirdDay = new Date();
+        thirdDay.setDate(thirdDay.getDate() + 3);
+        
+        const tomorrowSlot = availabilityData.availableSlots?.find((slot: any) => 
+          slot.date === tomorrow.toISOString().split('T')[0]
+        );
+        const nextDaySlots = availabilityData.availableSlots?.filter((slot: any) => 
+          slot.date === dayAfter.toISOString().split('T')[0] || slot.date === thirdDay.toISOString().split('T')[0]
+        );
+        
+        // Send structured scheduling approach to AI
+        const schedulingInstruction = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'message',
+            role: 'system',
+            content: [
+              {
+                type: 'input_text',
+                text: `🎯 VIEWING BOOKING PROTOCOL - 3-STEP APPROACH:
+
+CLIENT QUALIFICATION: This client has answered ${conversationMetrics.totalQuestions} questions showing strong interest. Time to schedule viewing!
+
+AVAILABLE BROKER SCHEDULES:
+${availabilityData.availableSlots ? availabilityData.availableSlots.slice(0, 5).map((slot: any) => 
+  `📅 ${slot.date} at ${slot.time} - ${slot.broker.full_name} (${slot.broker.years_experience}+ years)`
+).join('\n') : 'Broker schedules being updated - suggest manual coordination'}
+
+🚀 STEP 1 - SUGGEST TOMORROW FIRST:
+${selectedLanguage === 'ar' ? `
+"ممتاز! بما إنك مهتم بالعقار ده، أقترح إننا نحجزلك زيارة شخصية. عندنا موعد متاح ${tomorrowSlot ? `بكرة ${tomorrowSlot.date} الساعة ${tomorrowSlot.time} مع ${tomorrowSlot.broker.full_name}` : 'بكرة في المساء'}. هل ده موعد مناسب ليك؟"
+` : `
+"Perfect! Since you're interested in this property, let me schedule a personal viewing for you. I have an available slot ${tomorrowSlot ? `tomorrow ${tomorrowSlot.date} at ${tomorrowSlot.time} with ${tomorrowSlot.broker.full_name}` : 'tomorrow evening'}. Does that work for you?"
+`}
+
+⏰ IF TOMORROW DOESN'T WORK - STEP 2:
+${selectedLanguage === 'ar' ? `
+"مفيش مشكلة! إيه رأيك في الـ 2-3 أيام الجايين؟ عندنا مواعيد ${nextDaySlots?.map((slot: any) => `${slot.date} الساعة ${slot.time}`).join(' أو ') || 'يوم السبت والأحد'}. أيهم أحسن ليك؟"
+` : `
+"No problem! How about the next 2-3 days? I have slots available on ${nextDaySlots?.map((slot: any) => `${slot.date} at ${slot.time}`).join(' or ') || 'this weekend'}. Which works better for you?"
+`}
+
+❓ IF NOTHING WORKS - STEP 3:
+${selectedLanguage === 'ar' ? `
+"تمام! أنت اللي تحدد الموعد المناسب ليك. قولي أي يوم وأي وقت يناسبك وأنا هشوف إيه المتاح. إيه أحسن يوم ووقت ليك في الأسبوع الجاي؟"
+` : `
+"That's fine! You tell me what works best for your schedule. What day and time would be most convenient for you next week? I'll check our availability and make it happen."
+`}
+
+IMPORTANT RULES:
+1. Start with STEP 1 (tomorrow)
+2. Only go to STEP 2 if they decline tomorrow
+3. Only go to STEP 3 if they decline the next 2-3 days
+4. When they agree to ANY date, immediately confirm and ask for their contact details
+5. Always sound confident that you can make their preferred time work
+
+BOOKING CONFIRMATION FORMAT:
+"Excellent! I've reserved [DATE] at [TIME] with [BROKER NAME]. I just need your name and phone number to confirm this viewing."
+
+RESPOND NOW with Step 1 approach.`
+              }
+            ]
+          }
+        }
+        
+        dataChannelRef?.current?.send(JSON.stringify(schedulingInstruction));
+        
+        // Trigger AI response
+        const responseCommand = {
+          type: 'response.create',
+          response: {
+            modalities: ['audio', 'text']
+          }
+        }
+        dataChannelRef?.current?.send(JSON.stringify(responseCommand));
+        
+        console.log('🤖 AI 3-step scheduling protocol activated');
+      }
+    } catch (error) {
+      console.error('❌ Error triggering AI viewing scheduling:', error);
+      
+      // Fallback - AI suggests general scheduling
+      if (dataChannelRef?.current) {
+        const fallbackInstruction = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'message',
+            role: 'system',
+            content: [
+              {
+                type: 'input_text',
+                text: `BOOKING FALLBACK PROTOCOL: Client shows strong interest after ${conversationMetrics.totalQuestions} questions.
+
+${selectedLanguage === 'ar' ? `
+"ممتاز! بما إنك مهتم بالعقار، أقترح حجز زيارة شخصية بكرة أو بعد بكرة. هل ده مناسب ليك؟ لو مش مناسب، قولي أي يوم يناسبك وهحجزهولك."
+` : `
+"Excellent! Given your interest, I'd like to schedule a personal viewing for tomorrow or the day after. Does that work for you? If not, just tell me what day suits you and I'll arrange it."
+`}
+
+Always be confident you can accommodate their schedule.`
+              }
+            ]
+          }
+        }
+        dataChannelRef?.current?.send(JSON.stringify(fallbackInstruction));
+      }
     }
   }
 
@@ -2115,6 +2636,7 @@ ${selectedLang?.code === 'ar' ? `
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
+                    handleTourInteraction(); // Start tracking on first interaction
                     handleVoiceToggle();
                   }}
                   className={`${fullscreen 

@@ -1,29 +1,36 @@
 {
-  "extends": "@react-native/typescript-config/tsconfig.json",
   "compilerOptions": {
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
     "jsx": "react-native",
-    "lib": ["ES2019", "ES2020.Promise"],
-    "moduleResolution": "bundler", 
+    "lib": [
+      "ES2019",
+      "ES2020.Promise",
+      "DOM"
+    ],
+    "moduleResolution": "bundler",
     "noEmit": true,
     "strict": false,
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "target": "esnext",
     "noImplicitAny": false,
-    "typeRoots": ["node_modules/@types"],
-    "types": ["node"],
-    
-    // Path mapping for shared code
     "baseUrl": ".",
     "paths": {
-      "@mobile/*": ["./src/*"],
-      "@shared-types/*": ["../types/*"],
-      "@shared-lib/*": ["../lib/*"],
-      "@shared-components/*": ["../components/*"]
+      "@mobile/*": [
+        "./src/*"
+      ],
+      "@shared-types/*": [
+        "../types/*"
+      ],
+      "@shared-lib/*": [
+        "../lib/*"
+      ],
+      "@shared-components/*": [
+        "../components/*"
+      ]
     }
   },
   "include": [
@@ -39,5 +46,6 @@
     "../node_modules",
     "../.next",
     "../out"
-  ]
+  ],
+  "extends": "expo/tsconfig.base"
 }

@@ -21,8 +21,13 @@ export async function POST() {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const hostFromUrl = supabaseUrl ? new URL(supabaseUrl).hostname.split('.')[0] : 'localhost'
     
-    // Add host-specific cookies
+    // Add host-specific cookies (including chunked variants)
     cookieNames.push(`sb-${hostFromUrl}-auth-token`)
+    cookieNames.push(`sb-${hostFromUrl}-auth-token.0`)
+    cookieNames.push(`sb-${hostFromUrl}-auth-token.1`)
+    cookieNames.push(`sb-${hostFromUrl}-auth-token.2`)
+    
+    console.log(`🧹 Clearing cookies for host: ${hostFromUrl}`, cookieNames)
     
     cookieNames.forEach(name => {
       // Clear for current domain

@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    // Get photographer assignments with lead details
+    // Get photographer assignments with lead details and property details
     const { data: assignments, error } = await supabase
       .from('photographer_assignments')
       .select(`
@@ -37,6 +37,13 @@ export async function GET(request: NextRequest) {
           whatsapp_number,
           price_range,
           timeline
+        ),
+        property:properties!property_id (
+          id,
+          title,
+          address,
+          city,
+          property_type
         )
       `)
       .eq('photographer_id', photographerId)

@@ -18,7 +18,10 @@ import {
   Camera,
   FileText,
   Gavel,
-  Clock
+  Clock,
+  Mail,
+  Calculator,
+  Home
 } from 'lucide-react'
 import { useAuth } from '@/components/providers'
 import { getCurrentUserRole, type UserRole } from '@/lib/auth/admin-client'
@@ -44,10 +47,28 @@ const sidebarItems = [
     permission: 'properties:read'
   },
   {
+    name: 'Rentals',
+    href: '/admin/rentals',
+    icon: Home,
+    permission: 'properties:read'
+  },
+  {
     name: 'Brokers',
     href: '/admin/brokers',
     icon: UserCheck,
     permission: 'users:read'
+  },
+  {
+    name: 'Appraisers',
+    href: '/admin/appraisers',
+    icon: Calculator,
+    permission: 'users:read'
+  },
+  {
+    name: 'Appraisals',
+    href: '/admin/appraisals',
+    icon: FileText,
+    permission: 'properties:read'
   },
   {
     name: 'Users',
@@ -59,6 +80,12 @@ const sidebarItems = [
     name: 'Leads',
     href: '/admin/leads',
     icon: FileText,
+    permission: 'inquiries:read'
+  },
+  {
+    name: 'Promo Leads',
+    href: '/admin/promo-leads',
+    icon: Mail,
     permission: 'inquiries:read'
   },
   {

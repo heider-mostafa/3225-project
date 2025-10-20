@@ -1,14 +1,28 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { Play, Clock, Eye, Star, Filter } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import Link from "next/link"
-import { TourViewer } from "@/components/tour-viewer"
+import dynamic from "next/dynamic"
 import { useTranslation } from "react-i18next"
+
+// Dynamic import for TourViewer - MASSIVE bundle size savings
+const TourViewer = dynamic(() => import("@/components/tour-viewer").then(mod => ({ default: mod.TourViewer })), {
+  loading: () => (
+    <div className="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-lg overflow-hidden flex items-center justify-center min-h-[400px]">
+      <div className="text-center text-white">
+        <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <h3 className="text-lg font-semibold mb-2">Loading Virtual Tour</h3>
+        <p className="text-slate-300">Preparing 3D experience...</p>
+      </div>
+    </div>
+  ),
+  ssr: false
+})
 import { usePropertiesTranslation } from '@/components/PropertyTranslationWrapper'
 
 // Real property interface matching our database schema
@@ -41,8 +55,64 @@ interface Property {
   virtual_tour_url?: string
 }
 
+// Helper function to translate room names
+const translateRoomName = (roomName: string, t: any) => {
+  const roomMap: { [key: string]: string } = {
+    'Living Room': t('common.livingRoom', 'Living Room'),
+    'Kitchen': t('common.kitchen', 'Kitchen'),
+    'Master Bedroom': t('common.masterBedroom', 'Master Bedroom'),
+    'Guest Bedroom': t('common.guestBedroom', 'Guest Bedroom'),
+    'Bathroom': t('common.bathroom', 'Bathroom'),
+    '2 Bathrooms': `2 ${t('common.bathrooms', 'Bathrooms')}`,
+    '3 Bathrooms': `3 ${t('common.bathrooms', 'Bathrooms')}`,
+    'Garden': t('common.garden', 'Garden'),
+    'Open Living Space': t('common.openLivingSpace', 'Open Living Space'),
+    'Master Suite': t('common.masterSuite', 'Master Suite'),
+    'Pool Area': t('common.poolArea', 'Pool Area'),
+    'Terrace': t('common.terrace', 'Terrace')
+  }
+  
+  // Handle dynamic bedroom/bathroom counts
+  if (roomName.includes('Bedrooms')) {
+    const count = roomName.split(' ')[0]
+    return `${count} ${t('common.bedrooms', 'Bedrooms')}`
+  }
+  
+  return roomMap[roomName] || roomName
+}
+
+// Helper function to translate highlights
+const translateHighlight = (highlight: string, t: any) => {
+  const highlightMap: { [key: string]: string } = {
+    'City Views': t('common.cityViews', 'City Views'),
+    'Modern Kitchen': t('common.modernKitchen', 'Modern Kitchen'),
+    'Spacious Rooms': t('common.spaciousRooms', 'Spacious Rooms'),
+    'Private Garden': t('common.privateGarden', 'Private Garden'),
+    'Family Friendly': t('common.familyFriendly', 'Family Friendly'),
+    'Parking Space': t('common.parkingSpace', 'Parking Space'),
+    'Building Amenities': t('common.buildingAmenities', 'Building Amenities'),
+    'Security': t('common.security', 'Security'),
+    'Modern Design': t('common.modernDesign', 'Modern Design'),
+    'Multi-level Living': t('common.multiLevelLiving', 'Multi-level Living'),
+    'Private Entrance': t('common.privateEntrance', 'Private Entrance'),
+    'Community Features': t('common.communityFeatures', 'Community Features'),
+    'Efficient Layout': t('common.efficientLayout', 'Efficient Layout'),
+    'Prime Location': t('common.primeLocation', 'Prime Location'),
+    'Swimming Pool': t('common.swimmingPool', 'Swimming Pool'),
+    'Luxury Features': t('common.luxuryFeatures', 'Luxury Features'),
+    'Rooftop Terrace': t('common.rooftopTerrace', 'Rooftop Terrace'),
+    'Panoramic Views': t('common.panoramicViews', 'Panoramic Views'),
+    'Luxury Finishes': t('common.luxuryFinishes', 'Luxury Finishes'),
+    'Modern Features': t('common.modernFeatures', 'Modern Features'),
+    'Great Location': t('common.greatLocation', 'Great Location'),
+    'Well Maintained': t('common.wellMaintained', 'Well Maintained')
+  }
+  
+  return highlightMap[highlight] || highlight
+}
+
 // Helper function to generate tour data from real property
-const generateTourFromProperty = (property: Property) => {
+const generateTourFromProperty = (property: Property, t: any) => {
   const roomsMap: { [key: string]: string[] } = {
     'apartment': ['Living Room', 'Kitchen', 'Master Bedroom', 'Bathroom'],
     'house': ['Living Room', 'Kitchen', 'Master Bedroom', 'Guest Bedroom', 'Bathroom', 'Garden'],
@@ -69,7 +139,7 @@ const generateTourFromProperty = (property: Property) => {
 
   // Estimate duration based on property size and rooms
   const baseDuration = Math.max(5, Math.min(25, Math.ceil(property.square_meters / 400)))
-  const duration = `${baseDuration}-${baseDuration + 5} minutes`
+  const duration = `${baseDuration}-${baseDuration + 5} ${t('virtualTours.minutes', 'minutes')}`
 
   // Generate realistic view count based on property age and price
   const daysSinceCreated = Math.floor((Date.now() - new Date(property.created_at).getTime()) / (1000 * 60 * 60 * 24))
@@ -91,9 +161,10 @@ const generateTourFromProperty = (property: Property) => {
     rating,
     thumbnail: property.property_photos?.[0]?.url || "/placeholder.svg?height=300&width=400",
     tourId: `tour_${property.id}`,
+    virtualTourUrl: property.virtual_tour_url, // Add the actual virtual tour URL
     type: property.property_type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-    rooms,
-    highlights,
+    rooms: rooms.map(room => translateRoomName(room, t)),
+    highlights: highlights.map(highlight => translateHighlight(highlight, t)),
     description: property.description,
     price: property.price,
     bedrooms: property.bedrooms,
@@ -107,39 +178,93 @@ export default function VirtualToursPage() {
   const { t } = useTranslation()
   const [properties, setProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [hasMoreData, setHasMoreData] = useState(true)
   const [selectedType, setSelectedType] = useState("all")
   const [sortBy, setSortBy] = useState("popular")
   const [previewTour, setPreviewTour] = useState<string | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement>(null)
   
   // Add property translation
   const { translatedProperties, isTranslating } = usePropertiesTranslation(properties)
 
-  // Fetch real properties data
+  // Fetch properties with virtual tours only
   useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        setLoading(true)
-        const response = await fetch('/api/properties?limit=50') // Get more properties for virtual tours
-        if (response.ok) {
-          const data = await response.json()
-          setProperties(data.properties || [])
-        } else {
-          console.error('Failed to load properties')
-        }
-      } catch (error) {
-        console.error('Error loading properties:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchProperties()
+    loadProperties(true) // Load first page
   }, [])
 
-  // Convert translated properties to tour format
+  const loadProperties = async (reset = false) => {
+    try {
+      if (reset) {
+        setLoading(true)
+        setCurrentPage(1)
+        setProperties([])
+        setHasMoreData(true)
+      } else {
+        setLoadingMore(true)
+      }
+
+      const page = reset ? 1 : currentPage + 1
+      const response = await fetch(`/api/properties?page=${page}&limit=20&has_virtual_tour=true`)
+      
+      if (response.ok) {
+        const data = await response.json()
+        const newProperties = data.properties || []
+        
+        if (reset) {
+          setProperties(newProperties)
+        } else {
+          setProperties(prev => [...prev, ...newProperties])
+        }
+        
+        setCurrentPage(page)
+        setHasMoreData(newProperties.length === 20) // If we got less than 20, no more data
+      } else {
+        console.error('Failed to load properties')
+      }
+    } catch (error) {
+      console.error('Error loading properties:', error)
+    } finally {
+      setLoading(false)
+      setLoadingMore(false)
+    }
+  }
+
+  // Intersection Observer for infinite scrolling
+  useEffect(() => {
+    if (!loadMoreRef.current || !hasMoreData || loadingMore || loading) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loadingMore && hasMoreData) {
+          loadProperties(false) // Load next page
+        }
+      },
+      {
+        rootMargin: '100px', // Start loading 100px before reaching the bottom
+        threshold: 0.1
+      }
+    )
+
+    const currentRef = loadMoreRef.current
+    observer.observe(currentRef)
+
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef)
+      }
+    }
+  }, [loadingMore, hasMoreData, loading])
+
+  // Convert translated properties to tour format - only show properties with virtual tours
   const virtualTours = translatedProperties
-    .filter(property => property.status === 'available') // Only show available properties
-    .map(generateTourFromProperty)
+    .filter(property => 
+      (property.status === 'available' || property.status === 'active') && 
+      property.virtual_tour_url && 
+      property.virtual_tour_url.trim() !== ''
+    )
+    .map(property => generateTourFromProperty(property, t))
 
   const filteredTours = virtualTours.filter(
     (tour) => selectedType === "all" || tour.type.toLowerCase().includes(selectedType.toLowerCase()),
@@ -316,7 +441,7 @@ export default function VirtualToursPage() {
                       </>
                     )}
                     <div className="absolute top-4 left-4">
-                      <Badge className="bg-purple-600 text-white">3D Virtual Tour</Badge>
+                      <Badge className="bg-purple-600 text-white">{t('propertyDetails.threeDVirtualTour', '3D Virtual Tour')}</Badge>
                     </div>
                     <div className="absolute top-4 right-4">
                       <Badge variant="secondary">{tour.type}</Badge>
@@ -387,36 +512,39 @@ export default function VirtualToursPage() {
 
                     {/* Actions */}
                     <div className="flex gap-3">
-                      <Link href={`/property/${tour.id}`} className="flex-1" onClick={(e) => e.stopPropagation()}>
+                      <a href={tour.virtualTourUrl} target="_blank" rel="noopener noreferrer" className="flex-1" onClick={(e) => e.stopPropagation()}>
                         <Button className="w-full">
                           <Play className="h-4 w-4 mr-2" />
-{t('virtualTours.startFullTour', 'Start Full Tour')}
+                          {t('virtualTours.startVirtualTour', 'Start Virtual Tour')}
+                        </Button>
+                      </a>
+                      <Link href={`/property/${tour.id}`} onClick={(e) => e.stopPropagation()}>
+                        <Button variant="outline">
+                          {t('virtualTours.viewProperty', 'View Property')}
                         </Button>
                       </Link>
-                      <Button
-                        variant="outline"
-                        onClick={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          navigator
-                            .share?.({
-                              title: tour.title,
-                              text: tour.description,
-                              url: `${window.location.origin}/property/${tour.id}`,
-                            })
-                            .catch(() => {
-                              navigator.clipboard.writeText(`${window.location.origin}/property/${tour.id}`)
-                              alert("Link copied to clipboard!")
-                            })
-                        }}
-                        aria-label={`Share ${tour.title}`}
-                      >
-{t('common.share', 'Share')}
-                      </Button>
                     </div>
                   </CardContent>
                 </Card>
             ))}
+          </div>
+        )}
+
+        {/* Infinite Scroll Loading Indicator */}
+        {sortedTours.length > 0 && (
+          <div 
+            ref={loadMoreRef}
+            className="mt-8 text-center"
+          >
+            {loadingMore && (
+              <div className="flex items-center justify-center space-x-2">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="text-slate-600">{t('common.loadingMore', 'Loading more virtual tours...')}</span>
+              </div>
+            )}
+            {!hasMoreData && sortedTours.length > 0 && (
+              <p className="text-slate-500">{t('common.allToursLoaded', 'All virtual tours loaded')}</p>
+            )}
           </div>
         )}
 

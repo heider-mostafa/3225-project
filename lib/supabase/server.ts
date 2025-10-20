@@ -11,10 +11,6 @@ export async function createServerSupabaseClient() {
       cookies: {
         get(name: string) {
           const value = cookieStore.get(name)?.value
-          // Debug logging for auth issues
-          if (name.includes('sb') || name.includes('supabase')) {
-            console.log(`🍪 Server cookie get: ${name} = ${value ? `[${value.length} chars]` : 'null'}`)
-          }
           return value
         },
         set(name: string, value: string, options: any) {

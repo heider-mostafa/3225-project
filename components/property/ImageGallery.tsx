@@ -35,6 +35,12 @@ interface PropertyPhoto {
   order_index: number
   alt_text?: string
   caption?: string
+  // Source tracking fields
+  source?: string
+  appraisal_id?: string
+  original_category?: string
+  document_page?: number
+  extraction_metadata?: any
   // Virtual staging fields
   is_virtually_staged?: boolean
   original_image_id?: string | null
@@ -242,25 +248,185 @@ export default function ImageGallery({
     if (!confirm(confirmMessage)) return
 
     try {
-      const response = await fetch('/api/upload/images', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          imageIds: selectedImages
-        }),
+      // Separate appraisal extracted images from regular property photos
+      const appraisalImageIds = selectedImages.filter(id => {
+        const image = images.find(img => img.id === id)
+        return image?.source === 'appraisal_extracted'
+      })
+      const regularImageIds = selectedImages.filter(id => {
+        const image = images.find(img => img.id === id)
+        return !image || image.source !== 'appraisal_extracted'
       })
 
-      if (response.ok) {
+      console.log('🗑️ Starting deletion process:', {
+        total: selectedImages.length,
+        appraisal: appraisalImageIds.length,
+        regular: regularImageIds.length
+      })
+
+      let deletionSuccess = true
+
+      // Delete regular property photos through the API
+      if (regularImageIds.length > 0) {
+        console.log('🔄 Deleting regular images:', regularImageIds)
+        const response = await fetch('/api/upload/images', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            imageIds: regularImageIds
+          }),
+        })
+
+        if (!response.ok) {
+          deletionSuccess = false
+          const errorText = await response.text()
+          console.error('❌ Failed to delete regular images:', errorText)
+        } else {
+          console.log('✅ Successfully deleted regular images')
+        }
+      }
+
+      // Delete appraisal extracted images by deleting the property_photos records AND updating form_data
+      if (appraisalImageIds.length > 0 && propertyId) {
+        console.log('🔄 Deleting appraisal extracted images:', appraisalImageIds)
+        
+        // First, delete the actual property_photos records for appraisal extracted images
+        const appraisalPhotoIds = appraisalImageIds // These are already the actual database IDs
+        
+        if (appraisalPhotoIds.length > 0) {
+          console.log('🔄 Deleting property_photos records for appraisal images:', appraisalPhotoIds)
+          const deletePhotosResponse = await fetch('/api/upload/images', {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              imageIds: appraisalPhotoIds
+            }),
+          })
+
+          if (!deletePhotosResponse.ok) {
+            deletionSuccess = false
+            const errorText = await deletePhotosResponse.text()
+            console.error('❌ Failed to delete appraisal property_photos records:', errorText)
+          } else {
+            console.log('✅ Successfully deleted appraisal property_photos records')
+          }
+        }
+        
+        // Also update the appraisal form_data to keep it in sync (optional, but good for consistency)
+        const propertyResponse = await fetch(`/api/properties/${propertyId}`)
+        if (propertyResponse.ok) {
+          const propertyData = await propertyResponse.json()
+          const property = propertyData.property
+          
+          if (property.property_appraisals && property.property_appraisals.length > 0) {
+            const appraisal = property.property_appraisals[0]
+            console.log('📋 Found appraisal with ID:', appraisal.id)
+            
+            if (appraisal.form_data?.extracted_images) {
+              console.log('🖼️ Current extracted images count:', appraisal.form_data.extracted_images.length)
+              
+              // Get filenames of deleted images to match with form_data
+              const deletedImageFilenames = images
+                .filter(img => appraisalImageIds.includes(img.id))
+                .map(img => img.filename)
+                .filter(filename => filename) // Only include images with filenames
+              
+              console.log('🗑️ Deleted image filenames:', deletedImageFilenames)
+              
+              // Remove the selected extracted images from form_data for consistency
+              const updatedExtractedImages = appraisal.form_data.extracted_images.filter(
+                (img: any, index: number) => {
+                  const shouldKeep = !deletedImageFilenames.includes(img.filename)
+                  if (!shouldKeep) {
+                    console.log(`🗑️ Removing image from form_data: ${img.filename}`)
+                  }
+                  return shouldKeep
+                }
+              )
+              
+              console.log('📊 Updated extracted images count:', updatedExtractedImages.length)
+              
+              // Update the appraisal with the new extracted_images array
+              const appraisalUpdatePayload = {
+                id: appraisal.id,
+                form_data: {
+                  ...appraisal.form_data,
+                  extracted_images: updatedExtractedImages
+                }
+              }
+              
+              console.log('💾 Updating appraisal form_data for consistency')
+              
+              const appraisalUpdateResponse = await fetch('/api/appraisals', {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(appraisalUpdatePayload),
+              })
+
+              if (!appraisalUpdateResponse.ok) {
+                const errorText = await appraisalUpdateResponse.text()
+                console.warn('⚠️ Failed to update appraisal form_data (non-critical):', errorText)
+                // Don't set deletionSuccess to false since the main deletion (property_photos) succeeded
+              } else {
+                console.log('✅ Successfully updated appraisal form_data for consistency')
+              }
+            } else {
+              console.log('⚠️ No extracted images found in appraisal form_data')
+            }
+          } else {
+            console.log('⚠️ No appraisals found for property')
+          }
+        } else {
+          console.warn('⚠️ Failed to fetch property data for appraisal form_data update (non-critical)')
+        }
+      }
+
+      if (deletionSuccess) {
+        console.log('✅ All deletions successful, updating local state')
+        
+        // Update the local images state
         const updatedImages = images.filter(img => !selectedImages.includes(img.id))
         onImagesChange(updatedImages)
         setSelectedImages([])
+        
+        // Force property detail page cache invalidation by updating property timestamp
+        if (propertyId) {
+          try {
+            console.log('🔄 Invalidating property cache and forcing browser refresh')
+            await fetch(`/api/properties/${propertyId}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                updated_at: new Date().toISOString()
+              }),
+            })
+            
+            // Also force any existing property detail page tabs to refresh by setting a flag in localStorage
+            // This will be picked up by the property detail page's useEffect
+            const cacheKey = `property_cache_invalidated_${propertyId}`
+            localStorage.setItem(cacheKey, Date.now().toString())
+            
+            console.log('✅ Property cache invalidated and browser refresh triggered')
+          } catch (cacheError) {
+            console.warn('⚠️ Could not invalidate property cache:', cacheError)
+          }
+        }
+        
+        console.log('🎉 Deletion process completed successfully')
       } else {
-        alert('Failed to delete images')
+        console.error('❌ Some deletions failed')
+        alert('Some images could not be deleted')
       }
     } catch (error) {
-      console.error('Delete error:', error)
+      console.error('💥 Delete error:', error)
       alert('Failed to delete images')
     }
   }
@@ -835,6 +1001,19 @@ export default function ImageGallery({
                   >
                     {selectedImages.includes(image.id) && <Check className="w-3 h-3" />}
                   </button>
+                </div>
+              )}
+
+              {/* Source Badge */}
+              {image.source === 'appraisal_extracted' && (
+                <div className="absolute top-2 left-2">
+                  <div className="px-2 py-1 bg-blue-600 text-white text-xs rounded-full flex items-center">
+                    <span>📄</span>
+                    <span className="ml-1">Appraisal</span>
+                    {image.document_page && (
+                      <span className="ml-1 opacity-75">p.{image.document_page}</span>
+                    )}
+                  </div>
                 </div>
               )}
 

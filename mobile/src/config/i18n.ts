@@ -177,6 +177,10 @@ const resources = {
         
         // Settings additions
         preferences: 'Preferences',
+        
+        // Verification status
+        emailVerified: 'Email Verified',
+        phoneVerified: 'Phone Verified',
       },
 
       // Properties
@@ -366,6 +370,8 @@ const resources = {
         priceHighToLow: 'Price: High to Low',
         areaSmallToLarge: 'Area: Small to Large',
         areaLargeToSmall: 'Area: Large to Small',
+        savedSearches: 'Saved Searches',
+        noSavedSearches: 'No saved searches yet',
       },
 
       // Map & Location
@@ -543,6 +549,47 @@ const resources = {
         download: 'Download Report',
         share: 'Share Report',
       },
+
+      // Brokers
+      brokers: {
+        contactBroker: 'Contact Broker',
+        chooseContactMethod: 'Choose contact method',
+        call: 'Call',
+        email: 'Email',
+        scheduleShowing: 'Schedule Showing',
+        primaryBroker: 'Primary Broker',
+        reviews: 'reviews',
+        yearsExperience: 'years of experience',
+      },
+
+      // Booking
+      booking: {
+        scheduleViewing: 'Schedule Viewing',
+        withBroker: 'with broker',
+        selectDate: 'Select Date',
+        selectTime: 'Select Time',
+        selectDateTime: 'Please select date and time',
+        fillContactInfo: 'Please fill in all contact information',
+        viewingType: 'Viewing Type',
+        inPerson: 'In-Person',
+        virtual: 'Virtual',
+        selfGuided: 'Self-Guided',
+        duration: 'Duration',
+        minutes: 'min',
+        partySize: 'Party Size',
+        contactInformation: 'Contact Information',
+        fullName: 'Full Name',
+        phoneNumber: 'Phone Number',
+        email: 'Email',
+        specialRequests: 'Special Requests (Optional)',
+        specialRequestsPlaceholder: 'Any special requirements or questions...',
+        preparationNotes: 'Preparation Notes (Optional)',
+        preparationNotesPlaceholder: 'Notes for the broker to prepare for your visit...',
+        confirmBooking: 'Confirm Booking',
+        success: 'Booking Successful',
+        confirmationMessage: 'Your viewing with {{brokerName}} is scheduled for {{date}} at {{time}}. You will receive a confirmation shortly.',
+        failed: 'Failed to create booking',
+      },
     },
   },
   ar: {
@@ -717,6 +764,10 @@ const resources = {
         
         // Settings additions
         preferences: 'التفضيلات',
+        
+        // Verification status
+        emailVerified: 'البريد الإلكتروني موثق',
+        phoneVerified: 'الهاتف موثق',
       },
 
       // Properties
@@ -906,6 +957,8 @@ const resources = {
         priceHighToLow: 'السعر: من الأعلى للأقل',
         areaSmallToLarge: 'المساحة: من الأصغر للأكبر',
         areaLargeToSmall: 'المساحة: من الأكبر للأصغر',
+        savedSearches: 'البحث المحفوظ',
+        noSavedSearches: 'لا توجد بحث محفوظ بعد',
       },
 
       // Map & Location
@@ -1082,6 +1135,47 @@ const resources = {
         soldProperties: 'العقارات المباعة مؤخراً',
         download: 'تحميل التقرير',
         share: 'مشاركة التقرير',
+      },
+
+      // Brokers
+      brokers: {
+        contactBroker: 'التواصل مع السمسار',
+        chooseContactMethod: 'اختر طريقة التواصل',
+        call: 'اتصال',
+        email: 'إيميل',
+        scheduleShowing: 'جدولة معاينة',
+        primaryBroker: 'السمسار الأساسي',
+        reviews: 'تقييم',
+        yearsExperience: 'سنوات الخبرة',
+      },
+
+      // Booking
+      booking: {
+        scheduleViewing: 'جدولة معاينة',
+        withBroker: 'مع السمسار',
+        selectDate: 'اختيار التاريخ',
+        selectTime: 'اختيار الوقت',
+        selectDateTime: 'يرجى اختيار التاريخ والوقت',
+        fillContactInfo: 'يرجى ملء جميع معلومات التواصل',
+        viewingType: 'نوع المعاينة',
+        inPerson: 'شخصياً',
+        virtual: 'افتراضي',
+        selfGuided: 'ذاتي',
+        duration: 'المدة',
+        minutes: 'دقيقة',
+        partySize: 'عدد الأشخاص',
+        contactInformation: 'معلومات التواصل',
+        fullName: 'الاسم الكامل',
+        phoneNumber: 'رقم الهاتف',
+        email: 'البريد الإلكتروني',
+        specialRequests: 'طلبات خاصة (اختياري)',
+        specialRequestsPlaceholder: 'أي متطلبات أو أسئلة خاصة...',
+        preparationNotes: 'ملاحظات التحضير (اختياري)',
+        preparationNotesPlaceholder: 'ملاحظات للسمسار للتحضير لزيارتك...',
+        confirmBooking: 'تأكيد الحجز',
+        success: 'تم الحجز بنجاح',
+        confirmationMessage: 'تم جدولة معاينتك مع {{brokerName}} في {{date}} في {{time}}. ستتلقى تأكيداً قريباً.',
+        failed: 'فشل في إنشاء الحجز',
       },
     },
   },

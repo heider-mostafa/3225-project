@@ -33,6 +33,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
+import PhotographerSchedulingModal from '@/components/admin/PhotographerSchedulingModal'
+import PropertyStatusToggle from '@/components/admin/PropertyStatusToggle'
 
 interface Property {
   id: string
@@ -64,11 +66,25 @@ interface Property {
   has_parking?: boolean
   has_gym?: boolean
   has_elevator?: boolean
+  virtual_tour_url?: string
   property_photos: Array<{
     id: string
     url: string
     is_primary: boolean
   }>
+  // Appraisal information (for appraised properties)
+  appraisal?: {
+    id: string
+    client_name: string
+    market_value_estimate: number
+    appraisal_date: string
+    status: string
+    brokers?: {
+      id: string
+      full_name: string
+      email: string
+    }
+  }
 }
 
 interface PendingProperty {
@@ -125,16 +141,30 @@ export default function AdminProperties() {
   const [properties, setProperties] = useState<Property[]>([])
   const [filteredProperties, setFilteredProperties] = useState<Property[]>([])
   const [pendingProperties, setPendingProperties] = useState<PendingProperty[]>([])
+  const [appraisedProperties, setAppraisedProperties] = useState<Property[]>([])
   const [loading, setLoading] = useState(true)
   const [pendingLoading, setPendingLoading] = useState(false)
+  const [appraisedLoading, setAppraisedLoading] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [showBasicFilters, setShowBasicFilters] = useState(false)
-  const [activeTab, setActiveTab] = useState<'properties' | 'pending'>('properties')
+  const [activeTab, setActiveTab] = useState<'properties' | 'pending' | 'appraised'>('properties')
   const [selectedPendingProperty, setSelectedPendingProperty] = useState<PendingProperty | null>(null)
   const [adminFeedback, setAdminFeedback] = useState('')
   const [adminNotes, setAdminNotes] = useState('')
   const [updatingStatus, setUpdatingStatus] = useState(false)
+  
+  // Photographer scheduling modal state
+  const [showPhotographerModal, setShowPhotographerModal] = useState(false)
+  const [selectedAppraisedProperty, setSelectedAppraisedProperty] = useState<Property | null>(null)
+  
+  // Regular properties photographer booking state
+  const [showRegularPhotographerModal, setShowRegularPhotographerModal] = useState(false)
+  const [selectedRegularProperty, setSelectedRegularProperty] = useState<Property | null>(null)
+  
+  // Property form state (missing variables)
+  const [showPropertyForm, setShowPropertyForm] = useState(false)
+  const [propertyFormData, setPropertyFormData] = useState<PendingProperty | null>(null)
 
   // Filter states
   const [filters, setFilters] = useState<AdminFilters>({
@@ -185,6 +215,8 @@ export default function AdminProperties() {
       await loadProperties()
       if (activeTab === 'pending') {
         await loadPendingProperties()
+      } else if (activeTab === 'appraised') {
+        await loadAppraisedProperties()
       }
     }
 
@@ -194,14 +226,18 @@ export default function AdminProperties() {
   useEffect(() => {
     if (activeTab === 'pending') {
       loadPendingProperties() // Always refresh when switching to pending tab
+    } else if (activeTab === 'appraised') {
+      loadAppraisedProperties() // Always refresh when switching to appraised tab
     }
   }, [activeTab])
 
-  // Auto-refresh pending properties when page becomes visible (user returns from new property form)
+  // Auto-refresh pending and appraised properties when page becomes visible (user returns from new property form)
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (!document.hidden && activeTab === 'pending') {
         loadPendingProperties()
+      } else if (!document.hidden && activeTab === 'appraised') {
+        loadAppraisedProperties()
       }
     }
 
@@ -254,6 +290,23 @@ export default function AdminProperties() {
       console.error('Error loading pending properties:', error)
     } finally {
       setPendingLoading(false)
+    }
+  }
+
+  const loadAppraisedProperties = async () => {
+    setAppraisedLoading(true)
+    try {
+      const response = await fetch('/api/admin/appraised-properties')
+      if (response.ok) {
+        const data = await response.json()
+        setAppraisedProperties(data.properties || [])
+      } else {
+        console.error('Failed to load appraised properties')
+      }
+    } catch (error) {
+      console.error('Error loading appraised properties:', error)
+    } finally {
+      setAppraisedLoading(false)
     }
   }
 
@@ -587,6 +640,56 @@ export default function AdminProperties() {
     }
   }
 
+  // Photographer scheduling functions
+  const handleSchedulePhotographer = (property: Property) => {
+    setSelectedAppraisedProperty(property)
+    setShowPhotographerModal(true)
+  }
+
+  // Regular property photographer booking
+  const handleBookPhotographer = (property: Property) => {
+    setSelectedRegularProperty(property)
+    setShowRegularPhotographerModal(true)
+  }
+
+  const handlePhotographerScheduleSuccess = async () => {
+    // Reload appraised properties to reflect the status change
+    await loadAppraisedProperties()
+  }
+
+  const handleRegularPhotographerScheduleSuccess = async () => {
+    // Reload regular properties to reflect any changes
+    await loadProperties()
+  }
+
+  const handleApproveProperty = async (property: Property) => {
+    try {
+      const response = await fetch('/api/admin/appraised-properties', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          propertyId: property.id,
+          action: 'approve',
+          adminNotes: 'Property approved from admin panel'
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        // Reload appraised properties to reflect the status change
+        await loadAppraisedProperties()
+        alert('Property approved and published successfully!')
+      } else {
+        console.error('Approve error:', result.error)
+        alert(result.error || 'Failed to approve property')
+      }
+    } catch (error) {
+      console.error('Error approving property:', error)
+      alert('Failed to approve property')
+    }
+  }
+
   const getStatusBadge = (status: string) => {
     const statusStyles = {
       active: 'bg-green-100 text-green-800',
@@ -682,6 +785,24 @@ export default function AdminProperties() {
                 {pendingProperties.filter(p => p.status === 'photos_uploaded').length > 0 && (
                   <Badge className="bg-red-100 text-red-800 text-xs">
                     {pendingProperties.filter(p => p.status === 'photos_uploaded').length} new
+                  </Badge>
+                )}
+              </div>
+            </button>
+            <button
+              onClick={() => setActiveTab('appraised')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'appraised'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              <div className="flex items-center space-x-2">
+                <Settings className="w-4 h-4" />
+                <span>Pending Appraised Properties ({appraisedProperties.length})</span>
+                {appraisedProperties.filter(p => p.status === 'appraised_pending_review').length > 0 && (
+                  <Badge className="bg-orange-100 text-orange-800 text-xs">
+                    {appraisedProperties.filter(p => p.status === 'appraised_pending_review').length} pending
                   </Badge>
                 )}
               </div>
@@ -1176,9 +1297,29 @@ export default function AdminProperties() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="space-y-2">
-                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusBadge(property.status)}`}>
-                          {property.status}
-                        </span>
+                        <PropertyStatusToggle
+                          propertyId={property.id}
+                          currentStatus={property.status}
+                          propertyTitle={property.title}
+                          onStatusChange={(newStatus) => {
+                            // Update the property in the local state
+                            setProperties(prev => 
+                              prev.map(p => 
+                                p.id === property.id 
+                                  ? { ...p, status: newStatus }
+                                  : p
+                              )
+                            );
+                            // Trigger re-filtering to update display
+                            setFilteredProperties(prev => 
+                              prev.map(p => 
+                                p.id === property.id 
+                                  ? { ...p, status: newStatus }
+                                  : p
+                              )
+                            );
+                          }}
+                        />
                         <div className="text-xs text-gray-500">
                           <div className="flex items-center">
                             <Eye className="w-3 h-3 mr-1" />
@@ -1213,6 +1354,26 @@ export default function AdminProperties() {
                         >
                           <Edit className="w-4 h-4" />
                         </Link>
+                        {/* Conditional Photographer Booking or Virtual Tour Indicator */}
+                        {property.virtual_tour_url && property.virtual_tour_url.trim() !== '' ? (
+                          <a
+                            href={property.virtual_tour_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 hover:text-indigo-800 p-1.5 rounded-md hover:bg-indigo-50 transition-colors"
+                            title="View Virtual Tour"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </a>
+                        ) : (
+                          <button
+                            onClick={() => handleBookPhotographer(property)}
+                            className="text-orange-600 hover:text-orange-800 p-1.5 rounded-md hover:bg-orange-50 transition-colors"
+                            title="Book Photographer"
+                          >
+                            <Camera className="w-4 h-4" />
+                          </button>
+                        )}
                         <button
                           onClick={() => setDeleteConfirm(property.id)}
                           className="text-red-600 hover:text-red-800 p-1.5 rounded-md hover:bg-red-50 transition-colors"
@@ -1256,7 +1417,7 @@ export default function AdminProperties() {
         </div>
       )}
         </>
-      ) : (
+      ) : activeTab === 'pending' ? (
         /* Pending Properties Content */
         <div className="space-y-6">
           {/* Pending Properties Stats */}
@@ -1408,14 +1569,18 @@ export default function AdminProperties() {
 
                     {/* Photo Preview */}
                     <div className="flex space-x-2 overflow-x-auto pb-2">
-                      {property.photos?.slice(0, 5).map((photo) => (
-                        <img
-                          key={photo.id}
-                          src={photo.photo_url}
-                          alt="Property"
-                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                        />
-                      )) || <div className="text-sm text-gray-500">No photos available</div>}
+                      {property.photos && property.photos.length > 0 ? (
+                        property.photos.slice(0, 5).map((photo) => (
+                          <img
+                            key={photo.id}
+                            src={photo.photo_url}
+                            alt="Property"
+                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                          />
+                        ))
+                      ) : (
+                        <div className="text-sm text-gray-500">No photos available</div>
+                      )}
                       {(property.photos?.length || 0) > 5 && (
                         <div className="w-20 h-20 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                           <span className="text-sm text-gray-500">+{(property.photos?.length || 0) - 5}</span>
@@ -1428,7 +1593,185 @@ export default function AdminProperties() {
             </div>
           )}
         </div>
-      )}
+      ) : activeTab === 'appraised' ? (
+        <div className="space-y-6">
+          {/* Appraised Properties Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Settings className="w-5 h-5 text-orange-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Pending Review</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {appraisedProperties.filter(p => p.status === 'appraised_pending_review').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Camera className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Awaiting Photos</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {appraisedProperties.filter(p => p.status === 'awaiting_photos').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Clock className="w-5 h-5 text-yellow-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Pending Approval</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {appraisedProperties.filter(p => p.status === 'pending_approval').length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-white p-4 rounded-lg shadow-sm border">
+              <div className="flex items-center space-x-2">
+                <Check className="w-5 h-5 text-green-600" />
+                <div>
+                  <p className="text-sm text-gray-600">Total Appraised</p>
+                  <p className="text-2xl font-bold text-gray-900">{appraisedProperties.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Appraised Properties Loading State */}
+          {appraisedLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-2 text-gray-600">Loading appraised properties...</span>
+            </div>
+          ) : appraisedProperties.length === 0 ? (
+            <div className="text-center py-8">
+              <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No appraised properties found</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-medium text-gray-900">Appraised Properties Requiring Review</h3>
+                <p className="text-sm text-gray-500 mt-1">Properties created from appraisals that need admin approval before publishing</p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Property</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Details</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Appraisal Value</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {appraisedProperties.map((property) => (
+                      <tr key={property.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="flex-shrink-0 h-16 w-16">
+                              {property.property_photos && property.property_photos.length > 0 && property.property_photos[0] ? (
+                                <img
+                                  src={property.property_photos[0].url}
+                                  alt={property.title}
+                                  className="w-16 h-16 object-cover rounded-lg"
+                                />
+                              ) : (
+                                <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                                  <Building2 className="w-8 h-8 text-gray-400" />
+                                </div>
+                              )}
+                            </div>
+                            <div className="ml-4">
+                              <div className="text-sm font-medium text-gray-900">{property.title}</div>
+                              <div className="text-sm text-gray-500">{property.address}</div>
+                              <div className="text-xs text-gray-400">{property.city}, {property.state}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            <div>{property.property_type} • {property.bedrooms}BR/{property.bathrooms}BA</div>
+                            <div className="text-gray-500">{property.square_meters} m²</div>
+                            <div className="text-xs text-gray-400">Created: {new Date(property.created_at).toLocaleDateString()}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-gray-900">
+                            <div className="font-medium">{formatPrice(property.price)} EGP</div>
+                            <div className="text-xs text-gray-500">{property.price > 0 ? `${Math.round(property.price / (property.square_meters || 1))} EGP/m²` : 'TBD'}</div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                            property.status === 'appraised_pending_review'
+                              ? 'bg-orange-100 text-orange-800'
+                              : property.status === 'awaiting_photos'
+                              ? 'bg-blue-100 text-blue-800'
+                              : property.status === 'pending_approval'
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {property.status === 'appraised_pending_review'
+                              ? 'Pending Review'
+                              : property.status === 'awaiting_photos'
+                              ? 'Awaiting Photos'
+                              : property.status === 'pending_approval'
+                              ? 'Pending Approval'
+                              : property.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center space-x-2">
+                            <Link
+                              href={`/property/${property.id}`}
+                              className="text-blue-600 hover:text-blue-800 p-1.5 rounded-md hover:bg-blue-50 transition-colors"
+                              title="Preview Property"
+                              target="_blank"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Link>
+                            <Link
+                              href={`/admin/properties/${property.id}/edit`}
+                              className="text-green-600 hover:text-green-800 p-1.5 rounded-md hover:bg-green-50 transition-colors"
+                              title="Edit Property"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Link>
+                            <button
+                              onClick={() => handleSchedulePhotographer(property)}
+                              className="text-purple-600 hover:text-purple-800 p-1.5 rounded-md hover:bg-purple-50 transition-colors"
+                              title="Schedule Photographer"
+                            >
+                              <Camera className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleApproveProperty(property)}
+                              className="text-green-600 hover:text-green-800 p-1.5 rounded-md hover:bg-green-50 transition-colors"
+                              title="Approve & Publish"
+                              disabled={property.status !== 'appraised_pending_review' && property.status !== 'pending_approval'}
+                            >
+                              <Check className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </div>
+      ) : null}
 
       {/* Review Modal for Pending Properties */}
       {selectedPendingProperty && (
@@ -1456,27 +1799,32 @@ export default function AdminProperties() {
                   Photos ({selectedPendingProperty.photos?.length || 0})
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {selectedPendingProperty.photos?.map((photo) => (
-                    <div key={photo.id} className="relative">
-                      <img
-                        src={photo.photo_url}
-                        alt="Property"
-                        className="w-full h-32 object-cover rounded-lg"
-                      />
-                      {photo.is_primary && (
-                        <Badge className="absolute top-2 left-2 bg-blue-600 text-white">
-                          Primary
-                        </Badge>
-                      )}
-                      {photo.photographer_caption && (
-                        <p className="text-xs text-gray-600 mt-1 truncate">
-                          {photo.photographer_caption}
-                        </p>
-                      )}
-                    </div>
-                  )) || <div className="text-gray-500">No photos available</div>}
+                  {selectedPendingProperty.photos && selectedPendingProperty.photos.length > 0 ? (
+                    selectedPendingProperty.photos.map((photo) => (
+                      <div key={photo.id} className="relative">
+                        <img
+                          src={photo.photo_url}
+                          alt="Property"
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        {photo.is_primary && (
+                          <Badge className="absolute top-2 left-2 bg-blue-600 text-white">
+                            Primary
+                          </Badge>
+                        )}
+                        {photo.photographer_caption && (
+                          <p className="text-xs text-gray-600 mt-1 truncate">
+                            {photo.photographer_caption}
+                          </p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-500">No photos available</div>
+                  )}
                 </div>
               </div>
+
 
               {/* Photographer Notes */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1603,6 +1951,28 @@ export default function AdminProperties() {
           </div>
         </div>
       )}
+
+      {/* Photographer Scheduling Modal for Appraised Properties */}
+      <PhotographerSchedulingModal
+        isOpen={showPhotographerModal}
+        onClose={() => {
+          setShowPhotographerModal(false)
+          setSelectedAppraisedProperty(null)
+        }}
+        property={selectedAppraisedProperty}
+        onScheduleSuccess={handlePhotographerScheduleSuccess}
+      />
+
+      {/* Photographer Scheduling Modal for Regular Properties */}
+      <PhotographerSchedulingModal
+        isOpen={showRegularPhotographerModal}
+        onClose={() => {
+          setShowRegularPhotographerModal(false)
+          setSelectedRegularProperty(null)
+        }}
+        property={selectedRegularProperty}
+        onScheduleSuccess={handleRegularPhotographerScheduleSuccess}
+      />
 
     </div>
   )

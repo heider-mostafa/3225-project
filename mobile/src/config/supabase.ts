@@ -1,8 +1,9 @@
 import { createClient } from '@supabase/supabase-js'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
-const supabaseUrl = 'https://pupqcchcdwawgyxbcbeb.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1cHFjY2hjZHdhd2d5eGJjYmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NzU4NTEsImV4cCI6MjA2NDE1MTg1MX0.3smTr2aD4BMBvarmE15QYm6rPLJtFFxaabWxdbiljaQ'
+// Use environment variables with fallbacks for mobile
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://pupqcchcdwawgyxbcbeb.supabase.co'
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB1cHFjY2hjZHdhd2d5eGJjYmViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDg1NzU4NTEsImV4cCI6MjA2NDE1MTg1MX0.3smTr2aD4BMBvarmE15QYm6rPLJtFFxaabWxdbiljaQ'
 
 // Create Supabase client with AsyncStorage for session persistence
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {

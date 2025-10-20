@@ -2,8 +2,10 @@
 import { useState } from 'react'
 import { Mail, ArrowLeft, Check } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation()
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -13,7 +15,7 @@ export default function ResetPasswordPage() {
     e.preventDefault()
     
     if (!email) {
-      setError('Please enter your email address')
+      setError(t('auth.enterEmailAddress'))
       return
     }
 
@@ -34,11 +36,11 @@ export default function ResetPasswordPage() {
       if (response.ok) {
         setSubmitted(true)
       } else {
-        setError(data.error || 'Failed to send reset email')
+        setError(data.error || t('auth.failedToSendResetEmail'))
       }
     } catch (error) {
       console.error('Password reset error:', error)
-      setError('Something went wrong. Please try again.')
+      setError(t('auth.somethingWentWrong'))
     } finally {
       setLoading(false)
     }
@@ -53,17 +55,16 @@ export default function ResetPasswordPage() {
               <Check className="h-6 w-6 text-green-600" />
             </div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Check your email
+              {t('auth.checkYourEmail')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              If an account with the email <span className="font-semibold">{email}</span> exists,
-              we've sent you a password reset link.
+              {t('auth.resetEmailSentMessage', { email })}
             </p>
           </div>
           
           <div className="space-y-4">
             <p className="text-sm text-gray-500 text-center">
-              Didn't receive the email? Check your spam folder or try again.
+              {t('auth.didNotReceiveEmail')}
             </p>
             
             <div className="flex flex-col space-y-2">
@@ -74,14 +75,14 @@ export default function ResetPasswordPage() {
                 }}
                 className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Try different email
+                {t('auth.tryDifferentEmail')}
               </button>
               
               <Link
                 href="/auth"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Back to Sign In
+                {t('auth.backToSignIn')}
               </Link>
             </div>
           </div>
@@ -99,7 +100,7 @@ export default function ResetPasswordPage() {
             className="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Sign In
+            {t('auth.backToSignIn')}
           </Link>
           
           <div className="text-center">
@@ -107,10 +108,10 @@ export default function ResetPasswordPage() {
               <Mail className="h-6 w-6 text-blue-600" />
             </div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Reset your password
+              {t('auth.resetYourPassword')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Enter your email address and we'll send you a link to reset your password.
+              {t('auth.resetPasswordInstructions')}
             </p>
           </div>
         </div>
@@ -118,7 +119,7 @@ export default function ResetPasswordPage() {
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>
             <label htmlFor="email" className="sr-only">
-              Email address
+              {t('auth.emailAddress')}
             </label>
             <input
               id="email"
@@ -129,7 +130,7 @@ export default function ResetPasswordPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Enter your email address"
+              placeholder={t('auth.enterEmailAddress')}
             />
           </div>
 
@@ -148,10 +149,10 @@ export default function ResetPasswordPage() {
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  Sending...
+                  {t('auth.sending')}
                 </div>
               ) : (
-                'Send reset link'
+                t('auth.sendResetLink')
               )}
             </button>
           </div>

@@ -66,11 +66,58 @@ interface AnalyticsData {
   }
 }
 
+interface MetaAnalyticsData {
+  overview: {
+    totalEvents: number
+    totalConversions: number
+    conversionValue: number
+    conversationEvents: number
+    tourEvents: number
+    rentalEvents: number
+    averageEventValue: number
+    eventGrowth: number
+  }
+  eventMetrics: {
+    byType: Array<{ event_name: string; count: number; total_value: number; avg_value: number }>
+    bySource: Array<{ source: string; events: number; conversions: number; value: number }>
+    conversionFunnel: Array<{ stage: string; count: number; conversion_rate: number }>
+  }
+  conversationMetrics: {
+    totalSessions: number
+    averageQualificationScore: number
+    highIntentConversations: number
+    completionRate: number
+    byQualificationScore: Array<{ score_range: string; count: number; meta_value: number }>
+  }
+  tourMetrics: {
+    totalSessions: number
+    averageEngagementScore: number
+    completionRate: number
+    averageDuration: number
+    topMilestones: Array<{ milestone: string; count: number; avg_value: number }>
+  }
+  rentalMetrics: {
+    searchEvents: number
+    bookingEvents: number
+    conversionRate: number
+    averageLTV: number
+    highValueCustomers: number
+  }
+  performance: {
+    costPerEvent: number
+    roas: number // Return on Ad Spend
+    cpa: number // Cost per Acquisition
+    qualityScore: number
+  }
+}
+
 export default function AdminAnalytics() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [metaAnalytics, setMetaAnalytics] = useState<MetaAnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [dateRange, setDateRange] = useState('30d')
   const [refreshing, setRefreshing] = useState(false)
+  const [activeTab, setActiveTab] = useState<'overview' | 'meta'>('overview')
 
   useEffect(() => {
     const checkAdminAndLoad = async () => {
@@ -91,12 +138,16 @@ export default function AdminAnalytics() {
       setRefreshing(true)
       
       // Fetch real analytics data from API
-      const response = await fetch(`/api/admin/analytics?range=${dateRange}`)
-      if (response.ok) {
-        const data = await response.json()
+      const [analyticsResponse, metaResponse] = await Promise.all([
+        fetch(`/api/admin/analytics?range=${dateRange}`),
+        fetch(`/api/admin/analytics/meta?range=${dateRange}`)
+      ])
+      
+      if (analyticsResponse.ok) {
+        const data = await analyticsResponse.json()
         setAnalytics(data)
       } else {
-        console.error('Failed to fetch analytics:', response.statusText)
+        console.error('Failed to fetch analytics:', analyticsResponse.statusText)
         // Fallback to empty/default data structure
         setAnalytics({
           overview: {
@@ -135,6 +186,60 @@ export default function AdminAnalytics() {
           }
         })
       }
+      
+      // Load Meta analytics
+      if (metaResponse.ok) {
+        const metaData = await metaResponse.json()
+        setMetaAnalytics(metaData)
+      } else {
+        console.error('Failed to fetch Meta analytics:', metaResponse.statusText)
+        // Fallback to empty Meta analytics
+        setMetaAnalytics({
+          overview: {
+            totalEvents: 0,
+            totalConversions: 0,
+            conversionValue: 0,
+            conversationEvents: 0,
+            tourEvents: 0,
+            rentalEvents: 0,
+            averageEventValue: 0,
+            eventGrowth: 0
+          },
+          eventMetrics: {
+            byType: [],
+            bySource: [],
+            conversionFunnel: []
+          },
+          conversationMetrics: {
+            totalSessions: 0,
+            averageQualificationScore: 0,
+            highIntentConversations: 0,
+            completionRate: 0,
+            byQualificationScore: []
+          },
+          tourMetrics: {
+            totalSessions: 0,
+            averageEngagementScore: 0,
+            completionRate: 0,
+            averageDuration: 0,
+            topMilestones: []
+          },
+          rentalMetrics: {
+            searchEvents: 0,
+            bookingEvents: 0,
+            conversionRate: 0,
+            averageLTV: 0,
+            highValueCustomers: 0
+          },
+          performance: {
+            costPerEvent: 0,
+            roas: 0,
+            cpa: 0,
+            qualityScore: 0
+          }
+        })
+      }
+      
     } catch (error) {
       console.error('Error loading analytics:', error)
     } finally {
@@ -211,7 +316,36 @@ export default function AdminAnalytics() {
         </div>
       </div>
 
-      {/* Overview Cards */}
+      {/* Tab Navigation */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Platform Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('meta')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'meta'
+                ? 'border-blue-500 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            Meta Performance
+          </button>
+        </nav>
+      </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' && analytics && (
+        <div className="space-y-6">
+          {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
           <div className="flex items-center justify-between">
@@ -457,6 +591,226 @@ export default function AdminAnalytics() {
           </table>
         </div>
       </div>
+    </div>
+  )}
+
+      {/* Meta Performance Tab */}
+      {activeTab === 'meta' && metaAnalytics && (
+        <div className="space-y-6">
+          {/* Meta Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Total Events</p>
+                  <p className="text-2xl font-bold text-gray-900">{metaAnalytics.overview.totalEvents.toLocaleString()}</p>
+                  <div className="flex items-center mt-2">
+                    <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+                    <span className="text-sm text-green-500 font-medium">+{metaAnalytics.overview.eventGrowth}%</span>
+                  </div>
+                </div>
+                <BarChart3 className="w-12 h-12 text-blue-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Conversions</p>
+                  <p className="text-2xl font-bold text-gray-900">{metaAnalytics.overview.totalConversions}</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm text-gray-600">Value: ${metaAnalytics.overview.conversionValue.toLocaleString()}</span>
+                  </div>
+                </div>
+                <TrendingUp className="w-12 h-12 text-green-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">AI Conversations</p>
+                  <p className="text-2xl font-bold text-gray-900">{metaAnalytics.overview.conversationEvents}</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm text-gray-600">Avg Score: {metaAnalytics.conversationMetrics.averageQualificationScore.toFixed(1)}</span>
+                  </div>
+                </div>
+                <MessageSquare className="w-12 h-12 text-purple-500" />
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600">Virtual Tours</p>
+                  <p className="text-2xl font-bold text-gray-900">{metaAnalytics.overview.tourEvents}</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-sm text-gray-600">Completion: {metaAnalytics.tourMetrics.completionRate}%</span>
+                  </div>
+                </div>
+                <Eye className="w-12 h-12 text-orange-500" />
+              </div>
+            </div>
+          </div>
+
+          {/* Meta Event Metrics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Events by Type</h3>
+              <div className="space-y-3">
+                {metaAnalytics.eventMetrics.byType.map((event, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">{event.event_name}</span>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-24 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-500 h-2 rounded-full"
+                          style={{ width: `${Math.min(100, (event.count / metaAnalytics.overview.totalEvents) * 100)}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-16">{event.count}</span>
+                      <span className="text-sm text-gray-500 w-20">${event.total_value.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance Metrics</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Return on Ad Spend (ROAS)</span>
+                  <span className="text-sm font-medium text-green-600">{metaAnalytics.performance.roas.toFixed(2)}x</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Cost per Acquisition (CPA)</span>
+                  <span className="text-sm font-medium text-gray-900">${metaAnalytics.performance.cpa.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Cost per Event</span>
+                  <span className="text-sm font-medium text-gray-900">${metaAnalytics.performance.costPerEvent.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Quality Score</span>
+                  <span className="text-sm font-medium text-blue-600">{metaAnalytics.performance.qualityScore}/10</span>
+                </div>
+                <div className="pt-2 border-t border-gray-200">
+                  <div className="flex justify-between">
+                    <span className="text-sm font-medium text-gray-700">Average Event Value</span>
+                    <span className="text-sm font-bold text-blue-600">${metaAnalytics.overview.averageEventValue.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Conversation Analytics */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2" />
+                AI Conversation Performance
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Total Sessions</span>
+                  <span className="text-sm font-medium text-gray-900">{metaAnalytics.conversationMetrics.totalSessions}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">High Intent Conversations</span>
+                  <span className="text-sm font-medium text-green-600">{metaAnalytics.conversationMetrics.highIntentConversations}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Completion Rate</span>
+                  <span className="text-sm font-medium text-blue-600">{metaAnalytics.conversationMetrics.completionRate}%</span>
+                </div>
+                <div className="pt-2 border-t border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Qualification Score Distribution</h4>
+                  <div className="space-y-2">
+                    {metaAnalytics.conversationMetrics.byQualificationScore.map((score, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">{score.score_range}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-900">{score.count}</span>
+                          <span className="text-green-600">${score.meta_value}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <Eye className="w-5 h-5 mr-2" />
+                Virtual Tour Performance
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Total Sessions</span>
+                  <span className="text-sm font-medium text-gray-900">{metaAnalytics.tourMetrics.totalSessions}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Average Engagement Score</span>
+                  <span className="text-sm font-medium text-blue-600">{metaAnalytics.tourMetrics.averageEngagementScore.toFixed(1)}/10</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-gray-600">Average Duration</span>
+                  <span className="text-sm font-medium text-gray-900">{Math.floor(metaAnalytics.tourMetrics.averageDuration / 60)}m {metaAnalytics.tourMetrics.averageDuration % 60}s</span>
+                </div>
+                <div className="pt-2 border-t border-gray-200">
+                  <h4 className="text-sm font-medium text-gray-700 mb-2">Top Milestones</h4>
+                  <div className="space-y-2">
+                    {metaAnalytics.tourMetrics.topMilestones.map((milestone, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <span className="text-gray-600">{milestone.milestone}</span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-gray-900">{milestone.count}</span>
+                          <span className="text-green-600">${milestone.avg_value.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Rental Marketplace Performance */}
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+              <Building2 className="w-5 h-5 mr-2" />
+              Rental Marketplace LTV Performance
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="text-center">
+                <p className="text-2xl font-bold text-blue-600">{metaAnalytics.rentalMetrics.searchEvents}</p>
+                <p className="text-sm text-gray-600">Search Events</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-green-600">{metaAnalytics.rentalMetrics.bookingEvents}</p>
+                <p className="text-sm text-gray-600">Booking Events</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-purple-600">{metaAnalytics.rentalMetrics.conversionRate}%</p>
+                <p className="text-sm text-gray-600">Conversion Rate</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-600">${metaAnalytics.rentalMetrics.averageLTV.toLocaleString()}</p>
+                <p className="text-sm text-gray-600">Average LTV</p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-200">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">High-Value Customers</span>
+                <span className="text-sm font-medium text-green-600">{metaAnalytics.rentalMetrics.highValueCustomers}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

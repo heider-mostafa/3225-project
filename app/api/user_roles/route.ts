@@ -62,7 +62,7 @@ export async function POST(request: Request) {
     }
 
     // Validate role
-    const validRoles = ['admin', 'superadmin', 'broker', 'user']
+    const validRoles = ['admin', 'superadmin', 'super_admin', 'broker', 'appraiser', 'user']
     if (!validRoles.includes(role)) {
       return NextResponse.json(
         { error: 'Invalid role. Must be one of: ' + validRoles.join(', ') },
@@ -75,9 +75,7 @@ export async function POST(request: Request) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
       {
         cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value
-          },
+          get() { return undefined },  // Don't use cookies with service role
         },
       }
     )

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 import { 
   Building2, 
   MapPin, 
@@ -32,6 +33,39 @@ import {
 import { logAdminActivity } from '@/lib/auth/admin-client'
 import Link from 'next/link'
 
+// Dynamic import for LocationPickerSection to reduce bundle size
+const LocationPickerSection = dynamic(() => import('@/components/appraiser/LocationPickerSection'), {
+  loading: () => (
+    <div className="w-full h-[400px] bg-slate-100 rounded-lg flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2" />
+        <p className="text-slate-600">Loading map...</p>
+      </div>
+    </div>
+  ),
+  ssr: false
+})
+
+interface LocationData {
+  latitude: number
+  longitude: number
+  formatted_address: string
+  place_id?: string
+  confidence_score: number
+  address_components: {
+    street_number?: string
+    route?: string
+    neighborhood?: string
+    locality?: string
+    administrative_area_level_1?: string
+    country?: string
+    postal_code?: string
+  }
+  location_type: 'ROOFTOP' | 'RANGE_INTERPOLATED' | 'GEOMETRIC_CENTER' | 'APPROXIMATE'
+  last_updated: string
+  source: 'auto_geocoded' | 'manual_pin' | 'search_result'
+}
+
 interface PropertyFormData {
   // Basic Information
   title: string
@@ -50,6 +84,9 @@ interface PropertyFormData {
   compound: string
   latitude: number | null
   longitude: number | null
+  
+  // Enhanced location data from maps
+  locationData: LocationData | null
   
   // Property Details
   price: number
@@ -143,6 +180,9 @@ export default function NewProperty() {
     compound: '',
     latitude: null,
     longitude: null,
+    
+    // Enhanced location data
+    locationData: null,
     
     // Property Details
     price: 0,
@@ -729,10 +769,33 @@ export default function NewProperty() {
                 />
         </div>
 
+              {/* Enhanced Map Location Picker */}
+              <div className="md:col-span-2">
+                <LocationPickerSection
+                  propertyAddressEnglish={formData.address}
+                  districtName={formData.neighborhood}
+                  cityName={formData.city}
+                  governorate={formData.state}
+                  locationData={formData.locationData}
+                  onLocationUpdate={(locationData) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      locationData,
+                      latitude: locationData.latitude,
+                      longitude: locationData.longitude
+                    }))
+                  }}
+                  onLocationError={(error) => {
+                    console.error('Location error:', error)
+                  }}
+                />
+              </div>
+
+              {/* Manual coordinates input (as backup) */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <MapPinIcon className="w-4 h-4 inline mr-1" />
-                  Latitude
+                  Latitude (Auto-filled)
                 </label>
                 <input
                   type="number"
@@ -740,15 +803,16 @@ export default function NewProperty() {
                   value={formData.latitude || ''}
                   onChange={handleInputChange}
                   step="0.000001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
                   placeholder="30.0444"
+                  readOnly={!!formData.locationData}
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   <MapPinIcon className="w-4 h-4 inline mr-1" />
-                  Longitude
+                  Longitude (Auto-filled)
                 </label>
                 <input
                   type="number"
@@ -756,8 +820,9 @@ export default function NewProperty() {
                   value={formData.longitude || ''}
                   onChange={handleInputChange}
                   step="0.000001"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-slate-50"
                   placeholder="31.2357"
+                  readOnly={!!formData.locationData}
                 />
               </div>
 

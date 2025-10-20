@@ -17,6 +17,12 @@ interface PropertyPhoto {
   order_index: number
   alt_text?: string
   caption?: string
+  // Source tracking fields
+  source?: string
+  appraisal_id?: string
+  original_category?: string
+  document_page?: number
+  extraction_metadata?: any
   // Virtual staging fields
   is_virtually_staged?: boolean
   original_image_id?: string | null
@@ -66,6 +72,9 @@ export default function PropertyImagesPage() {
           setProperty(data.property)
           
           // Set images data
+          const allImages: PropertyPhoto[] = []
+          
+          // Add standard property photos
           if (data.property?.property_photos) {
             const formattedImages = data.property.property_photos.map((photo: any) => ({
               id: photo.id,
@@ -77,10 +86,21 @@ export default function PropertyImagesPage() {
               is_primary: photo.is_primary,
               order_index: photo.order_index,
               alt_text: photo.alt_text,
-              caption: photo.caption
+              caption: photo.caption,
+              // Include source tracking fields that are now available
+              source: photo.source,
+              appraisal_id: photo.appraisal_id,
+              original_category: photo.original_category,
+              document_page: photo.document_page,
+              extraction_metadata: photo.extraction_metadata
             }))
-            setImages(formattedImages)
+            allImages.push(...formattedImages)
           }
+          
+          // Note: Extracted images are now automatically uploaded as real property photos
+          // when appraisals are created/completed, so they appear in property_photos above
+          
+          setImages(allImages)
         }
       } catch (error) {
         console.error('Error fetching property data:', error)
@@ -103,6 +123,9 @@ export default function PropertyImagesPage() {
       const response = await fetch(`/api/properties/${propertyId}`)
       if (response.ok) {
         const data = await response.json()
+        const allImages: PropertyPhoto[] = []
+        
+        // Add standard property photos
         if (data.property?.property_photos) {
           const formattedImages = data.property.property_photos.map((photo: any) => ({
             id: photo.id,
@@ -114,10 +137,20 @@ export default function PropertyImagesPage() {
             is_primary: photo.is_primary,
             order_index: photo.order_index,
             alt_text: photo.alt_text,
-            caption: photo.caption
+            caption: photo.caption,
+            // Include source tracking fields that are now available
+            source: photo.source,
+            appraisal_id: photo.appraisal_id,
+            original_category: photo.original_category,
+            document_page: photo.document_page,
+            extraction_metadata: photo.extraction_metadata
           }))
-          setImages(formattedImages)
+          allImages.push(...formattedImages)
         }
+        
+        // Note: Extracted images are now automatically uploaded as real property photos
+        
+        setImages(allImages)
       }
     } catch (error) {
       console.error('Error refreshing images:', error)
@@ -292,7 +325,13 @@ export default function PropertyImagesPage() {
           {view === 'gallery' && (
             <ImageGallery
               images={images}
-              onImagesChange={handleImagesChange}
+              onImagesChange={(newImages) => {
+                handleImagesChange(newImages)
+                // Also refresh from server to ensure we have latest data
+                setTimeout(() => {
+                  refreshImages()
+                }, 500) // Small delay to ensure server updates are complete
+              }}
               editable={true}
               propertyId={propertyId}
               categories={['general', 'exterior', 'interior', 'amenities', 'kitchen', 'bathroom', 'bedroom', 'living_room', 'garden', 'pool']}
@@ -441,12 +480,12 @@ export default function PropertyImagesPage() {
                 Organize images by category for better browsing experience.
               </p>
               <div className="flex flex-wrap gap-1">
-                {['exterior', 'interior', 'amenities', 'kitchen'].map(category => (
+                {['exterior', 'interior', 'amenities', 'general'].map(category => (
                   <span
                     key={category}
                     className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
                   >
-                    {images.filter(img => img.category === category).length} {category}
+                    {images.filter(img => img.category === category).length} {category.replace('_', ' ')}
                   </span>
                 ))}
               </div>

@@ -44,18 +44,18 @@ export async function isServerUserAdmin(cookieStore?: any): Promise<boolean> {
     // Enhanced authorization check with multiple validation layers
     console.log('🔒 Server-side admin authorization check starting...')
 
-    // Layer 1: Session validation
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession()
-    if (sessionError || !session) {
-      console.log('❌ No valid session found')
+    // Layer 1: User validation (more secure than getSession)
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+    if (userError || !user) {
+      console.log('❌ No valid user found')
       return false
     }
 
-    console.log('✅ Session validated for user:', session.user.email)
+    console.log('✅ User validated:', user.email)
 
     // Layer 2: Primary role check using RPC function
     const { data: isAdmin, error: rpcError } = await supabase.rpc('is_admin', { 
-      user_id_param: session.user.id 
+      user_id_param: user.id 
     })
 
     if (rpcError) {
@@ -65,7 +65,7 @@ export async function isServerUserAdmin(cookieStore?: any): Promise<boolean> {
       const { data: userRoles, error: roleError } = await supabase
         .from('user_roles')
         .select('role, is_active')
-        .eq('user_id', session.user.id)
+        .eq('user_id', user.id)
         .eq('is_active', true)
         .in('role', ['admin', 'super_admin'])
 
@@ -99,13 +99,13 @@ export async function hasServerPermission(
   try {
     const supabase = await createServerSupabaseClient()
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return false
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
 
     // Check if user has the specific permission
     const { data: hasPermission, error } = await supabase.rpc('has_permission', {
       permission_name: permission,
-      user_id_param: session.user.id,
+      user_id_param: user.id,
       resource_name: resourceId || null
     })
 
@@ -146,11 +146,11 @@ export async function authorizeAdminRequest(
     // Step 2: Get user session for additional info
     const supabase = await createServerSupabaseClient()
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
       return { 
         authorized: false, 
-        error: 'Invalid session' 
+        error: 'Invalid user' 
       }
     }
 
@@ -158,7 +158,7 @@ export async function authorizeAdminRequest(
     const { data: userRoles } = await supabase
       .from('user_roles')
       .select('role')
-      .eq('user_id', session.user.id)
+      .eq('user_id', user.id)
       .eq('is_active', true)
       .order('role', { ascending: false })
       .limit(1)
@@ -208,8 +208,8 @@ export async function authorizeAdminRequest(
     return {
       authorized: true,
       user: {
-        id: session.user.id,
-        email: session.user.email || '',
+        id: user.id,
+        email: user.email || '',
         role: userRole as UserRole,
         permissions: [] // Could be populated with actual permissions if needed
       }
@@ -228,11 +228,11 @@ export async function getCurrentServerUserRole(cookieStore?: any): Promise<UserR
   try {
     const supabase = await createServerSupabaseClient()
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return 'user'
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return 'user'
 
     const { data: role } = await supabase.rpc('get_user_role', {
-      user_id_param: session.user.id
+      user_id_param: user.id
     })
 
     return role || 'user'
@@ -289,11 +289,11 @@ export async function logAdminActivity(
   try {
     const supabase = await createServerSupabaseClient()
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
 
     const logData = {
-      admin_user_id: session.user.id,
+      admin_user_id: user.id,
       action,
       resource_type: resourceType,
       resource_id: resourceId,

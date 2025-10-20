@@ -1,7 +1,7 @@
 import { supabase } from '@/lib/supabase/config'
 import type { User } from '@supabase/supabase-js'
 
-export type UserRole = 'user' | 'admin' | 'super_admin'
+export type UserRole = 'user' | 'admin' | 'super_admin' | 'appraiser' | 'broker'
 
 export interface AdminUser extends User {
   role: UserRole
@@ -14,16 +14,26 @@ export async function getCurrentUserRole(): Promise<UserRole> {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return 'user'
 
-    const { data: role, error } = await supabase.rpc('get_user_role', { 
-      user_id_param: user.id 
-    })
-    
+    // Check user_roles table directly for all role types
+    const { data: userRoles, error } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+
     if (error) {
       console.error('Error getting user role:', error)
       return 'user'
     }
+
+    // Return the most recent active role
+    if (userRoles && userRoles.length > 0) {
+      const role = userRoles[0].role as UserRole
+      return role
+    }
     
-    return role || 'user'
+    return 'user'
   } catch (error) {
     console.error('Error in getCurrentUserRole:', error)
     return 'user'

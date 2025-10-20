@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { conversationAnalyzer } from '@/lib/calls/conversation-analyzer'
+import { metaConversationTracker } from '@/lib/services/meta-conversation-tracker'
 
 export async function POST(request: NextRequest) {
   try {
@@ -228,6 +229,25 @@ async function handleConversationEnded(
       finalTranscript, 
       callLog.leads
     )
+
+    // Track conversation completion with Meta
+    try {
+      const metaResult = await metaConversationTracker.trackConversationCompletion({
+        sessionId: callLog.openai_session_id || callLog.id,
+        conversationType: 'phone_call',
+        analysis,
+        duration: duration || 0,
+        userInfo: {
+          email: callLog.leads?.email,
+          phone: callLog.leads?.phone,
+          userId: callLog.leads?.user_id
+        }
+      })
+      
+      console.log(`📈 Meta call tracking: Success=${metaResult.success}, EventSent=${metaResult.metaEventSent}`)
+    } catch (metaError) {
+      console.error('⚠️ Meta call tracking error (non-blocking):', metaError)
+    }
 
     // Update call log with final analysis
     await supabase

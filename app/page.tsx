@@ -47,7 +47,10 @@ import {
   Sparkles,
   Camera,
   Zap,
-  Globe
+  Globe,
+  Calculator,
+  AlertCircle,
+  FileText
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -152,36 +155,36 @@ const getTestimonials = (t: any) => [
 
 const getStatsData = (t: any) => [
   { 
-    label: t('stats.propertieslisted', 'Properties Listed'),
-    value: 10000, 
-    suffix: "+",
-    icon: Building2,
-    color: "from-blue-600 to-blue-700",
-    description: t('stats.activeListings', 'Active listings')
-  },
-  { 
-    label: t('stats.virtualTourscreated', 'Virtual Tours Created'),
-    value: 25000, 
-    suffix: "+",
-    icon: Play,
-    color: "from-amber-500 to-orange-600", 
-    description: t('stats.experiences3d', '3D experiences')
-  },
-  { 
-    label: t('stats.happyclients', 'Happy Clients'),
-    value: 5000, 
-    suffix: "+",
-    icon: Users,
+    label: t('stats.fasterPropertySales', '73% Faster Property Sales'),
+    value: 73, 
+    suffix: "%",
+    icon: Zap,
     color: "from-emerald-500 to-green-600",
-    description: t('stats.satisfiedCustomers', 'Satisfied customers')
+    description: t('stats.withVirtualTours', 'With virtual tours')
   },
   { 
-    label: t('stats.citiescovered', 'Cities Covered'),
-    value: 15, 
-    suffix: "+",
-    icon: Globe,
+    label: t('stats.aiAssistantActive', '24/7 AI Assistant Active'),
+    value: 24, 
+    suffix: "/7",
+    icon: MessageCircle,
+    color: "from-blue-600 to-blue-700", 
+    description: t('stats.alwaysAvailableSupport', 'Always available support')
+  },
+  { 
+    label: t('stats.appraisalTurnaround', '48hr Appraisal Turnaround'),
+    value: 48, 
+    suffix: "hr",
+    icon: Clock,
+    color: "from-amber-500 to-orange-600",
+    description: t('stats.professionalValuations', 'Professional valuations')
+  },
+  { 
+    label: t('stats.freeVirtualTours', '100% Free Virtual Tours'),
+    value: 100, 
+    suffix: "%",
+    icon: Gift,
     color: "from-purple-600 to-indigo-700",
-    description: t('stats.acrossEgypt', 'Across Egypt')
+    description: t('stats.zeroCostToSellers', 'Zero cost to sellers')
   },
 ]
 
@@ -368,16 +371,16 @@ export default function HomePage() {
   const [interactionCount, setInteractionCount] = useState(0)
   const [showFloatingCTA, setShowFloatingCTA] = useState(false)
   const [isLeadFormOpen, setIsLeadFormOpen] = useState(false)
-  const [quickFilters] = useState([
-    { label: "Under $500K", value: "price_under_500k", category: "price" },
-    { label: "New Listing", value: "new_listing", category: "status" },
-    { label: "Luxury", value: "luxury", category: "type" },
-    { label: "Villa", value: "villa", category: "type" },
-    { label: "Apartment", value: "apartment", category: "type" },
-    { label: "Pet Friendly", value: "pet_friendly", category: "amenity" },
-    { label: "Pool", value: "pool", category: "amenity" },
-    { label: "Garden", value: "garden", category: "amenity" }
-  ])
+  const quickFilters = [
+    { label: t('search.priceUnder500K'), value: "price_under_500k", category: "price" },
+    { label: t('search.newListing'), value: "new_listing", category: "status" },
+    { label: t('search.luxury'), value: "luxury", category: "type" },
+    { label: t('properties.villa'), value: "villa", category: "type" },
+    { label: t('properties.apartment'), value: "apartment", category: "type" },
+    { label: t('search.petFriendly'), value: "pet_friendly", category: "amenity" },
+    { label: t('search.pool'), value: "pool", category: "amenity" },
+    { label: t('search.garden'), value: "garden", category: "amenity" }
+  ]
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
 
   // Helper functions for translations
@@ -1605,7 +1608,7 @@ export default function HomePage() {
                         className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute top-4 right-4">
-                        <Badge className="bg-blue-600 text-white">Virtual Tour</Badge>
+                        <Badge className="bg-blue-600 text-white">{t('cta.virtualTour3D')}</Badge>
                       </div>
                       {property.isHot && (
                         <div className="absolute top-4 left-4">
@@ -1938,8 +1941,125 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Services Section */}
-      <ServicesSection />
+      {/* Authentic Magazine Style Property Value Section */}
+      <section className="relative py-16 bg-gradient-to-br from-slate-900 via-blue-900 to-slate-800">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            
+            {/* Main Headline - Clean & Bold */}
+            <div className="text-center mb-12">
+              <h2 className="text-4xl sm:text-5xl md:text-7xl font-black text-white mb-6">
+                {t('properties.propertyValuation.title')}
+                <span className="block text-blue-400">{t('properties.propertyValuation.titleHighlight')}</span>
+              </h2>
+              <p className="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto">
+                {t('properties.propertyValuation.description')}
+              </p>
+            </div>
+
+            {/* Visual Information Card - Real Benefits */}
+            <div className="bg-white rounded-2xl p-6 sm:p-8 mb-12 shadow-2xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center">
+                
+                {/* Left: Professional Image/Icon */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl h-64 flex items-center justify-center">
+                  <div className="text-center text-blue-600">
+                    <FileText className="w-16 sm:w-20 h-16 sm:h-20 mx-auto mb-4" />
+                    <div className="text-lg font-semibold">{t('properties.propertyValuation.professionalAssessment')}</div>
+                    <div className="text-sm text-slate-600">{t('properties.propertyValuation.certifiedAppraisalReport')}</div>
+                  </div>
+                </div>
+                
+                {/* Right: Why You Need This */}
+                <div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <h3 className="text-xl sm:text-2xl font-bold text-slate-800 mb-4">
+                      {t('properties.propertyValuation.whyGetValuation')}
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <div className="font-semibold text-slate-800">Selling Your Property</div>
+                          <div className="text-sm text-slate-600">Price it right to attract serious buyers</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <div className="font-semibold text-slate-800">Buying Property</div>
+                          <div className="text-sm text-slate-600">Ensure you're paying fair market value</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <div className="font-semibold text-slate-800">Refinancing</div>
+                          <div className="text-sm text-slate-600">Get accurate value for loan applications</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <div className="font-semibold text-slate-800">Insurance Claims</div>
+                          <div className="text-sm text-slate-600">Document property value for coverage</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <Button 
+                      size="lg"
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold hover:from-blue-700 hover:to-blue-800 transition-all w-full sm:w-auto"
+                      onClick={() => router.push('/find-appraisers')}
+                    >
+                      <Calculator className="w-5 h-5 mr-2" />
+                      Find Certified Appraiser
+                      <ArrowRight className="w-5 h-5 ml-2" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Service Benefits Bar - Real Information */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                { 
+                  icon: Clock, 
+                  title: "48 Hour Turnaround", 
+                  desc: "Quick professional reports",
+                  color: "text-amber-400"
+                },
+                { 
+                  icon: Award, 
+                  title: "Licensed Professionals", 
+                  desc: "Certified property appraisers",
+                  color: "text-blue-400"
+                },
+                { 
+                  icon: FileText, 
+                  title: "Detailed Reports", 
+                  desc: "Comprehensive market analysis",
+                  color: "text-emerald-400"
+                }
+              ].map((benefit, index) => (
+                <div key={index} className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center border border-white/20">
+                  <benefit.icon className={`w-8 h-8 ${benefit.color} mx-auto mb-3`} />
+                  <div className="text-white font-semibold mb-2">{benefit.title}</div>
+                  <div className="text-slate-300 text-sm">{benefit.desc}</div>
+                </div>
+              ))}
+            </div>
+
+          </div>
+        </div>
+      </section>
 
       {/* Top Areas */}
       <section className="py-12 bg-gradient-to-r from-slate-50 to-blue-50">
@@ -2231,12 +2351,12 @@ export default function HomePage() {
               <ul className="space-y-2 text-slate-400">
                 <li>
                   <Link href="/virtual-tours" className="hover:text-white transition-colors">
-                    Virtual Tours
+                    {t('nav.virtualTours')}
                   </Link>
                 </li>
                 <li>
                   <Link href="/about" className="hover:text-white transition-colors">
-                    AI Assistance
+                    {t('nav.aiAssistance')}
                   </Link>
                 </li>
                 <li>

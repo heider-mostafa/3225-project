@@ -165,6 +165,17 @@ export interface TimeSlot {
   currentBookings: number;
   broker_id: string;
   availability_id: string;
+  duration_minutes?: number;
+  booking_type?: string;
+  notes?: string;
+  // Enhanced conflict detection
+  hasConflict?: boolean;
+  conflictReason?: 'broker_busy_other_property' | 'blocked_time' | 'fully_booked';
+  conflictDetails?: {
+    conflictingProperty?: string;
+    conflictingTime?: string;
+    propertyId?: string;
+  };
 }
 
 export interface CalendarDay {

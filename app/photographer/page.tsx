@@ -39,17 +39,25 @@ interface PhotographerProfile {
 
 interface Assignment {
   id: string
-  lead_id: string
+  lead_id: string | null
+  property_id: string | null
   scheduled_time: string
   duration_minutes: number
   status: 'assigned' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled'
   preparation_notes: string
-  lead: {
+  lead?: {
     name: string
     location: string
     property_type: string
     whatsapp_number: string
-  }
+  } | null
+  property?: {
+    id: string
+    title: string
+    address: string
+    city: string
+    property_type: string
+  } | null
 }
 
 interface PerformanceMetrics {
@@ -302,6 +310,32 @@ export default function PhotographerDashboard() {
     return upcoming[0] || null
   }
 
+  // Helper function to get assignment display data
+  const getAssignmentData = (assignment: Assignment) => {
+    if (assignment.lead) {
+      return {
+        name: assignment.lead.name,
+        location: assignment.lead.location,
+        property_type: assignment.lead.property_type,
+        whatsapp_number: assignment.lead.whatsapp_number
+      }
+    } else if (assignment.property) {
+      return {
+        name: `Property Owner (${assignment.property.title})`,
+        location: `${assignment.property.address}, ${assignment.property.city}`,
+        property_type: assignment.property.property_type,
+        whatsapp_number: '+20100000000' // Placeholder for admin contact
+      }
+    } else {
+      return {
+        name: 'Unknown Assignment',
+        location: 'Location not specified',
+        property_type: 'Property type not specified',
+        whatsapp_number: ''
+      }
+    }
+  }
+
   const getTodaysAssignments = () => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -464,26 +498,29 @@ export default function PhotographerDashboard() {
                 <Upload className="w-4 h-4 mr-2" />
                 Upload Photos
               </Button>
-              {nextAssignment && (
-                <>
-                  <Button 
-                    variant="outline" 
-                    className="h-12 text-sm"
-                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(nextAssignment.lead.location)}`, '_blank')}
-                  >
-                    <Navigation className="w-4 h-4 mr-2" />
-                    Navigate
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="h-12 text-sm"
-                    onClick={() => updateAssignmentStatus(nextAssignment.id, 'completed')}
-                  >
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Complete
-                  </Button>
-                </>
-              )}
+              {nextAssignment && (() => {
+                const assignmentData = getAssignmentData(nextAssignment)
+                return (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="h-12 text-sm"
+                      onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(assignmentData.location)}`, '_blank')}
+                    >
+                      <Navigation className="w-4 h-4 mr-2" />
+                      Navigate
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="h-12 text-sm"
+                      onClick={() => updateAssignmentStatus(nextAssignment.id, 'completed')}
+                    >
+                      <CheckCircle className="w-4 h-4 mr-2" />
+                      Complete
+                    </Button>
+                  </>
+                )
+              })()}
             </div>
           </CardContent>
         </Card>
@@ -498,65 +535,72 @@ export default function PhotographerDashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <h3 className="font-medium text-blue-900">{nextAssignment.lead.property_type}</h3>
-                  <p className="text-sm text-blue-700">
-                    {new Date(nextAssignment.scheduled_time).toLocaleDateString()} at{' '}
-                    {new Date(nextAssignment.scheduled_time).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
-                  </p>
-                  <p className="text-sm text-blue-600">{nextAssignment.duration_minutes} minutes</p>
-                </div>
-                
-                <div className="bg-white p-3 rounded border border-blue-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center">
-                      <User className="w-4 h-4 mr-2 text-gray-500" />
-                      <span className="font-medium">{nextAssignment.lead.name}</span>
+              {(() => {
+                const assignmentData = getAssignmentData(nextAssignment)
+                return (
+                  <div className="space-y-3">
+                    <div>
+                      <h3 className="font-medium text-blue-900">{assignmentData.property_type}</h3>
+                      <p className="text-sm text-blue-700">
+                        {new Date(nextAssignment.scheduled_time).toLocaleDateString()} at{' '}
+                        {new Date(nextAssignment.scheduled_time).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </p>
+                      <p className="text-sm text-blue-600">{nextAssignment.duration_minutes} minutes</p>
                     </div>
-                    <a 
-                      href={`https://wa.me/${nextAssignment.lead.whatsapp_number.replace(/[^0-9]/g, '')}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <Button size="sm" variant="outline">
-                        <Phone className="w-3 h-3 mr-1" />
-                        Contact
+                    
+                    <div className="bg-white p-3 rounded border border-blue-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <User className="w-4 h-4 mr-2 text-gray-500" />
+                          <span className="font-medium">{assignmentData.name}</span>
+                        </div>
+                        {assignmentData.whatsapp_number && assignmentData.whatsapp_number !== '+20100000000' && (
+                          <a 
+                            href={`https://wa.me/${assignmentData.whatsapp_number.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <Button size="sm" variant="outline">
+                              <Phone className="w-3 h-3 mr-1" />
+                              Contact
+                            </Button>
+                          </a>
+                        )}
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {assignmentData.location}
+                      </div>
+                    </div>
+
+                    {nextAssignment.preparation_notes && (
+                      <div className="bg-white p-3 rounded border border-blue-200">
+                        <p className="text-sm font-medium text-gray-900 mb-1">Notes:</p>
+                        <p className="text-sm text-gray-700">{nextAssignment.preparation_notes}</p>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => updateAssignmentStatus(nextAssignment.id, 'in_progress')}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                      >
+                        Start Shoot
                       </Button>
-                    </a>
+                      <Button 
+                        variant="outline"
+                        onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(assignmentData.location)}`, '_blank')}
+                        className="border-blue-300 text-blue-600 hover:bg-blue-100"
+                      >
+                        <Navigation className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center text-sm text-gray-600">
-                    <MapPin className="w-4 h-4 mr-2" />
-                    {nextAssignment.lead.location}
-                  </div>
-                </div>
-
-                {nextAssignment.preparation_notes && (
-                  <div className="bg-white p-3 rounded border border-blue-200">
-                    <p className="text-sm font-medium text-gray-900 mb-1">Notes:</p>
-                    <p className="text-sm text-gray-700">{nextAssignment.preparation_notes}</p>
-                  </div>
-                )}
-
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => updateAssignmentStatus(nextAssignment.id, 'in_progress')}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                  >
-                    Start Shoot
-                  </Button>
-                  <Button 
-                    variant="outline"
-                    onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(nextAssignment.lead.location)}`, '_blank')}
-                    className="border-blue-300 text-blue-600 hover:bg-blue-100"
-                  >
-                    <Navigation className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+                )
+              })()}
             </CardContent>
           </Card>
         )}
@@ -581,65 +625,68 @@ export default function PhotographerDashboard() {
               </div>
             ) : (
               <div className="space-y-3">
-                {todaysAssignments.map((assignment) => (
-                  <div key={assignment.id} className="border rounded-lg p-3 bg-white">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <h4 className="font-medium text-gray-900">{assignment.lead.name}</h4>
-                        <p className="text-sm text-gray-600">{assignment.lead.property_type}</p>
+                {todaysAssignments.map((assignment) => {
+                  const assignmentData = getAssignmentData(assignment)
+                  return (
+                    <div key={assignment.id} className="border rounded-lg p-3 bg-white">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h4 className="font-medium text-gray-900">{assignmentData.name}</h4>
+                          <p className="text-sm text-gray-600">{assignmentData.property_type}</p>
+                        </div>
+                        <Badge 
+                          variant={
+                            assignment.status === 'completed' ? 'default' :
+                            assignment.status === 'in_progress' ? 'secondary' :
+                            'outline'
+                          }
+                        >
+                          {assignment.status}
+                        </Badge>
                       </div>
-                      <Badge 
-                        variant={
-                          assignment.status === 'completed' ? 'default' :
-                          assignment.status === 'in_progress' ? 'secondary' :
-                          'outline'
-                        }
-                      >
-                        {assignment.status}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600 mb-2">
-                      <Clock className="w-4 h-4 mr-2" />
-                      {new Date(assignment.scheduled_time).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })} ({assignment.duration_minutes}min)
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600 mb-3">
-                      <MapPin className="w-4 h-4 mr-2" />
-                      {assignment.lead.location}
-                    </div>
-                    
-                    {assignment.status !== 'completed' && (
-                      <div className="flex gap-2">
-                        {assignment.status === 'assigned' && (
+                      <div className="flex items-center text-sm text-gray-600 mb-2">
+                        <Clock className="w-4 h-4 mr-2" />
+                        {new Date(assignment.scheduled_time).toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })} ({assignment.duration_minutes}min)
+                      </div>
+                      <div className="flex items-center text-sm text-gray-600 mb-3">
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {assignmentData.location}
+                      </div>
+                      
+                      {assignment.status !== 'completed' && (
+                        <div className="flex gap-2">
+                          {assignment.status === 'assigned' && (
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => updateAssignmentStatus(assignment.id, 'in_progress')}
+                            >
+                              Start
+                            </Button>
+                          )}
+                          {assignment.status === 'in_progress' && (
+                            <Button 
+                              size="sm"
+                              onClick={() => updateAssignmentStatus(assignment.id, 'completed')}
+                            >
+                              Complete
+                            </Button>
+                          )}
                           <Button 
                             size="sm" 
                             variant="outline"
-                            onClick={() => updateAssignmentStatus(assignment.id, 'in_progress')}
+                            onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(assignmentData.location)}`, '_blank')}
                           >
-                            Start
+                            Navigate
                           </Button>
-                        )}
-                        {assignment.status === 'in_progress' && (
-                          <Button 
-                            size="sm"
-                            onClick={() => updateAssignmentStatus(assignment.id, 'completed')}
-                          >
-                            Complete
-                          </Button>
-                        )}
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => window.open(`https://maps.google.com/?q=${encodeURIComponent(assignment.lead.location)}`, '_blank')}
-                        >
-                          Navigate
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </CardContent>

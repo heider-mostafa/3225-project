@@ -5,9 +5,16 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "platforms": ["ios", "android", "web"],
+    "platforms": ["ios", "android"],
+    "main": "./App.tsx",
     "web": {
       "bundler": "metro"
+    },
+    "ios": {
+      "bundleIdentifier": "com.egyptianrealestate.mobile"
+    },
+    "android": {
+      "package": "com.egyptianrealestate.mobile"
     }
   }
 }

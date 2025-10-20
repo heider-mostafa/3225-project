@@ -67,13 +67,26 @@ export async function PUT(
       email,
       phone,
       license_number,
+      appraiser_license_number,
+      appraiser_certification_authority,
       bio,
       specialties,
       languages,
       years_experience,
       commission_rate,
+      property_specialties,
+      max_property_value_limit,
+      professional_headshot_url,
+      profile_headline,
+      profile_summary,
+      service_areas,
       profile_image_url,
-      is_active
+      is_active,
+      average_rating,
+      total_reviews,
+      response_time_hours,
+      certifications,
+      pricing_info
     } = body
 
     const supabase = createServerClient(
@@ -93,13 +106,26 @@ export async function PUT(
     if (email !== undefined) updateData.email = email
     if (phone !== undefined) updateData.phone = phone
     if (license_number !== undefined) updateData.license_number = license_number
+    if (appraiser_license_number !== undefined) updateData.appraiser_license_number = appraiser_license_number
+    if (appraiser_certification_authority !== undefined) updateData.appraiser_certification_authority = appraiser_certification_authority
     if (bio !== undefined) updateData.bio = bio
     if (specialties !== undefined) updateData.specialties = specialties
     if (languages !== undefined) updateData.languages = languages
     if (years_experience !== undefined) updateData.years_experience = years_experience
     if (commission_rate !== undefined) updateData.commission_rate = commission_rate
+    if (property_specialties !== undefined) updateData.property_specialties = property_specialties
+    if (max_property_value_limit !== undefined) updateData.max_property_value_limit = max_property_value_limit
+    if (professional_headshot_url !== undefined) updateData.professional_headshot_url = professional_headshot_url
+    if (profile_headline !== undefined) updateData.profile_headline = profile_headline
+    if (profile_summary !== undefined) updateData.profile_summary = profile_summary
+    if (service_areas !== undefined) updateData.service_areas = service_areas
     if (profile_image_url !== undefined) updateData.profile_image_url = profile_image_url
     if (is_active !== undefined) updateData.is_active = is_active
+    if (average_rating !== undefined) updateData.average_rating = average_rating
+    if (total_reviews !== undefined) updateData.total_reviews = total_reviews
+    if (response_time_hours !== undefined) updateData.response_time_hours = response_time_hours
+    if (certifications !== undefined) updateData.certifications = certifications
+    if (pricing_info !== undefined) updateData.pricing_info = pricing_info
 
     const { data: broker, error } = await supabase
       .from('brokers')

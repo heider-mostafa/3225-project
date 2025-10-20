@@ -3,8 +3,10 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Eye, EyeOff, Lock, Check } from 'lucide-react'
 import Link from 'next/link'
+import { useTranslation } from 'react-i18next'
 
 export default function ConfirmResetPasswordPage() {
+  const { t } = useTranslation()
   const router = useRouter()
   const searchParams = useSearchParams()
   const [token, setToken] = useState('')
@@ -20,13 +22,13 @@ export default function ConfirmResetPasswordPage() {
     if (tokenParam) {
       setToken(tokenParam)
     } else {
-      setError('Invalid reset link. Please request a new password reset.')
+      setError(t('auth.invalidResetLink'))
     }
   }, [searchParams])
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
-      return 'Password must be at least 6 characters long'
+      return t('auth.passwordLengthRequirement')
     }
     return null
   }
@@ -35,7 +37,7 @@ export default function ConfirmResetPasswordPage() {
     e.preventDefault()
     
     if (!token) {
-      setError('Invalid reset token')
+      setError(t('auth.invalidResetToken'))
       return
     }
 
@@ -46,7 +48,7 @@ export default function ConfirmResetPasswordPage() {
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Passwords do not match')
+      setError(t('auth.passwordsDoNotMatch'))
       return
     }
 
@@ -74,11 +76,11 @@ export default function ConfirmResetPasswordPage() {
           router.push('/auth')
         }, 3000)
       } else {
-        setError(data.error || 'Failed to reset password')
+        setError(data.error || t('auth.failedToResetPassword'))
       }
     } catch (error) {
       console.error('Password reset error:', error)
-      setError('Something went wrong. Please try again.')
+      setError(t('auth.somethingWentWrong'))
     } finally {
       setLoading(false)
     }
@@ -93,10 +95,10 @@ export default function ConfirmResetPasswordPage() {
               <Check className="h-6 w-6 text-green-600" />
             </div>
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Password Reset Successful
+              {t('auth.passwordResetSuccessful')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              Your password has been successfully reset. You will be redirected to the sign-in page shortly.
+              {t('auth.passwordResetSuccessMessage')}
             </p>
           </div>
           
@@ -105,7 +107,7 @@ export default function ConfirmResetPasswordPage() {
               href="/auth"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Continue to Sign In
+              {t('auth.continueToSignIn')}
             </Link>
           </div>
         </div>
@@ -119,10 +121,10 @@ export default function ConfirmResetPasswordPage() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-              Invalid Reset Link
+              {t('auth.invalidResetLinkTitle')}
             </h2>
             <p className="mt-2 text-sm text-gray-600">
-              This password reset link is invalid or has expired.
+              {t('auth.invalidResetLinkMessage')}
             </p>
           </div>
           
@@ -131,7 +133,7 @@ export default function ConfirmResetPasswordPage() {
               href="/auth/reset-password"
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Request New Reset Link
+              {t('auth.requestNewResetLink')}
             </Link>
           </div>
         </div>
@@ -147,10 +149,10 @@ export default function ConfirmResetPasswordPage() {
             <Lock className="h-6 w-6 text-blue-600" />
           </div>
           <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-            Set New Password
+            {t('auth.setNewPassword')}
           </h2>
           <p className="mt-2 text-sm text-gray-600">
-            Enter your new password below.
+            {t('auth.enterNewPasswordBelow')}
           </p>
         </div>
         
@@ -158,7 +160,7 @@ export default function ConfirmResetPasswordPage() {
           <div className="space-y-4">
             <div>
               <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700">
-                New Password
+                {t('auth.newPassword')}
               </label>
               <div className="mt-1 relative">
                 <input
@@ -170,7 +172,7 @@ export default function ConfirmResetPasswordPage() {
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="appearance-none rounded-md relative block w-full px-3 py-2 pr-10 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Enter new password"
+                  placeholder={t('auth.enterNewPassword')}
                 />
                 <button
                   type="button"
@@ -188,7 +190,7 @@ export default function ConfirmResetPasswordPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
-                Confirm New Password
+                {t('auth.confirmNewPassword')}
               </label>
               <div className="mt-1">
                 <input
@@ -200,7 +202,7 @@ export default function ConfirmResetPasswordPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                  placeholder="Confirm new password"
+                  placeholder={t('auth.confirmNewPassword')}
                 />
               </div>
             </div>
@@ -208,7 +210,7 @@ export default function ConfirmResetPasswordPage() {
 
           {/* Password Requirements */}
           <div className="text-xs text-gray-500">
-            <p>Password must be at least 6 characters long</p>
+            <p>{t('auth.passwordLengthRequirement')}</p>
           </div>
 
           {error && (
@@ -226,10 +228,10 @@ export default function ConfirmResetPasswordPage() {
               {loading ? (
                 <div className="flex items-center">
                   <div className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  Updating Password...
+                  {t('auth.updatingPassword')}
                 </div>
               ) : (
-                'Update Password'
+                t('auth.updatePassword')
               )}
             </button>
           </div>

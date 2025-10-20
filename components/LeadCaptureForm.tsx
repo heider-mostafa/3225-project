@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -244,16 +243,8 @@ export function LeadCaptureForm({
           </DialogDescription>
         </DialogHeader>
 
-        <AnimatePresence mode="wait">
-          {!isSuccess ? (
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-              className="space-y-6"
-            >
+        {!isSuccess ? (
+            <div className="space-y-6">
               {/* Progress Bar */}
               <div className="w-full bg-gray-200 rounded-full h-2">
                 <div 
@@ -512,14 +503,10 @@ export function LeadCaptureForm({
                   </div>
                 )}
               </form>
-            </motion.div>
+            </div>
           ) : (
             /* Success Step */
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center space-y-6 py-8"
-            >
+            <div className="text-center space-y-6 py-8">
               <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
                 <CheckCircle className="h-8 w-8 text-green-500" />
               </div>
@@ -548,9 +535,8 @@ export function LeadCaptureForm({
               >
                 Close
               </Button>
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
       </DialogContent>
     </Dialog>
   )

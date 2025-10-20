@@ -1,8 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import OptimizedImage from "@/components/ui/OptimizedImage"
+import ErrorBoundary from "@/components/ui/ErrorBoundary"
 import { useSearchParams } from "next/navigation"
 import { Search, MapPin, Bed, Bath, Square, Grid, List, SlidersHorizontal, Bookmark, Clock, Filter, Map, Loader2, ChevronUp, Home, DollarSign } from "lucide-react"
+import SmartSearchInput from "@/components/search/SmartSearchInput"
+import QuickFilterPills from "@/components/search/QuickFilterPills"
+import SearchSEO from "@/components/seo/SearchSEO"
+import Head from 'next/head'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -74,7 +80,7 @@ export default function PropertiesPage() {
   const [searchResultsTotal, setSearchResultsTotal] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [viewMode, setViewMode] = useState<"grid" | "list" | "map">("grid")
-  const [priceRange, setPriceRange] = useState([0, 500000])
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000])
   const [propertyType, setPropertyType] = useState("all")
   const [bedrooms, setBedrooms] = useState("all")
   const [status, setStatus] = useState("all")
@@ -206,7 +212,7 @@ export default function PropertiesPage() {
       if (minPriceParam || maxPriceParam) {
         setPriceRange([
           minPriceParam ? parseInt(minPriceParam) : 0,
-          maxPriceParam ? parseInt(maxPriceParam) : 2000000
+          maxPriceParam ? parseInt(maxPriceParam) : 10000000
         ])
       }
       
@@ -249,12 +255,37 @@ export default function PropertiesPage() {
 
   // Intersection Observer for infinite scrolling
   useEffect(() => {
-    if (!loadMoreRef.current || !hasMoreData || loadingMore || loading) return
+    console.log('👁️ Intersection Observer useEffect triggered')
+    console.log('📊 Observer conditions:', {
+      hasLoadMoreRef: !!loadMoreRef.current,
+      hasMoreData,
+      loadingMore,
+      loading
+    })
 
+    if (!loadMoreRef.current || !hasMoreData || loadingMore || loading) {
+      console.log('🚫 Observer not initialized due to conditions not met')
+      return
+    }
+
+    console.log('✅ Creating intersection observer')
     const observer = new IntersectionObserver(
       (entries) => {
+        console.log('👁️ Intersection observer triggered')
+        console.log('📊 Intersection entries:', entries.map(e => ({ 
+          isIntersecting: e.isIntersecting, 
+          intersectionRatio: e.intersectionRatio 
+        })))
+        
         if (entries[0].isIntersecting && !loadingMore && hasMoreData) {
+          console.log('🎯 Intersection conditions met - calling loadMoreProperties')
           loadMoreProperties()
+        } else {
+          console.log('❌ Intersection conditions not met:', {
+            isIntersecting: entries[0].isIntersecting,
+            loadingMore,
+            hasMoreData
+          })
         }
       },
       {
@@ -264,9 +295,11 @@ export default function PropertiesPage() {
     )
 
     const currentRef = loadMoreRef.current
+    console.log('👀 Starting to observe loadMore element')
     observer.observe(currentRef)
 
     return () => {
+      console.log('🔚 Cleaning up intersection observer')
       if (currentRef) {
         observer.unobserve(currentRef)
       }
@@ -274,59 +307,111 @@ export default function PropertiesPage() {
   }, [loadingMore, hasMoreData, loading])
 
   const loadProperties = async (reset = false) => {
-    console.log('\ud83d\udcda loadProperties called with reset:', reset)
+    console.log('🔍 ========== loadProperties DEBUG START ==========')
+    console.log('📚 loadProperties called with reset:', reset)
+    console.log('📊 Current state before load:', {
+      currentPage,
+      propertiesCount: properties.length,
+      hasMoreData,
+      loading,
+      loadingMore
+    })
+    
     try {
       if (reset) {
-        console.log('\ud83d\udd04 Reset mode - setting loading to true')
+        console.log('🔄 Reset mode - clearing state')
         setLoading(true)
         setCurrentPage(1)
         setProperties([])
       } else {
+        console.log('➕ Load more mode - setting loadingMore to true')
         setLoadingMore(true)
       }
 
       const page = reset ? 1 : currentPage + 1
-      console.log('\ud83d\udccb Fetching properties page:', page)
-      const response = await fetch(`/api/properties?page=${page}&limit=20`)
+      console.log('📄 Fetching properties for page:', page)
+      const apiUrl = `/api/properties?page=${page}&limit=20&context=listing`
+      console.log('🔗 API URL:', apiUrl)
+      
+      const response = await fetch(apiUrl)
+      console.log('📡 API Response status:', response.status, response.statusText)
       
       if (response.ok) {
         const data = await response.json()
         const newProperties = data.properties || []
-        console.log('\u2705 Properties API response:', data.properties?.length, 'properties')
+        console.log('✅ Properties API response received:')
+        console.log('  - New properties count:', newProperties.length)
+        console.log('  - Pagination data:', data.pagination)
+        console.log('  - First property title:', newProperties[0]?.title)
+        console.log('  - Last property title:', newProperties[newProperties.length - 1]?.title)
         
         setPagination(data.pagination)
         
         if (reset) {
-          console.log('\ud83d\udd04 Setting properties (reset mode)')
+          console.log('🔄 Reset mode: Setting properties to new array')
+          console.log('  - Setting', newProperties.length, 'properties')
           setProperties(newProperties)
         } else {
+          console.log('➕ Append mode: Adding to existing properties')
           setProperties(prev => {
+            console.log('  - Previous properties count:', prev.length)
+            console.log('  - Adding properties count:', newProperties.length)
             const updated = [...prev, ...newProperties]
+            console.log('  - Total after merge:', updated.length)
+            
             // Performance optimization: Keep only the latest MAX_PROPERTIES
             if (updated.length > MAX_PROPERTIES) {
+              console.log('⚠️ Trimming properties to MAX_PROPERTIES:', MAX_PROPERTIES)
               return updated.slice(-MAX_PROPERTIES)
             }
             return updated
           })
           setCurrentPage(page)
+          console.log('📄 Updated currentPage to:', page)
         }
         
         // Check if we've reached the end
-        setHasMoreData(page < data.pagination.totalPages)
+        const hasMore = page < data.pagination.totalPages;
+        console.log('📄 Pagination check:')
+        console.log('  - Current page:', page)
+        console.log('  - Total pages:', data.pagination.totalPages)
+        console.log('  - Has more data:', hasMore)
+        console.log('  - Total properties in DB:', data.pagination.total)
+        setHasMoreData(hasMore)
+        
       } else {
-        console.error('\u274c Failed to load properties')
+        console.error('❌ Failed to load properties:', response.status, response.statusText)
+        const errorText = await response.text()
+        console.error('❌ Error response body:', errorText)
       }
     } catch (error) {
-      console.error('\u274c Error loading properties:', error)
+      console.error('❌ Error loading properties:', error instanceof Error ? error.message : error)
+      if (error instanceof Error) {
+        console.error('❌ Error stack:', error.stack)
+      }
     } finally {
-      console.log('\ud83c\udfc1 loadProperties finally block - setting loading to false')
+      console.log('🏁 loadProperties finally block - cleaning up state')
       setLoading(false)
       setLoadingMore(false)
+      console.log('🔍 ========== loadProperties DEBUG END ==========')
     }
   }
 
   const loadMoreProperties = useCallback(async () => {
-    if (loadingMore || !hasMoreData) return
+    console.log('🔄 loadMoreProperties called')
+    console.log('📊 LoadMore state check:', { loadingMore, hasMoreData, currentPage })
+    
+    if (loadingMore) {
+      console.log('⏳ Already loading more, skipping...')
+      return
+    }
+    
+    if (!hasMoreData) {
+      console.log('🚫 No more data available, skipping...')
+      return
+    }
+    
+    console.log('✅ Conditions met, calling loadProperties(false)')
     await loadProperties(false)
   }, [loadingMore, hasMoreData, currentPage])
 
@@ -342,7 +427,7 @@ export default function PropertiesPage() {
         setSavedSearches(data)
       }
     } catch (error) {
-      console.error('Error loading saved searches:', error)
+      console.error('Error loading saved searches:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -355,11 +440,11 @@ export default function PropertiesPage() {
         .limit(10)
 
       if (data && !error) {
-        const uniqueQueries = [...new Set(data.map(item => item.search_query).filter(Boolean))]
+        const uniqueQueries = [...new Set(data.map((item: any) => item.search_query).filter(Boolean))] as string[]
         setSearchHistory(uniqueQueries.slice(0, 5))
       }
     } catch (error) {
-      console.error('Error loading search history:', error)
+      console.error('Error loading search history:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -374,10 +459,10 @@ export default function PropertiesPage() {
         .eq('user_id', user.id)
 
       if (data && !error) {
-        setSavedPropertyIds(new Set(data.map(sp => sp.property_id)))
+        setSavedPropertyIds(new Set(data.map((sp: { property_id: string }) => sp.property_id)))
       }
     } catch (error) {
-      console.error('Error loading saved properties:', error)
+      console.error('Error loading saved properties:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -519,7 +604,7 @@ export default function PropertiesPage() {
         console.error('Error details:', errorText)
       }
     } catch (error) {
-      console.error('Error during advanced search:', error)
+      console.error('Error during advanced search:', error instanceof Error ? error.message : error)
     } finally {
       console.log('🏁 Search completed, setting isSearching to false')
       setIsSearching(false)
@@ -539,7 +624,7 @@ export default function PropertiesPage() {
         })
       }
     } catch (error) {
-      console.error('Error logging search activity:', error)
+      console.error('Error logging search activity:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -563,7 +648,7 @@ export default function PropertiesPage() {
         loadSavedSearches()
       }
     } catch (error) {
-      console.error('Error saving search:', error)
+      console.error('Error saving search:', error instanceof Error ? error.message : error)
     }
   }
 
@@ -589,7 +674,7 @@ export default function PropertiesPage() {
         setProperties(data.properties || [])
       }
     } catch (error) {
-      console.error('Error during location search:', error)
+      console.error('Error during location search:', error instanceof Error ? error.message : error)
     } finally {
       setIsSearching(false)
     }
@@ -605,13 +690,38 @@ export default function PropertiesPage() {
 
   // Determine which properties to show: search results or filtered local properties
   const displayProperties = (() => {
+    console.log('🔍 ========== DISPLAY PROPERTIES DEBUG START ==========')
+    console.log('📊 Raw properties from state:', properties.length)
+    console.log('🔍 Search state:', { searchResultsTotal, currentFiltersLength: Object.keys(currentFilters).length })
+    
     // If we have search results (from API), use those directly
     if (searchResultsTotal !== null || Object.keys(currentFilters).length > 0) {
+      console.log('📈 Using search results/filtered properties:', properties.length)
+      console.log('🔍 ========== DISPLAY PROPERTIES DEBUG END ==========')
       return properties // These are already filtered by the API
     }
     
+    // Check if user has actively set any filters (not just defaults)
+    const hasActiveFilters = 
+      searchQuery.trim() !== "" || 
+      priceRange[0] !== 0 || 
+      priceRange[1] !== 10000000 || 
+      propertyType !== "all" || 
+      bedrooms !== "all" || 
+      status !== "all"
+    
+    // If no active filters, return all properties (don't filter by defaults)
+    if (!hasActiveFilters) {
+      console.log('📋 No active filters applied - showing all properties:', properties.length)
+      console.log('🔍 ========== DISPLAY PROPERTIES DEBUG END ==========')
+      return properties
+    }
+    
+    console.log('🔧 Applying local filters to properties')
+    console.log('🔧 Filter settings:', { searchQuery, priceRange, propertyType, bedrooms, status })
+    
     // Otherwise, filter local properties based on basic UI filters
-    return properties.filter((property) => {
+    const filtered = properties.filter((property) => {
       const matchesSearch =
         !searchQuery.trim() ||
         property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -623,8 +733,20 @@ export default function PropertiesPage() {
       const matchesBeds = bedrooms === "all" || (property.bedrooms?.toString() ?? "") === bedrooms
       const matchesStatus = status === "all" || property.status.toLowerCase() === status.toLowerCase()
 
-      return matchesSearch && matchesPrice && matchesType && matchesBeds && matchesStatus
+      const passes = matchesSearch && matchesPrice && matchesType && matchesBeds && matchesStatus
+      
+      if (!passes) {
+        console.log('❌ Property filtered out:', property.title, {
+          matchesSearch, matchesPrice, matchesType, matchesBeds, matchesStatus
+        })
+      }
+
+      return passes
     })
+    
+    console.log('✅ Local filtering complete:', filtered.length, 'properties passed filters')
+    console.log('🔍 ========== DISPLAY PROPERTIES DEBUG END ==========')
+    return filtered
   })()
 
   // Sort properties
@@ -691,7 +813,17 @@ export default function PropertiesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <ErrorBoundary 
+      level="page" 
+      onError={(error, errorInfo) => {
+        console.error('Properties page error:', error, errorInfo);
+      }}
+    >
+      <SearchSEO 
+        resultsCount={searchResultsTotal !== null ? searchResultsTotal : (pagination?.total || sortedProperties.length)}
+        properties={sortedProperties}
+      />
+      <div className="min-h-screen bg-slate-50">
       <div className="container mx-auto px-4 py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -701,23 +833,15 @@ export default function PropertiesPage() {
 
         {/* Enhanced Search Section */}
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 overflow-hidden mb-8">
-          {/* Main Search Bar - Always Visible */}
+          {/* Enhanced Smart Search Bar */}
           <div className="p-6 bg-gradient-to-r from-slate-50 to-white border-b border-slate-100">
             <div className="flex items-center space-x-4">
-              <div className="flex-1 relative group">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-slate-400 transition-colors group-focus-within:text-slate-600" />
-              <Input
-                placeholder={t('properties.searchPlaceholder', 'Search by location, property type, or features...')}
+              <SmartSearchInput
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleSearchSubmit()
-                  }
-                }}
-                  className="pl-12 h-12 text-base border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 rounded-xl shadow-sm"
-                />
-                  </div>
+                onChange={setSearchQuery}
+                onSearch={handleSearchSubmit}
+                placeholder={t('properties.searchPlaceholder', 'Search by location, property type, or features...')}
+              />
             <Button
               onClick={() => setShowAdvancedSearch(true)}
                     variant="outline"
@@ -732,116 +856,149 @@ export default function PropertiesPage() {
               </div>
             </div>
 
-          {/* Basic Filters - Always Visible */}
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Property Type */}
-              <div className="space-y-2">
+
+          {/* Compact Filter Section - Clickable Buttons */}
+          <div className="p-6 space-y-4">
+            {/* Property Type and Sort By Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Property Type Buttons */}
+              <div className="lg:col-span-2 space-y-3">
                 <label className="text-sm font-semibold text-slate-700 flex items-center">
                   <Home className="h-4 w-4 mr-2 text-slate-500" />
                   {t('properties.propertyType', 'Property Type')}
                 </label>
-                <Select value={propertyType} onValueChange={setPropertyType}>
-                  <SelectTrigger className="h-11 border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 rounded-lg">
-                    <SelectValue placeholder={t('properties.allTypes', 'All Types')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('properties.allTypes', 'All Types')}</SelectItem>
-                    <SelectItem value="apartment">🏢 {t('properties.apartment', 'Apartment')}</SelectItem>
-                    <SelectItem value="villa">🏘️ {t('properties.villa', 'Villa')}</SelectItem>
-                    <SelectItem value="penthouse">⭐ {t('properties.penthouse', 'Penthouse')}</SelectItem>
-                    <SelectItem value="townhouse">🏘️ {t('properties.townhouse', 'Townhouse')}</SelectItem>
-                    <SelectItem value="condo">🏗️ {t('properties.condominium', 'Condominium')}</SelectItem>
-                    <SelectItem value="house">🏠 {t('properties.house', 'House')}</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'all', label: t('properties.allTypes', 'All'), icon: '🏠' },
+                    { value: 'apartment', label: t('properties.apartment', 'Apartment'), icon: '🏢' },
+                    { value: 'villa', label: t('properties.villa', 'Villa'), icon: '🏘️' },
+                    { value: 'penthouse', label: t('properties.penthouse', 'Penthouse'), icon: '⭐' },
+                    { value: 'townhouse', label: t('properties.townhouse', 'Townhouse'), icon: '🏘️' },
+                    { value: 'house', label: t('properties.house', 'House'), icon: '🏠' }
+                  ].map((type) => (
+                    <Button
+                      key={type.value}
+                      onClick={() => setPropertyType(type.value)}
+                      variant={propertyType === type.value ? "default" : "outline"}
+                      size="sm"
+                      className={`h-9 transition-all ${
+                        propertyType === type.value 
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="mr-1.5">{type.icon}</span>
+                      {type.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
 
-              {/* Bedrooms */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center">
-                  <Bed className="h-4 w-4 mr-2 text-slate-500" />
-                  {t('properties.bedrooms', 'Bedrooms')}
-                </label>
-                <Select value={bedrooms} onValueChange={setBedrooms}>
-                  <SelectTrigger className="h-11 border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 rounded-lg">
-                    <SelectValue placeholder={t('properties.any', 'Any')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('properties.any', 'Any')}</SelectItem>
-                    <SelectItem value="1">1+ {t('properties.bedroom', 'Bedroom')}</SelectItem>
-                    <SelectItem value="2">2+ {t('properties.bedrooms', 'Bedrooms')}</SelectItem>
-                    <SelectItem value="3">3+ {t('properties.bedrooms', 'Bedrooms')}</SelectItem>
-                    <SelectItem value="4">4+ {t('properties.bedrooms', 'Bedrooms')}</SelectItem>
-                    <SelectItem value="5">5+ {t('properties.bedrooms', 'Bedrooms')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Status */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold text-slate-700 flex items-center">
-                  <Badge className="h-4 w-4 mr-2 text-slate-500" />
-                  {t('properties.status', 'Status')}
-                </label>
-                <Select value={status} onValueChange={setStatus}>
-                  <SelectTrigger className="h-11 border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 rounded-lg">
-                    <SelectValue placeholder={t('properties.allStatus', 'All Status')} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">{t('properties.allStatus', 'All Status')}</SelectItem>
-                    <SelectItem value="available">🟢 {t('properties.available', 'Available')}</SelectItem>
-                    <SelectItem value="pending">🟡 {t('properties.pending', 'Pending')}</SelectItem>
-                    <SelectItem value="sold">🔴 {t('properties.sold', 'Sold')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Sort By */}
-              <div className="space-y-2">
+              {/* Sort By Buttons */}
+              <div className="space-y-3">
                 <label className="text-sm font-semibold text-slate-700 flex items-center">
                   <SlidersHorizontal className="h-4 w-4 mr-2 text-slate-500" />
                   {t('properties.sortBy', 'Sort By')}
                 </label>
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="h-11 border-slate-200 focus:border-slate-400 focus:ring-slate-400/20 rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="price-low">💰 {t('properties.priceLowToHigh', 'Price: Low to High')}</SelectItem>
-                    <SelectItem value="price-high">💎 {t('properties.priceHighToLow', 'Price: High to Low')}</SelectItem>
-                    <SelectItem value="newest">🆕 {t('properties.newestFirst', 'Newest First')}</SelectItem>
-                    <SelectItem value="bedrooms">🛏️ {t('properties.mostBedrooms', 'Most Bedrooms')}</SelectItem>
-                    <SelectItem value="size">📐 {t('properties.largestFirst', 'Largest First')}</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              </div>
-
-            {/* Price Range */}
-            <div className="mt-6 pt-6 border-t border-slate-100">
-              <div className="flex items-center justify-between mb-4">
-                <label className="text-sm font-semibold text-slate-700 flex items-center">
-                  <DollarSign className="h-4 w-4 mr-2 text-slate-500" />
-                  {t('properties.priceRange', 'Price Range')}
-                </label>
-                <span className="text-sm font-medium text-slate-600">
-                  ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
-                </span>
-              </div>
-                <Slider
-                  value={priceRange}
-                  onValueChange={setPriceRange}
-                  max={2000000}
-                  min={0}
-                step={50000}
-                  className="w-full"
-                />
-              <div className="flex justify-between text-xs text-slate-500 mt-2">
-                <span>$0</span>
-                <span>$2M+</span>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { value: 'price-low', label: 'Price ↑', icon: '💰' },
+                    { value: 'price-high', label: 'Price ↓', icon: '💎' },
+                    { value: 'newest', label: t('properties.newest', 'Newest'), icon: '🆕' },
+                    { value: 'bedrooms', label: 'Beds', icon: '🛏️' },
+                    { value: 'size', label: 'Size', icon: '📐' }
+                  ].map((sort) => (
+                    <Button
+                      key={sort.value}
+                      onClick={() => setSortBy(sort.value)}
+                      variant={sortBy === sort.value ? "default" : "outline"}
+                      size="sm"
+                      className={`h-9 transition-all ${
+                        sortBy === sort.value 
+                          ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                          : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                      }`}
+                    >
+                      <span className="mr-1.5">{sort.icon}</span>
+                      {sort.label}
+                    </Button>
+                  ))}
+                </div>
               </div>
             </div>
+
+            {/* Bedrooms Row */}
+            <div className="space-y-3">
+              <label className="text-sm font-semibold text-slate-700 flex items-center">
+                <Bed className="h-4 w-4 mr-2 text-slate-500" />
+                {t('properties.bedrooms', 'Bedrooms')}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { value: 'all', label: t('properties.any', 'Any') },
+                  { value: '1', label: '1+' },
+                  { value: '2', label: '2+' },
+                  { value: '3', label: '3+' },
+                  { value: '4', label: '4+' },
+                  { value: '5', label: '5+' }
+                ].map((bed) => (
+                  <Button
+                    key={bed.value}
+                    onClick={() => setBedrooms(bed.value)}
+                    variant={bedrooms === bed.value ? "default" : "outline"}
+                    size="sm"
+                    className={`h-9 transition-all ${
+                      bedrooms === bed.value 
+                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                        : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    }`}
+                  >
+                    {bed.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Filters and Price Range Row */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Quick Filters */}
+              <div className="lg:col-span-2 space-y-3">
+                <label className="text-sm font-semibold text-slate-700 flex items-center">
+                  <Filter className="h-4 w-4 mr-2 text-slate-500" />
+                  {t('properties.quickFilters', 'Quick Filters')}
+                </label>
+                <QuickFilterPills 
+                  onFilterSelect={handleAdvancedSearch}
+                  activeFilters={currentFilters}
+                />
+              </div>
+
+              {/* Price Range */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-semibold text-slate-700 flex items-center">
+                    <DollarSign className="h-4 w-4 mr-2 text-slate-500" />
+                    {t('properties.priceRange', 'Price Range')}
+                  </label>
+                  <span className="text-sm font-medium text-slate-600">
+                    ${priceRange[0].toLocaleString()} - ${priceRange[1].toLocaleString()}
+                  </span>
+                </div>
+                <Slider
+                  value={priceRange}
+                  onValueChange={(value) => setPriceRange(value as [number, number])}
+                  max={2000000}
+                  min={0}
+                  step={50000}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>$0</span>
+                  <span>$2M+</span>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           {/* Saved Searches */}
@@ -1023,10 +1180,16 @@ export default function PropertiesPage() {
                 <Link key={property.id} href={`/property/${property.id}`} className="block">
                   <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
                     <div className="relative">
-                      <img
+                      <OptimizedImage
                         src={property.property_photos?.[0]?.url || "/placeholder.svg"}
                         alt={property.title}
-                        className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                        width={400}
+                        height={240}
+                        className="w-full h-48 group-hover:scale-105 transition-transform duration-300"
+                        priority={false}
+                        lazy={true}
+                        trackPerformance={true}
+                        category="property-grid"
                       />
                       <div className="absolute top-4 left-4">
                         <Badge className={property.status === "active" ? "bg-green-600" : 
@@ -1050,16 +1213,16 @@ export default function PropertiesPage() {
                       <div className="flex items-center gap-4 text-sm text-slate-600 mb-4">
                         <div className="flex items-center">
                           <Bed className="h-4 w-4 mr-1" />
-                          {property.bedrooms}
+                          {property.bedrooms} {t('common.bed', 'bed')}
                         </div>
                         <div className="flex items-center">
                           <Bath className="h-4 w-4 mr-1" />
-                          {property.bathrooms}
+                          {property.bathrooms} {t('common.bath', 'bath')}
                         </div>
                         {property.square_meters && (
                           <div className="flex items-center">
                             <Square className="h-4 w-4 mr-1" />
-                            {property.square_meters} sqm
+                            {property.square_meters} {t('common.sqm', 'sqm')}
                           </div>
                         )}
                       </div>
@@ -1125,10 +1288,16 @@ export default function PropertiesPage() {
                   <CardContent className="p-0">
                     <div className="flex flex-col md:flex-row">
                       <div className="md:w-1/3">
-                        <img
+                        <OptimizedImage
                           src={property.property_photos?.[0]?.url || "/placeholder.svg"}
                           alt={property.title}
-                          className="w-full h-48 md:h-full object-cover"
+                          width={400}
+                          height={300}
+                          className="w-full h-48 md:h-full"
+                          priority={false}
+                          lazy={true}
+                          trackPerformance={true}
+                          category="property-list"
                         />
                       </div>
                       <div className="flex-1 p-6">
@@ -1154,7 +1323,7 @@ export default function PropertiesPage() {
                           {property.square_meters && (
                             <div className="flex items-center">
                               <Square className="h-4 w-4 mr-1" />
-                              {property.square_meters} sqm
+                              {property.square_meters} {t('common.sqm', 'sqm')}
                             </div>
                           )}
                           <div className="text-slate-500">
@@ -1260,6 +1429,7 @@ export default function PropertiesPage() {
           <ChevronUp className="h-4 w-4" />
         </Button>
       )}
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }

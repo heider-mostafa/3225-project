@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 import type { 
   Broker, 
   BrokerAvailabilityCalendarProps, 
@@ -24,6 +25,7 @@ export default function BrokerAvailabilityCalendar({
   maxDate,
   className
 }: BrokerAvailabilityCalendarProps) {
+  const { t } = useTranslation();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [brokers, setBrokers] = useState<Broker[]>([]);
@@ -257,7 +259,15 @@ export default function BrokerAvailabilityCalendar({
   });
 
   const calendarDays = getCalendarDays();
-  const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const weekDays = [
+    t('calendar.weekDays.sunday', 'Sun'),
+    t('calendar.weekDays.monday', 'Mon'),
+    t('calendar.weekDays.tuesday', 'Tue'),
+    t('calendar.weekDays.wednesday', 'Wed'),
+    t('calendar.weekDays.thursday', 'Thu'),
+    t('calendar.weekDays.friday', 'Fri'),
+    t('calendar.weekDays.saturday', 'Sat')
+  ];
 
   if (loading) {
     return (
@@ -265,7 +275,7 @@ export default function BrokerAvailabilityCalendar({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Schedule a Viewing
+            {t('calendar.scheduleViewing', 'Schedule a Viewing')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -283,14 +293,14 @@ export default function BrokerAvailabilityCalendar({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Schedule a Viewing
+            {t('calendar.scheduleViewing', 'Schedule a Viewing')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
             <p className="text-red-600 mb-4">{error}</p>
             <Button onClick={loadBrokers} variant="outline">
-              Try Again
+              {t('calendar.tryAgain', 'Try Again')}
             </Button>
           </div>
         </CardContent>
@@ -304,12 +314,12 @@ export default function BrokerAvailabilityCalendar({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="w-5 h-5" />
-            Schedule a Viewing
+            {t('calendar.scheduleViewing', 'Schedule a Viewing')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12">
-            <p className="text-gray-600">No brokers available for this property.</p>
+            <p className="text-gray-600">{t('calendar.noBrokersAvailable', 'No brokers available for this property.')}</p>
           </div>
         </CardContent>
       </Card>
@@ -321,13 +331,13 @@ export default function BrokerAvailabilityCalendar({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="w-5 h-5" />
-          Schedule a Viewing
+          {t('calendar.scheduleViewing', 'Schedule a Viewing')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Broker Selection */}
         <div className="space-y-4">
-          <h3 className="font-medium text-gray-900">Choose Your Broker</h3>
+          <h3 className="font-medium text-gray-900">{t('calendar.chooseYourBroker', 'Choose Your Broker')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {brokers.map((broker: any) => (
               <div
@@ -361,7 +371,7 @@ export default function BrokerAvailabilityCalendar({
                       </h4>
                       {broker.is_primary && (
                         <Badge variant="secondary" className="text-xs">
-                          Primary
+                          {t('calendar.primary', 'Primary')}
                         </Badge>
                       )}
                     </div>
@@ -372,7 +382,7 @@ export default function BrokerAvailabilityCalendar({
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span>{broker.years_experience || 0}+ years</span>
+                      <span>{broker.years_experience || 0}+ {t('calendar.yearsExperience', 'years')}</span>
                       <span>•</span>
                       <span>{broker.specialties ? broker.specialties.join(', ') : 'General'}</span>
                     </div>
@@ -380,7 +390,7 @@ export default function BrokerAvailabilityCalendar({
                       <div className="flex items-center gap-1 mt-2">
                         <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                         <span className="text-xs text-green-600">
-                          {broker.next_available_slots || 0} slots available
+                          {broker.next_available_slots || 0} {t('calendar.slotsAvailable', 'slots available')}
                         </span>
                       </div>
                     )}
@@ -394,7 +404,7 @@ export default function BrokerAvailabilityCalendar({
         {/* Calendar */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-medium text-gray-900">Select Date</h3>
+            <h3 className="font-medium text-gray-900">{t('calendar.selectDate', 'Select Date')}</h3>
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
@@ -475,7 +485,7 @@ export default function BrokerAvailabilityCalendar({
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
               <h3 className="font-medium text-gray-900">
-                Available Times - {new Date(selectedDate).toLocaleDateString()}
+                {t('calendar.availableTimes', 'Available Times')} - {new Date(selectedDate).toLocaleDateString()}
               </h3>
             </div>
             
@@ -485,9 +495,9 @@ export default function BrokerAvailabilityCalendar({
               </div>
             ) : availableSlots.length === 0 ? (
               <div className="text-center py-8">
-                <p className="text-gray-600">No available time slots for this date.</p>
+                <p className="text-gray-600">{t('calendar.noAvailableSlots', 'No available time slots for this date.')}</p>
                 <p className="text-sm text-gray-500 mt-1">
-                  Try selecting a different date or broker.
+                  {t('calendar.tryDifferentDate', 'Try selecting a different date or broker.')}
                 </p>
               </div>
             ) : (
@@ -497,21 +507,44 @@ export default function BrokerAvailabilityCalendar({
                     {brokerSlots.timeSlots.length > 0 && (
                       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
                         {brokerSlots.timeSlots.map((slot) => (
-                          <Button
-                            key={`${slot.broker_id}-${slot.time}`}
-                            variant={slot.available ? "outline" : "ghost"}
-                            size="sm"
-                            onClick={() => handleTimeSlotSelect(slot)}
-                            disabled={!slot.available}
-                            className={cn(
-                              "text-sm",
-                              slot.available 
-                                ? "hover:bg-blue-50 hover:border-blue-300" 
-                                : "opacity-50 cursor-not-allowed"
+                          <div key={`${slot.broker_id}-${slot.time}`} className="relative group">
+                            <Button
+                              variant={slot.available ? "outline" : "ghost"}
+                              size="sm"
+                              onClick={() => handleTimeSlotSelect(slot)}
+                              disabled={!slot.available}
+                              className={cn(
+                                "text-sm w-full",
+                                slot.available 
+                                  ? "hover:bg-blue-50 hover:border-blue-300" 
+                                  : slot.hasConflict
+                                    ? "opacity-50 cursor-not-allowed bg-red-50 border-red-200 text-red-600"
+                                    : "opacity-50 cursor-not-allowed"
+                              )}
+                            >
+                              {slot.time}
+                              {slot.hasConflict && (
+                                <span className="ml-1 text-xs">🚫</span>
+                              )}
+                            </Button>
+                            
+                            {/* Conflict Tooltip */}
+                            {slot.hasConflict && slot.conflictDetails && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                                <div className="text-center">
+                                  <div className="font-medium">Broker Unavailable</div>
+                                  <div className="text-gray-300">
+                                    Viewing at {slot.conflictDetails.conflictingProperty}
+                                  </div>
+                                  <div className="text-gray-300">
+                                    {slot.conflictDetails.conflictingTime}
+                                  </div>
+                                </div>
+                                {/* Tooltip Arrow */}
+                                <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                              </div>
                             )}
-                          >
-                            {slot.time}
-                          </Button>
+                          </div>
                         ))}
                       </div>
                     )}

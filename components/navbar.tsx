@@ -18,6 +18,7 @@ export default function Navbar() {
   const pathname = usePathname()
   const { user } = useAuth()
   const [userRole, setUserRole] = useState<UserRole>('user')
+  const [userAppraiserData, setUserAppraiserData] = useState<any>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
@@ -30,8 +31,23 @@ export default function Navbar() {
       if (user) {
         const role = await getCurrentUserRole()
         setUserRole(role)
+        
+        // If user is an appraiser, fetch their appraiser data for dashboard link
+        if (role === 'appraiser') {
+          try {
+            const response = await fetch('/api/appraisers')
+            if (response.ok) {
+              const data = await response.json()
+              const userAppraiser = data.appraisers?.find((appraiser: any) => appraiser.user_id === user.id)
+              setUserAppraiserData(userAppraiser)
+            }
+          } catch (error) {
+            console.error('Failed to fetch appraiser data:', error)
+          }
+        }
       } else {
         setUserRole('user')
+        setUserAppraiserData(null)
       }
     }
 
@@ -51,7 +67,7 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link href="/coming-soon" className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-3">
             <svg width="40" height="40" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-10 h-10">
               <rect x="12" y="8" width="28" height="48" stroke="currentColor" strokeWidth="4"/>
               <polygon points="12,8 36,20 36,52 12,56" fill="currentColor"/>
@@ -65,22 +81,42 @@ export default function Navbar() {
             {!isComingSoonPage && (
               <>
                 <Link 
-                  href="/coming-soon" 
+                  href="/properties" 
                   className="text-slate-600 hover:text-slate-800 transition-colors"
                 >
                   {isMounted ? t('nav.properties') : 'Properties'}
                 </Link>
                 <Link 
-                  href="/coming-soon" 
+                  href="/virtual-tours" 
                   className="text-slate-600 hover:text-slate-800 transition-colors"
                 >
                   {isMounted ? t('nav.virtualTours') : 'Virtual Tours'}
                 </Link>
                 <Link 
-                  href="/coming-soon" 
+                  href="/about" 
                   className="text-slate-600 hover:text-slate-800 transition-colors"
                 >
                   {isMounted ? t('nav.about') : 'About'}
+                </Link>
+                <Link 
+                  href="/find-appraisers" 
+                  className="text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  {isMounted ? t('nav.appraisers') : 'Find Appraisers'}
+                </Link>
+                {/* Temporarily hidden Market Intelligence
+                <Link 
+                  href="/market-intelligence" 
+                  className="text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  Market Intelligence
+                </Link>
+                */}
+                <Link 
+                  href="/rentals" 
+                  className="text-slate-600 hover:text-slate-800 transition-colors"
+                >
+                  {isMounted ? t('nav.rentals') : 'Rentals'}
                 </Link>
                 
                 {/* Admin Access for Admin Users */}
@@ -98,13 +134,34 @@ export default function Navbar() {
                   </Link>
                 )}
                 
-                <Link href="/coming-soon">
+                <Link href="/contact">
                   <Button variant="outline">
                     {isMounted ? t('nav.contact') : 'Contact'}
                   </Button>
                 </Link>
                 {user ? (
                   <>
+                    {/* Role-based navigation */}
+                    {userRole === 'appraiser' && userAppraiserData && (
+                      <Link 
+                        href={`/appraiser/${userAppraiserData.id}/dashboard`} 
+                        className={`text-slate-600 hover:text-slate-800 transition-colors ${
+                          pathname.startsWith('/appraiser') ? 'text-purple-600 font-medium' : ''
+                        }`}
+                      >
+                        Appraiser Dashboard
+                      </Link>
+                    )}
+                    {userRole === 'broker' && (
+                      <Link 
+                        href="/broker/dashboard" 
+                        className={`text-slate-600 hover:text-slate-800 transition-colors ${
+                          pathname.startsWith('/broker') ? 'text-green-600 font-medium' : ''
+                        }`}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
                     <Link href="/profile" className="text-slate-600 hover:text-slate-800 transition-colors">
                       {isMounted ? t('nav.profile') : 'Profile'}
                     </Link>
@@ -175,7 +232,7 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.2 }}
                 >
                   <Link 
-                    href="/coming-soon" 
+                    href="/properties" 
                     className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -189,7 +246,7 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.3 }}
                 >
                   <Link 
-                    href="/coming-soon" 
+                    href="/virtual-tours" 
                     className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -203,11 +260,55 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.35 }}
                 >
                   <Link 
-                    href="/coming-soon" 
+                    href="/about" 
                     className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {isMounted ? t('nav.about') : 'About'}
+                  </Link>
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.38 }}
+                >
+                  <Link 
+                    href="/find-appraisers" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {isMounted ? t('nav.appraisers') : 'Find Appraisers'}
+                  </Link>
+                </motion.div>
+
+                {/* Temporarily hidden Market Intelligence
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.385 }}
+                >
+                  <Link 
+                    href="/market-intelligence" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    Market Intelligence
+                  </Link>
+                </motion.div>
+                */}
+
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.395 }}
+                >
+                  <Link 
+                    href="/rentals" 
+                    className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {isMounted ? t('nav.rentals') : 'Rentals'}
                   </Link>
                 </motion.div>
                 
@@ -239,7 +340,7 @@ export default function Navbar() {
                   transition={{ duration: 0.3, delay: 0.45 }}
                 >
                   <Link 
-                    href="/coming-soon" 
+                    href="/contact" 
                     className="text-lg text-slate-700 hover:text-blue-600 transition-colors"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
@@ -256,6 +357,29 @@ export default function Navbar() {
                 >
                   {user ? (
                     <>
+                      {/* Role-based mobile navigation */}
+                      {userRole === 'appraiser' && userAppraiserData && (
+                        <Link 
+                          href={`/appraiser/${userAppraiserData.id}/dashboard`} 
+                          className={`block text-lg transition-colors ${
+                            pathname.startsWith('/appraiser') ? 'text-purple-600 font-medium' : 'text-slate-700 hover:text-purple-600'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Appraiser Dashboard
+                        </Link>
+                      )}
+                      {userRole === 'broker' && (
+                        <Link 
+                          href="/broker/dashboard" 
+                          className={`block text-lg transition-colors ${
+                            pathname.startsWith('/broker') ? 'text-green-600 font-medium' : 'text-slate-700 hover:text-green-600'
+                          }`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Broker Dashboard
+                        </Link>
+                      )}
                       <Link 
                         href="/profile" 
                         className="block text-lg text-slate-700 hover:text-blue-600 transition-colors"

@@ -1,8 +1,8 @@
 import './globals.css'
 import Navbar from '@/components/navbar'
 import { Providers } from '@/components/providers'
-import { HomepageRedirect } from '@/components/homepage-redirect'
 import { StructuredData } from '@/components/structured-data'
+import MobilePerformanceOptimizer from '@/components/ui/MobilePerformanceOptimizer'
 import { Cairo, Amiri, Montserrat } from 'next/font/google'
 
 // Fonts
@@ -34,6 +34,7 @@ export const metadata = {
   },
   description: 'Discover luxury properties, apartments, and villas in Egypt with OpenBeit. Advanced search, virtual tours, and expert real estate services. Find your dream home today.',
   keywords: [
+    // English keywords
     'real estate Egypt',
     'properties Cairo',
     'apartments Alexandria',
@@ -43,7 +44,23 @@ export const metadata = {
     'real estate platform',
     'virtual tours',
     'property search',
-    'OpenBeit'
+    'OpenBeit',
+    'properties New Cairo',
+    'apartments Zamalek',
+    'villas Maadi',
+    'penthouses Egypt',
+    
+    // Arabic keywords (HUGE SEO OPPORTUNITY)
+    'عقارات مصر',
+    'عقارات القاهرة',
+    'شقق للبيع',
+    'فلل للبيع',
+    'عقارات الزمالك',
+    'شقق المعادي',
+    'عقارات القاهرة الجديدة',
+    'بنتهاوس مصر',
+    'عقارات فاخرة',
+    'أوبن بيت'
   ],
   authors: [{ name: 'OpenBeit Real Estate' }],
   creator: 'OpenBeit',
@@ -90,8 +107,9 @@ export const metadata = {
   alternates: {
     canonical: 'https://openbeit.com',
     languages: {
-      'en-US': 'https://openbeit.com',
-      'ar-EG': 'https://openbeit.com/ar',
+      'en': 'https://openbeit.com',
+      'ar': 'https://openbeit.com',
+      'x-default': 'https://openbeit.com',
     },
   },
   category: 'Real Estate',
@@ -104,7 +122,21 @@ export const metadata = {
     shortcut: '/favicon.ico',
     apple: '/favicon.svg',
   },
+  manifest: '/manifest.json',
 }
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+}
+
+export const themeColor = [
+  { media: '(prefers-color-scheme: light)', color: '#2563eb' },
+  { media: '(prefers-color-scheme: dark)', color: '#1d4ed8' }
+]
 
 export default function RootLayout({
   children,
@@ -117,6 +149,24 @@ export default function RootLayout({
         {/* Structured Data for SEO */}
         <StructuredData type="organization" />
         <StructuredData type="website" />
+        
+        {/* Meta Pixel Code */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              !function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '${process.env.NEXT_PUBLIC_META_PIXEL_ID || 'YOUR_PIXEL_ID'}');
+              fbq('track', 'PageView');
+            `,
+          }}
+        />
         
         {/* TikTok Pixel Code */}
         <script
@@ -133,15 +183,34 @@ export default function RootLayout({
             `,
           }}
         />
+        
+        {/* Service Worker Registration for PWA */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function() {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(function(registration) {
+                      console.log('SW registered: ', registration);
+                    })
+                    .catch(function(registrationError) {
+                      console.log('SW registration failed: ', registrationError);
+                    });
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} suppressHydrationWarning={true}>
         <Providers>
-          <HomepageRedirect>
+          <MobilePerformanceOptimizer enableOptimizations={true}>
             <Navbar />
             <main>
               {children}
             </main>
-          </HomepageRedirect>
+          </MobilePerformanceOptimizer>
         </Providers>
       </body>
     </html>

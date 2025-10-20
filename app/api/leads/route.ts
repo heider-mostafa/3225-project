@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/server'
 import { triggerLeadCaptureWorkflow } from '@/lib/n8n/client'
+import { metaConversions } from '@/lib/services/meta-conversions'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +16,9 @@ export async function POST(request: NextRequest) {
       timeline,
       utm_source,
       utm_medium,
-      utm_campaign
+      utm_campaign,
+      fbclid,
+      fbp
     } = body
 
     // Validate required fields
@@ -80,7 +83,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Prepare lead data
+    // Calculate conversion probability and estimated value
+    const conversionProbability = Math.min(initialScore * 1.5, 100) // Convert score to probability
+    const estimatedValue = initialScore * 25 // Estimated lead value in EGP
+
+    // Prepare lead data with Meta tracking fields
     const leadData = {
       lead_id: leadId,
       name,
@@ -98,6 +105,11 @@ export async function POST(request: NextRequest) {
       utm_campaign: utm_campaign || null,
       ip_address: ip,
       user_agent: userAgent,
+      facebook_click_id: fbclid || null,
+      facebook_browser_id: fbp || null,
+      conversion_probability: conversionProbability,
+      estimated_value: estimatedValue,
+      meta_tracking_consent: true,
       metadata: {
         form_version: '1.0',
         submission_timestamp: new Date().toISOString()
@@ -117,6 +129,42 @@ export async function POST(request: NextRequest) {
         { error: 'Failed to save lead data' },
         { status: 500 }
       )
+    }
+
+    // Send Meta Conversion Event
+    try {
+      const metaResult = await metaConversions.trackLead({
+        userEmail: email,
+        userPhone: cleanPhone,
+        leadScore: initialScore,
+        propertyType: property_type,
+        location: location,
+        timeline: timeline,
+        priceRange: price_range,
+        ipAddress: ip,
+        userAgent: userAgent,
+        utmSource: utm_source,
+        utmMedium: utm_medium,
+        utmCampaign: utm_campaign
+      })
+
+      if (metaResult.success) {
+        // Update lead record with Meta event success
+        await supabase
+          .from('leads')
+          .update({ 
+            meta_event_sent: true,
+            meta_event_id: `lead_${leadId}_${Date.now()}`
+          })
+          .eq('id', insertedLead.id)
+
+        console.log('Meta lead event sent successfully')
+      } else {
+        console.error('Meta lead event failed:', metaResult.error)
+      }
+    } catch (metaError) {
+      console.error('Meta conversion error:', metaError)
+      // Don't fail the API call if Meta fails - lead is still saved
     }
 
     // Trigger N8N workflow asynchronously

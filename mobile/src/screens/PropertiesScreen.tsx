@@ -15,6 +15,7 @@ import {
 import { useNavigation, NavigationProp } from '@react-navigation/native';
 import { apiClient } from '../config/api';
 import { RootStackParamList } from '../navigation/AppNavigator';
+import MapViewComponent from '../components/MapView';
 
 // Types based on your working API (matching the updated interface)
 interface Property {
@@ -90,6 +91,10 @@ const PropertiesScreen: React.FC = () => {
   const [priceRange, setPriceRange] = useState({ min: '', max: '' });
   const [sortBy, setSortBy] = useState('newest');
   const [showFilters, setShowFilters] = useState(false);
+  
+  // View mode state
+  const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [showMapView, setShowMapView] = useState(false);
 
   // Format EGP currency like your web app
   const formatEGP = (price: number): string => {
@@ -458,8 +463,28 @@ const PropertiesScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header with Search */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🔍 استكشف العقارات</Text>
-        <Text style={styles.headerSubtitle}>ابحث عن منزل أحلامك في مصر</Text>
+        <View style={styles.headerTop}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>🔍 استكشف العقارات</Text>
+            <Text style={styles.headerSubtitle}>ابحث عن منزل أحلامك في مصر</Text>
+          </View>
+          
+          {/* View Mode Toggle */}
+          <View style={styles.viewModeToggle}>
+            <TouchableOpacity
+              style={[styles.viewModeButton, viewMode === 'list' && styles.activeViewModeButton]}
+              onPress={() => setViewMode('list')}
+            >
+              <Text style={[styles.viewModeButtonText, viewMode === 'list' && styles.activeViewModeButtonText]}>📋</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.viewModeButton, viewMode === 'map' && styles.activeViewModeButton]}
+              onPress={() => setShowMapView(true)}
+            >
+              <Text style={[styles.viewModeButtonText, viewMode === 'map' && styles.activeViewModeButtonText]}>🗺️</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         
         {/* Search Bar */}
         <View style={styles.searchContainer}>
@@ -515,6 +540,17 @@ const PropertiesScreen: React.FC = () => {
         }
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Map View Modal */}
+      <MapViewComponent
+        visible={showMapView}
+        onClose={() => setShowMapView(false)}
+        properties={properties}
+        onPropertySelect={(property) => {
+          setShowMapView(false);
+          navigation.navigate('PropertyDetails', { propertyId: property.id });
+        }}
+      />
     </View>
   );
 };
@@ -567,17 +603,46 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 20,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  headerLeft: {
+    flex: 1,
+  },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#ffffff',
-    textAlign: 'center',
+    textAlign: 'right',
   },
   headerSubtitle: {
     fontSize: 14,
     color: '#bfdbfe',
-    textAlign: 'center',
+    textAlign: 'right',
     marginTop: 8,
+  },
+  viewModeToggle: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 8,
+    padding: 2,
+  },
+  viewModeButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  activeViewModeButton: {
+    backgroundColor: '#ffffff',
+  },
+  viewModeButtonText: {
+    fontSize: 18,
+  },
+  activeViewModeButtonText: {
+    // No change needed for emoji
   },
   searchContainer: {
     flexDirection: 'row',
