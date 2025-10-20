@@ -7,6 +7,19 @@ export default function MobileDiagnosticsPage() {
   const [supabaseStatus, setSupabaseStatus] = useState<string>('Testing...')
   const [apiStatus, setApiStatus] = useState<string>('Testing...')
   const [memoryInfo, setMemoryInfo] = useState<any>(null)
+  const [deviceInfo, setDeviceInfo] = useState<any>(null)
+
+  useEffect(() => {
+    // Set device info after component mounts (client-side only)
+    setDeviceInfo({
+      userAgent: navigator.userAgent,
+      screenSize: `${screen.width}x${screen.height}`,
+      windowSize: `${window.innerWidth}x${window.innerHeight}`,
+      devicePixelRatio: window.devicePixelRatio,
+      connection: (navigator as any).connection?.effectiveType || 'unknown'
+    })
+    
+  }, [])
 
   useEffect(() => {
     const errorLog: string[] = []
@@ -99,13 +112,7 @@ export default function MobileDiagnosticsPage() {
         <div className="bg-white border rounded p-4">
           <h2 className="font-semibold mb-2">Device Info</h2>
           <pre className="text-sm bg-gray-100 p-2 rounded">
-            {JSON.stringify({
-              userAgent: navigator.userAgent,
-              screenSize: `${screen.width}x${screen.height}`,
-              windowSize: `${window.innerWidth}x${window.innerHeight}`,
-              devicePixelRatio: window.devicePixelRatio,
-              connection: (navigator as any).connection?.effectiveType || 'unknown'
-            }, null, 2)}
+            {deviceInfo ? JSON.stringify(deviceInfo, null, 2) : 'Loading device info...'}
           </pre>
         </div>
 
