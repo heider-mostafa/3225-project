@@ -34,14 +34,13 @@ export function I18nProvider({ children }: I18nProviderProps) {
     initializeI18n()
   }, [])
 
+  // Don't block app rendering while i18n loads - show app immediately
   if (!isReady) {
+    // Return children immediately with fallback i18n
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p>Loading...</p>
-        </div>
-      </div>
+      <I18nextProvider i18n={i18n}>
+        {children}
+      </I18nextProvider>
     )
   }
 
