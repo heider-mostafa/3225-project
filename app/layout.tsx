@@ -189,6 +189,37 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Mobile debugging - works before React loads
+              if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                // Create error display immediately
+                var errorDiv = document.createElement('div');
+                errorDiv.id = 'pre-react-debug';
+                errorDiv.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; background: red; color: white; padding: 10px; z-index: 99999; font-size: 12px;';
+                errorDiv.innerHTML = 'Mobile detected. Checking for errors...';
+                document.body.appendChild(errorDiv);
+                
+                // Catch errors before React loads
+                window.onerror = function(msg, url, line, col, error) {
+                  errorDiv.innerHTML += '<br>JS Error: ' + msg + ' at ' + url + ':' + line;
+                };
+                
+                window.addEventListener('unhandledrejection', function(event) {
+                  errorDiv.innerHTML += '<br>Promise Error: ' + (event.reason && event.reason.message ? event.reason.message : event.reason);
+                });
+                
+                // Check environment and loading status
+                setTimeout(function() {
+                  errorDiv.innerHTML += '<br>Env: SUPABASE_URL = ' + (typeof process !== 'undefined' && process.env && process.env.NEXT_PUBLIC_SUPABASE_URL ? 'OK' : 'CHECK');
+                }, 100);
+                
+                // Check if React loads within 10 seconds
+                setTimeout(function() {
+                  if (!document.querySelector('[data-reactroot]') && !document.querySelector('#__next')) {
+                    errorDiv.innerHTML += '<br>ISSUE: React did not load within 10 seconds';
+                  }
+                }, 10000);
+              }
+              
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
                   navigator.serviceWorker.register('/sw.js')
