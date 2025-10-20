@@ -4,6 +4,15 @@ import { createServiceSupabaseClient } from '@/lib/supabase/server'
 // Helper function to fetch all properties for sitemap
 async function getPropertiesForSitemap() {
   try {
+    // Check if environment variables are available
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.log('Supabase environment variables not available for sitemap generation')
+      return []
+    }
+    
     const supabase = createServiceSupabaseClient()
     const { data: properties, error } = await supabase
       .from('properties')
