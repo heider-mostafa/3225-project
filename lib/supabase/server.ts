@@ -3,10 +3,17 @@ import { cookies } from 'next/headers'
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies()
+  
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -61,9 +68,16 @@ export async function getAuthenticatedUser() {
   const supabaseCookies = allCookies.filter(c => c.name.includes('sb') || c.name.includes('supabase'))
   console.log('🔐 Auth check - Supabase cookies found:', supabaseCookies.length)
   
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         get(name: string) {
@@ -87,4 +101,41 @@ export async function getAuthenticatedUser() {
   
   console.log('✅ Authenticated user:', user.email)
   return { user, supabase }
+}
+
+// Service role functions for API routes (admin operations)
+import { createClient } from '@supabase/supabase-js'
+
+/**
+ * Create a service role Supabase client for admin operations in API routes
+ * Uses service role key for full database access
+ */
+export function createServiceSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
+  
+  return createClient(supabaseUrl, supabaseServiceKey)
+}
+
+/**
+ * Create a server-side service client for API routes with SSR support
+ * Uses service role key with minimal cookie handling
+ */
+export function createServiceServerClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+  
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Missing required Supabase environment variables')
+  }
+  
+  return createServerClient(supabaseUrl, supabaseServiceKey, {
+    cookies: {
+      get() { return undefined },
+    },
+  })
 } 

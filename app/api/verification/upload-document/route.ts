@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
+import { createServiceServerClient } from '@/lib/supabase/server';
 import valifyService from '@/lib/services/valify-service';
 import fileUploadService from '@/lib/services/file-upload-service';
 
@@ -21,15 +21,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      {
-        cookies: {
-          get() { return undefined },
-        },
-      }
-    );
+    // Create Supabase service client
+    const supabase = createServiceServerClient();
 
     // Validate file
     const validation = fileUploadService.validateFile(file, 'document');
