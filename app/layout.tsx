@@ -204,12 +204,10 @@ export default function RootLayout({
       </head>
       <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} suppressHydrationWarning={true}>
         <Providers>
-          <MobilePerformanceOptimizer enableOptimizations={false}>
-            <Navbar />
-            <main>
-              {children}
-            </main>
-          </MobilePerformanceOptimizer>
+          <Navbar />
+          <main>
+            {children}
+          </main>
         </Providers>
       </body>
     </html>
