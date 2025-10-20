@@ -22,11 +22,16 @@ class FileUploadService {
   private supabase;
 
   constructor() {
+    // Create client safely at runtime
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      throw new Error('Missing required Supabase environment variables');
+    }
+    
     // Use anon key for client-side operations, service role should only be used server-side
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
+    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
   }
 
   /**
@@ -413,7 +418,10 @@ class FileUploadService {
 }
 
 // Export singleton instance
-export const fileUploadService = new FileUploadService();
+// Export singleton instance only if environment variables are available
+export const fileUploadService = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ? new FileUploadService()
+  : null;
 export default fileUploadService;
 
 // Export types

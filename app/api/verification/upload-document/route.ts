@@ -24,6 +24,14 @@ export async function POST(request: Request) {
     // Create Supabase service client
     const supabase = createServiceServerClient();
 
+    // Check if file upload service is available
+    if (!fileUploadService) {
+      return NextResponse.json(
+        { error: 'File upload service not configured' },
+        { status: 500 }
+      );
+    }
+
     // Validate file
     const validation = fileUploadService.validateFile(file, 'document');
     if (!validation.isValid) {
