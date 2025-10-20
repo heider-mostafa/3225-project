@@ -185,19 +185,17 @@ export default function RootLayout({
           }}
         />
         
-        {/* Service Worker Registration for PWA */}
+        {/* Service Worker Registration for PWA - Temporarily disabled for debugging */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Temporarily disable service worker for mobile debugging
               if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('SW unregistered for debugging:', registration);
+                  }
                 });
               }
             `,
@@ -206,7 +204,7 @@ export default function RootLayout({
       </head>
       <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} suppressHydrationWarning={true}>
         <Providers>
-          <MobilePerformanceOptimizer enableOptimizations={true}>
+          <MobilePerformanceOptimizer enableOptimizations={false}>
             <Navbar />
             <main>
               {children}
