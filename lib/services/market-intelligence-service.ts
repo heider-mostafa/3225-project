@@ -3,7 +3,7 @@
  * Aggregates appraisal data for market insights without exposing individual properties
  */
 
-import { createClient } from '@/utils/supabase/client'
+import { createServerClient } from '@supabase/ssr'
 
 export interface CompoundAnalytics {
   compound_name: string
@@ -105,7 +105,15 @@ interface ComparisonMetric {
 }
 
 class MarketIntelligenceService {
-  private supabase = createClient()
+  private createSupabaseClient() {
+    return createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {},
+      }
+    )
+  }
 
   /**
    * Get compound-level market analytics
@@ -116,7 +124,8 @@ class MarketIntelligenceService {
       const startDate = dateRange?.from || new Date(Date.now() - 365 * 24 * 60 * 60 * 1000) // 1 year ago
 
       // Get appraisals for the compound within date range
-      const { data: appraisals, error } = await this.supabase
+      const supabase = this.createSupabaseClient()
+      const { data: appraisals, error } = await supabase
         .from('property_appraisals')
         .select(`
           id,
@@ -166,7 +175,8 @@ class MarketIntelligenceService {
   async getAreaAnalytics(areaName: string): Promise<AreaAnalytics | null> {
     try {
       // Get all appraisals in the area
-      const { data: appraisals, error } = await this.supabase
+      const supabase = this.createSupabaseClient()
+      const { data: appraisals, error } = await supabase
         .from('property_appraisals')
         .select(`
           id,
