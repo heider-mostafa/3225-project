@@ -21,6 +21,11 @@ export default function Navbar() {
   const [userAppraiserData, setUserAppraiserData] = useState<any>(null)
   const [isMounted, setIsMounted] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  
+  // Debug mobile menu state changes
+  useEffect(() => {
+    console.log('📱 Mobile menu state changed:', isMobileMenuOpen)
+  }, [isMobileMenuOpen])
   const [isScrolled, setIsScrolled] = useState(false)
 
   useEffect(() => {
@@ -285,9 +290,13 @@ export default function Navbar() {
             {/* Mobile Menu Button - Hidden on coming soon page */}
             {!isComingSoonPage && (
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                onClick={() => {
+                  console.log('🍔 Mobile menu button clicked, current state:', isMobileMenuOpen)
+                  setIsMobileMenuOpen(!isMobileMenuOpen)
+                }}
                 className="p-2 rounded-lg hover:bg-slate-100 transition-colors z-50 relative"
                 aria-label="Toggle mobile menu"
+                style={{ touchAction: 'manipulation' }}
               >
                 <motion.div
                   animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
