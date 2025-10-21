@@ -9,7 +9,15 @@ export async function createServerSupabaseClient() {
   const supabaseUrl = config.url
   const supabaseAnonKey = config.anonKey
   
-  console.log('🔧 Creating server Supabase client with configuration')
+  console.log('🔧 Creating server Supabase client with configuration:', {
+    url: !!supabaseUrl,
+    key: !!supabaseAnonKey,
+    source: config.url === process.env.NEXT_PUBLIC_SUPABASE_URL ? 'env-vars' : 'fallback'
+  })
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase configuration not available - both env vars and fallback failed')
+  }
 
   return createServerClient(
     supabaseUrl,
@@ -68,15 +76,17 @@ export async function getAuthenticatedUser() {
   const supabaseCookies = allCookies.filter(c => c.name.includes('sb') || c.name.includes('supabase'))
   console.log('🔐 Auth check - Supabase cookies found:', supabaseCookies.length)
   
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const config = getSupabaseConfig()
+  const supabaseUrl = config.url
+  const supabaseAnonKey = config.anonKey
   
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase environment variables in getAuthenticatedUser:', { 
+    console.error('Missing Supabase configuration in getAuthenticatedUser:', { 
       url: !!supabaseUrl, 
-      key: !!supabaseAnonKey 
+      key: !!supabaseAnonKey,
+      source: config.url === process.env.NEXT_PUBLIC_SUPABASE_URL ? 'env-vars' : 'fallback'
     })
-    throw new Error('Missing required Supabase environment variables')
+    throw new Error('Missing required Supabase configuration')
   }
 
   const supabase = createServerClient(

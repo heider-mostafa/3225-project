@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getSupabaseConfig } from '@/lib/env'
 
 // List of paths that require authentication
 const protectedPaths = [
@@ -16,9 +17,10 @@ const adminPaths = [
 
 // Create a Supabase client for middleware
 function createMiddlewareSupabaseClient(req: NextRequest, res: NextResponse) {
+  const config = getSupabaseConfig()
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    config.url,
+    config.anonKey,
     {
       cookies: {
         get(name: string) {

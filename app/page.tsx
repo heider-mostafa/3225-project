@@ -541,7 +541,7 @@ export default function HomePage() {
                 virtual_tour_url: p.virtual_tour_url // Also add to hot listings
               }
             })
-          console.log('📊 Hot listings with view counts:', hot.map(h => ({ id: h.id, title: h.title, views: h.views })))
+          console.log('📊 Hot listings with view counts:', hot.map((h: any) => ({ id: h.id, title: h.title, views: h.views })))
           setHotListings(hot)
           
           // Count properties per area from database
@@ -910,7 +910,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Botika-Inspired Hero Section */}
-      <section className="relative min-h-screen overflow-hidden">
+      <section className="relative overflow-hidden">
         {/* Sophisticated Blue Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900"></div>
         
@@ -918,12 +918,12 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-slate-900/50 to-transparent"></div>
 
         {/* Two-Column Layout */}
-        <div className="relative z-10 min-h-screen flex items-center">
-          <div className="container mx-auto px-4 py-20">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center min-h-[80vh]">
+        <div className="relative z-10">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 items-center h-[700px]">
               
               {/* Left Column - Text Content + Search */}
-              <div className="space-y-8 lg:pr-8">
+              <div className="space-y-8 lg:pr-8 flex flex-col justify-center h-[700px]">
                 {/* Headlines */}
                 <div className="space-y-6">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
@@ -962,7 +962,7 @@ export default function HomePage() {
                       <Button 
                         onClick={handleSmartSearch}
                         disabled={isSearching}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-white hover:bg-gray-50 text-blue-600 font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                       >
                         {isSearching ? (
                           <Loader2 className="w-4 h-4 animate-spin" />
@@ -974,16 +974,17 @@ export default function HomePage() {
                   </div>
                   
                   {/* Quick Search Examples */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap justify-between gap-2">
                     {[
-                      'Villa in New Capital',
-                      'Penthouse Zamalek', 
-                      'Apartment under 3M'
+                      'Villa with a pool in New Cairo',
+                      '3bdr penthouse in Zamalek', 
+                      'Apartment under 3M in Maadi',
+                      'Townhouse in Sheikh Zayed'
                     ].map((example, index) => (
                       <button
                         key={index}
                         onClick={() => setSearchQuery(example)}
-                        className="text-white/60 text-sm hover:text-white bg-white/10 hover:bg-white/20 px-3 py-1 rounded-full border border-white/20 transition-colors backdrop-blur-sm"
+                        className="text-slate-700 text-sm hover:text-slate-900 bg-white/90 hover:bg-white px-4 py-2.5 rounded-full border border-gray-200 hover:border-gray-300 transition-all duration-200 backdrop-blur-sm shadow-sm hover:shadow-md flex-1 text-center"
                       >
                         {example}
                       </button>
@@ -993,8 +994,8 @@ export default function HomePage() {
               </div>
 
               {/* Right Column - Rotating Property Images */}
-              <div className="relative lg:pl-8">
-                <div className="relative h-[600px] w-full">
+              <div className="relative lg:pl-4">
+                <div className="relative h-[700px] w-full lg:w-[120%] lg:-mr-[20%]">
                   {/* Property Image Carousel - Clickable */}
                   <Link 
                     href={`/property/${currentProperty?.id || 'demo-property'}`}
@@ -1021,7 +1022,9 @@ export default function HomePage() {
                             <span className="text-3xl font-bold">
                               {formatPrice(currentProperty?.price || 8500000)}
                             </span>
-                            <div className="flex items-center gap-4 text-sm">
+                          </div>
+                          <div className="flex items-center justify-center mt-4">
+                            <div className="flex items-center justify-center gap-4 text-sm bg-black/40 backdrop-blur-sm rounded-full px-4 py-2">
                               <span className="flex items-center gap-1">
                                 <Bed className="h-4 w-4" />
                                 {currentProperty?.beds || 4}
@@ -1048,8 +1051,8 @@ export default function HomePage() {
                     </div>
                   </Link>
                   
-                  {/* Navigation Dots */}
-                  <div className="absolute top-6 right-6 flex gap-2 z-10">
+                  {/* Navigation Dots - Centered */}
+                  <div className="absolute top-6 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
                     {translatedFeatured.slice(0, 3).map((_, index) => (
                       <button
                         key={index}

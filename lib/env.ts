@@ -19,8 +19,8 @@ export function getSupabaseConfig() {
     }
   }
   
-  // Fallback to hardcoded config
-  console.log('⚠️ Using fallback Supabase config - env vars not available')
+  // Fallback during Vercel infrastructure issues
+  console.log('⚠️ Using fallback Supabase config - likely Vercel infrastructure issue affecting env vars')
   return {
     url: FALLBACK_CONFIG.SUPABASE_URL,
     anonKey: FALLBACK_CONFIG.SUPABASE_ANON_KEY
