@@ -102,14 +102,38 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     // Production optimizations
     if (!dev && !isServer) {
-      // 🚀 PERFORMANCE: Better chunk splitting for caching
+      // 🚀 MOBILE: Better chunk splitting for mobile devices
       config.optimization.splitChunks = {
         chunks: 'all',
+        maxAsyncRequests: 30,
+        maxInitialRequests: 25,
+        minSize: 20000,
+        maxSize: 244000, // 244KB chunks for mobile
         cacheGroups: {
+          // Split large vendor libraries
+          react: {
+            test: /[\\/]node_modules[\\/](react|react-dom)[\\/]/,
+            name: 'react',
+            chunks: 'all',
+            priority: 20,
+          },
+          framerMotion: {
+            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+            name: 'framer-motion',
+            chunks: 'all',
+            priority: 15,
+          },
+          ui: {
+            test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|class-variance-authority)[\\/]/,
+            name: 'ui',
+            chunks: 'all',
+            priority: 10,
+          },
           vendor: {
             test: /[\\/]node_modules[\\/]/,
             name: 'vendors',
             chunks: 'all',
+            priority: 5,
           },
           common: {
             minChunks: 2,
