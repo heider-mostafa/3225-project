@@ -184,10 +184,31 @@ export default function RootLayout({
           }}
         />
         
-        {/* Service Worker Registration for PWA - Temporarily disabled for debugging */}
+        {/* Debug Next.js hydration on mobile */}
         <script
           dangerouslySetInnerHTML={{
             __html: `
+              // Debug Next.js hydration
+              window.addEventListener('DOMContentLoaded', function() {
+                console.log('🔍 DOM loaded - checking Next.js:', {
+                  nextData: !!window.__NEXT_DATA__,
+                  react: !!window.React,
+                  nextRouter: !!window.next?.router
+                });
+                
+                // Mobile-specific debugging
+                if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+                  setTimeout(() => {
+                    console.log('📱 Mobile hydration check:', {
+                      nextData: !!window.__NEXT_DATA__,
+                      reactRoot: !!document.querySelector('#__next'),
+                      buttons: document.querySelectorAll('button').length,
+                      eventListeners: document.querySelector('button')?.onclick !== null
+                    });
+                  }, 3000);
+                }
+              });
+              
               // Temporarily disable service worker for mobile debugging
               if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -201,7 +222,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} suppressHydrationWarning={true}>
+      <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`}>
         <MobileDebug />
         <Providers>
           <Navbar />
