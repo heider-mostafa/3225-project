@@ -102,23 +102,12 @@ const nextConfig = {
   webpack: (config, { isServer, dev }) => {
     // Production optimizations
     if (!dev && !isServer) {
-      // Simplified chunk splitting - fewer chunks for mobile compatibility
+      // Emergency fix: Disable chunk splitting completely to avoid syntax errors
       config.optimization.splitChunks = {
         chunks: 'all',
-        maxAsyncRequests: 5,
-        maxInitialRequests: 3,
         cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-            priority: 10,
-          },
-          common: {
-            minChunks: 2,
-            priority: 5,
-            reuseExistingChunk: true,
-          },
+          default: false,
+          vendors: false,
         },
       };
       
