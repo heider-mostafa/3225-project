@@ -2,7 +2,6 @@ import './globals.css'
 import Navbar from '@/components/navbar'
 import { Providers } from '@/components/providers'
 import { StructuredData } from '@/components/structured-data'
-import MobilePerformanceOptimizer from '@/components/ui/MobilePerformanceOptimizer'
 import { MobileDebug } from '@/components/mobile-debug'
 import { Cairo, Amiri, Montserrat } from 'next/font/google'
 
@@ -203,6 +202,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} suppressHydrationWarning={true}>
+        <MobileDebug />
         <Providers>
           <Navbar />
           <main>
