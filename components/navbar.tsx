@@ -25,6 +25,10 @@ export default function Navbar() {
   // Debug mobile menu state changes
   useEffect(() => {
     console.log('📱 Mobile menu state changed:', isMobileMenuOpen)
+    // Mobile alert for debugging
+    if (typeof window !== 'undefined' && /Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+      alert(`Mobile menu is now: ${isMobileMenuOpen ? 'OPEN' : 'CLOSED'}`)
+    }
   }, [isMobileMenuOpen])
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -292,6 +296,10 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   console.log('🍔 Mobile menu button clicked, current state:', isMobileMenuOpen)
+                  // Mobile alert for button click
+                  if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+                    alert('Hamburger button clicked!')
+                  }
                   setIsMobileMenuOpen(!isMobileMenuOpen)
                 }}
                 className="p-2 rounded-lg hover:bg-slate-100 transition-colors z-50 relative"
