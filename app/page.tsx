@@ -486,7 +486,9 @@ export default function HomePage() {
         setLoadingData(true)
         
         // Fetch properties for featured and hot listings
+        console.log('🔍 Fetching properties from API...')
         const response = await fetch('/api/properties?limit=20')
+        console.log('📡 API Response status:', response.status, response.statusText)
         if (response.ok) {
           const data = await response.json()
           const properties = data.properties || []
@@ -560,9 +562,12 @@ export default function HomePage() {
           setTopAreas(areasWithCounts)
           // Use mock data for top compounds
           setTopCompounds(mockTopCompounds)
+        } else {
+          const errorText = await response.text()
+          console.error('❌ API Response failed:', response.status, errorText)
         }
       } catch (error) {
-        console.error('Error loading homepage data:', error)
+        console.error('❌ Error loading homepage data:', error)
         setFeaturedProperties([])
         setHotListings([])
         // Still show mock compounds even on error

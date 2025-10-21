@@ -7,6 +7,7 @@ import { propertyService } from '@/lib/services/property-service';
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Properties API called - User Agent:', request.headers.get('user-agent'))
     const { searchParams } = new URL(request.url);
     
     // Parse pagination parameters
@@ -35,9 +36,11 @@ export async function GET(request: NextRequest) {
     };
 
     // Use optimized PropertyService
+    console.log('🏠 Calling PropertyService with:', { filters, context, pagination: { page, limit } })
     const startTime = Date.now();
     const result = await propertyService.getProperties(filters, context, { page, limit });
     const totalTime = Date.now() - startTime;
+    console.log('✅ PropertyService returned:', { propertyCount: result.properties?.length, totalTime })
 
     return NextResponse.json({
       ...result,
