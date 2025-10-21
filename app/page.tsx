@@ -482,6 +482,10 @@ export default function HomePage() {
   // Load real homepage data
   useEffect(() => {
     console.log('🚀 Homepage useEffect started - Mobile test')
+    // Temporary mobile alert test
+    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
+      alert('Mobile detected - useEffect running!')
+    }
     const loadHomepageData = async () => {
       try {
         console.log('📱 Mobile data loading function called')
