@@ -1372,55 +1372,23 @@ export default function HomePage() {
         <div className="relative container mx-auto px-4">
           {/* Section Header */}
           <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6 }}
-              className="inline-flex items-center space-x-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 rounded-full px-6 py-2 mb-6"
-            >
+            <div className="inline-flex items-center space-x-2 bg-amber-500/10 backdrop-blur-sm border border-amber-500/20 rounded-full px-6 py-2 mb-6">
               <Zap className="w-4 h-4 text-amber-400" />
               <span className="text-amber-400 font-medium">{isMounted ? t('stats.headerBadge', "Egypt's #1 PropTech Platform") : "Egypt's #1 PropTech Platform"}</span>
-            </motion.div>
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="text-4xl md:text-5xl font-black text-white mb-4 font-montserrat"
-            >
+            </div>
+            <h2 className="text-4xl md:text-5xl font-black text-white mb-4 font-montserrat">
 {isMounted ? t('stats.headerTitle', "Powering Egypt's Real Estate Future") : "Powering Egypt's Real Estate Future"}
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed"
-            >
+            </h2>
+            <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
 {isMounted ? t('stats.headerDescription', "Join thousands of property owners and buyers who trust OpenBeit's AI-powered platform for seamless real estate experiences") : "Join thousands of property owners and buyers who trust OpenBeit's AI-powered platform for seamless real estate experiences"}
-            </motion.p>
+            </p>
           </div>
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {getStatsData(t).map((stat, index) => (
-              <motion.div
+              <div
                 key={stat.label}
-                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ 
-                  duration: 0.7, 
-                  delay: index * 0.15,
-                  type: "spring",
-                  stiffness: 100
-                }}
-                whileHover={{ 
-                  scale: 1.05, 
-                  y: -5,
-                  transition: { duration: 0.3 }
-                }}
                 className="group relative"
               >
                 {/* Glass Card */}
@@ -1457,18 +1425,12 @@ export default function HomePage() {
                   <div className="absolute -bottom-2 -right-2 w-20 h-20 bg-gradient-to-br from-white/5 to-transparent rounded-full blur-xl group-hover:from-white/10 transition-all duration-500"></div>
                   <div className="absolute top-4 right-4 w-2 h-2 bg-amber-400 rounded-full opacity-50 group-hover:opacity-100 group-hover:scale-150 transition-all duration-500"></div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Bottom CTA */}
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, delay: 0.6 }}
-            className="text-center mt-16"
-          >
+          <div className="text-center mt-16">
             <div className="inline-flex items-center space-x-4 bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl px-8 py-4">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-emerald-400 rounded-full animate-pulse"></div>
@@ -1477,7 +1439,7 @@ export default function HomePage() {
               <div className="w-px h-6 bg-white/20"></div>
               <span className="text-white font-semibold">{isMounted ? t('stats.updatedRealtime', 'Updated in real-time') : 'Updated in real-time'}</span>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
