@@ -98,7 +98,7 @@ const nextConfig = {
     ];
   },
   
-  // 🚀 ENHANCED Webpack configuration for maximum performance
+  // 🚀 Clean Webpack configuration - force rebuild
   webpack: (config, { isServer, dev }) => {
     // Production optimizations
     if (!dev && !isServer) {
