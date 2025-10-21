@@ -481,9 +481,16 @@ export default function HomePage() {
 
   // Load real homepage data
   useEffect(() => {
+    console.log('🚀 Homepage useEffect started - Mobile test')
     const loadHomepageData = async () => {
       try {
+        console.log('📱 Mobile data loading function called')
         setLoadingData(true)
+        
+        // Test basic connectivity first
+        console.log('🌐 Testing basic fetch capability...')
+        const testResponse = await fetch('/api/test-db')
+        console.log('🌐 Test API response:', testResponse.status)
         
         // Fetch properties for featured and hot listings
         console.log('🔍 Fetching properties from API...')
