@@ -481,11 +481,7 @@ export default function HomePage() {
 
   // Load real homepage data
   useEffect(() => {
-    console.log('🚀 Homepage useEffect started - Mobile test')
-    // Temporary mobile alert test
-    if (/Mobile|Android|iPhone/i.test(navigator.userAgent)) {
-      alert('Mobile detected - useEffect running!')
-    }
+    console.log('🚀 Homepage useEffect started')
     const loadHomepageData = async () => {
       try {
         console.log('📱 Mobile data loading function called')
@@ -936,10 +932,10 @@ export default function HomePage() {
         {/* Two-Column Layout */}
         <div className="relative z-10">
           <div className="container mx-auto px-4">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 items-center h-[700px]">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-4 items-center min-h-[600px] md:h-[700px]">
               
               {/* Left Column - Text Content + Search */}
-              <div className="space-y-8 lg:pr-8 flex flex-col justify-center h-[700px]">
+              <div className="space-y-6 md:space-y-8 lg:pr-8 flex flex-col justify-center min-h-[500px] md:h-[700px] py-8 md:py-0">
                 {/* Headlines */}
                 <div className="space-y-6">
                   <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight">
@@ -949,7 +945,7 @@ export default function HomePage() {
                     like never before
                   </h1>
                   
-                  <p className="text-xl text-slate-300 leading-relaxed max-w-lg">
+                  <p className="text-lg md:text-xl text-slate-300 leading-relaxed max-w-lg">
                     Professional virtual tours, expert appraisals, and AI-powered recommendations.
                   </p>
                   
@@ -989,10 +985,10 @@ export default function HomePage() {
                     </div>
                   </div>
                   
-                  {/* Quick Search Examples */}
-                  <div className="flex flex-wrap justify-between gap-2">
+                  {/* Quick Search Examples - 2x2 Grid Layout */}
+                  <div className="grid grid-cols-2 gap-2 w-full">
                     {[
-                      'Villa with a pool in New Cairo',
+                      'Villa with pool in New Cairo',
                       '3bdr penthouse in Zamalek', 
                       'Apartment under 3M in Maadi',
                       'Townhouse in Sheikh Zayed'
@@ -1000,7 +996,7 @@ export default function HomePage() {
                       <button
                         key={index}
                         onClick={() => setSearchQuery(example)}
-                        className="text-slate-700 text-sm hover:text-slate-900 bg-white/90 hover:bg-white px-4 py-2.5 rounded-full border border-gray-200 hover:border-gray-300 transition-all duration-200 backdrop-blur-sm shadow-sm hover:shadow-md flex-1 text-center"
+                        className="text-slate-700 text-sm md:text-base hover:text-slate-900 bg-white/90 hover:bg-white px-3 md:px-4 py-2.5 md:py-3 rounded-full border border-gray-200 hover:border-gray-300 transition-all duration-200 backdrop-blur-sm shadow-sm hover:shadow-md text-center leading-relaxed"
                       >
                         {example}
                       </button>
@@ -1011,7 +1007,7 @@ export default function HomePage() {
 
               {/* Right Column - Rotating Property Images */}
               <div className="relative lg:pl-4">
-                <div className="relative h-[700px] w-full lg:w-[120%] lg:-mr-[20%]">
+                <div className="relative h-[400px] md:h-[600px] lg:h-[700px] w-full lg:w-[120%] lg:-mr-[20%] mt-8 lg:mt-0">
                   {/* Property Image Carousel - Clickable */}
                   <Link 
                     href={`/property/${currentProperty?.id || 'demo-property'}`}
