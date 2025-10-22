@@ -920,7 +920,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
       {/* Botika-Inspired Hero Section */}
       <section className="relative overflow-hidden">
         {/* Sophisticated Blue Gradient Background */}
@@ -958,23 +958,25 @@ export default function HomePage() {
                 </div>
 
                 {/* Glass Morphism Search Bar */}
-                <div className="space-y-4 pt-4">
-                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20 shadow-2xl">
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center flex-1 px-6 py-4">
-                        <Search className="h-5 w-5 text-white/70 mr-4" />
+                <div className="space-y-4 pt-4 w-full">
+                  <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-2 border border-white/20 shadow-2xl w-full">
+                    <div className="flex items-center gap-2 md:gap-3 w-full">
+                      <div className="flex items-center flex-1 px-3 md:px-6 py-3 md:py-4 min-w-0">
+                        <Search className="h-4 w-4 md:h-5 md:w-5 text-white/70 mr-2 md:mr-4 flex-shrink-0" />
                         <input 
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyPress={handleSearchKeyPress}
-                          placeholder="Search by location, property type, or features..."
-                          className="flex-1 text-base text-white outline-none placeholder:text-white/60 bg-transparent"
+                          placeholder="Search by location, property type..."
+                          className="flex-1 text-sm md:text-base text-white outline-none placeholder:text-white/60 bg-transparent min-w-0"
+                          style={{ touchAction: 'manipulation' }}
                         />
                       </div>
                       <Button 
                         onClick={handleSmartSearch}
                         disabled={isSearching}
-                        className="bg-white hover:bg-gray-50 text-blue-600 font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+                        className="bg-white hover:bg-gray-50 text-blue-600 font-medium px-3 md:px-6 py-2.5 md:py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm md:text-base whitespace-nowrap flex-shrink-0"
+                        style={{ touchAction: 'manipulation' }}
                       >
                         {isSearching ? (
                           <Loader2 className="w-4 h-4 animate-spin" />

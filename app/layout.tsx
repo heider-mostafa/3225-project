@@ -221,8 +221,31 @@ export default function RootLayout({
             `,
           }}
         />
+        
+        {/* Mobile optimization CSS */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            html, body {
+              overflow-x: hidden !important;
+              width: 100% !important;
+              position: relative !important;
+            }
+            
+            * {
+              max-width: 100% !important;
+            }
+            
+            /* Prevent horizontal scroll on mobile */
+            @media (max-width: 768px) {
+              .container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+              }
+            }
+          `
+        }} />
       </head>
-      <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`}>
+      <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`} style={{ overflowX: 'hidden', touchAction: 'pan-y pinch-zoom' }}>
         <Providers>
           <Navbar />
           <main>
