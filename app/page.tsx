@@ -1128,7 +1128,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className="h-full"
               >
-                <Link href={`/property/${property.id}`} className="block h-full" prefetch={true}>
+                <Link href={`/property/${property.id}`} className="block h-full">
                   <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group relative h-full flex flex-col">
                     <div className="absolute top-4 left-4 z-10">
                       <Badge className="bg-red-500 text-white animate-pulse">
@@ -1459,7 +1459,7 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
-                <Link href={`/property/${property.id}`} className="block" prefetch={true}>
+                <Link href={`/property/${property.id}`} className="block">
                   <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group">
                     <div className="relative">
                       <img
@@ -1696,7 +1696,7 @@ export default function HomePage() {
                             </div>
                           )}
                           <div className="flex justify-center">
-                            <Link href={`/property/${property.id}`} prefetch={true}>
+                            <Link href={`/property/${property.id}`}>
                               <Button className="w-full">{t('properties.viewDetails', 'View Details')}</Button>
                             </Link>
                           </div>
