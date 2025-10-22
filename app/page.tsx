@@ -1014,8 +1014,6 @@ export default function HomePage() {
                   <Link 
                     href={`/property/${currentProperty?.id || 'demo-property'}`}
                     className="absolute inset-0 rounded-3xl overflow-hidden shadow-2xl group cursor-pointer"
-                    prefetch={true}
-                    priority
                   >
                     <div className="relative h-full w-full">
                       {/* Featured Property Image */}

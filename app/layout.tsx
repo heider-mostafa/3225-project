@@ -2,7 +2,7 @@ import './globals.css'
 import Navbar from '@/components/navbar'
 import { Providers } from '@/components/providers'
 import { StructuredData } from '@/components/structured-data'
-import { EnhancedPageTransition } from '@/components/ui/page-transition'
+import { MobileDebug } from '@/components/mobile-debug'
 import { Cairo, Amiri, Montserrat } from 'next/font/google'
 
 // Fonts
@@ -249,9 +249,7 @@ export default function RootLayout({
         <Providers>
           <Navbar />
           <main>
-            <EnhancedPageTransition>
-              {children}
-            </EnhancedPageTransition>
+            {children}
           </main>
         </Providers>
       </body>

@@ -67,48 +67,6 @@ export default function Navbar() {
     checkUserRole()
   }, [user])
 
-  // Enhanced prefetching for critical routes
-  useEffect(() => {
-    const prefetchCriticalRoutes = () => {
-      const criticalRoutes = [
-        '/properties',
-        '/virtual-tours', 
-        '/about',
-        '/find-appraisers'
-      ]
-      
-      // Prefetch routes after initial load to improve navigation speed
-      criticalRoutes.forEach(route => {
-        router.prefetch(route)
-      })
-      
-      // Role-based prefetching
-      if (user) {
-        if (userRole === 'admin' || userRole === 'super_admin') {
-          router.prefetch('/admin')
-        } else if (userRole === 'appraiser') {
-          router.prefetch('/appraiser')
-        } else if (userRole === 'broker') {
-          router.prefetch('/broker/dashboard')
-        } else if (userRole === 'photographer') {
-          router.prefetch('/photographer')
-        }
-        
-        // Common authenticated routes
-        router.prefetch('/profile')
-        router.prefetch('/saved')
-      } else {
-        // Unauthenticated user routes
-        router.prefetch('/auth')
-      }
-    }
-    
-    // Delay prefetching to not interfere with initial page load
-    const timeoutId = setTimeout(prefetchCriticalRoutes, 1000)
-    
-    return () => clearTimeout(timeoutId)
-  }, [router, user, userRole])
-
   const handleSignOut = async () => {
     await supabase.auth.signOut()
     router.push('/auth')

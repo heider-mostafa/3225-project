@@ -42,11 +42,7 @@ export function PropertyCard({ property, initialSaved = false }: PropertyCardPro
     <PropertyTranslationWrapper property={property}>
       {(translatedProperty, isTranslating) => (
     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 group h-full">
-      <Link 
-        href={`/property/${property.id}`} 
-        className="block"
-        prefetch={true}
-      >
+      <Link href={`/property/${property.id}`} className="block">
         <div className="relative h-48 w-full">
           <Image
             src={primaryPhoto}
