@@ -223,7 +223,6 @@ export default function RootLayout({
         />
       </head>
       <body className={`${cairo.variable} ${amiri.variable} ${montserrat.variable}`}>
-        <MobileDebug />
         <Providers>
           <Navbar />
           <main>
