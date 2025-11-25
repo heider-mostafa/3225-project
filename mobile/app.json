@@ -1,20 +1,4 @@
 {
-  "expo": {
-    "name": "Egyptian Real Estate",
-    "slug": "egyptian-real-estate",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "platforms": ["ios", "android"],
-    "main": "./App.tsx",
-    "web": {
-      "bundler": "metro"
-    },
-    "ios": {
-      "bundleIdentifier": "com.egyptianrealestate.mobile"
-    },
-    "android": {
-      "package": "com.egyptianrealestate.mobile"
-    }
-  }
+  "name": "RealEstateMvp",
+  "displayName": "RealEstateMvp"
 }

@@ -850,6 +850,73 @@ class ValifyService {
   }
 
   /**
+   * Validate Commercial Registration for developers
+   * Mock implementation for Egyptian GAFI commercial registration validation
+   */
+  async validateCommercialRegistration(
+    registrationNumber: string,
+    companyName: string,
+    taxId: string | null,
+    user_id: string
+  ): Promise<{
+    transaction_id: string;
+    is_valid: boolean;
+    company_data?: {
+      name: string;
+      registration_number: string;
+      tax_id?: string;
+      status: string;
+      issue_date?: string;
+      expiry_date?: string;
+    };
+    status: string;
+    error_message?: string;
+  }> {
+    try {
+      // Mock validation for now - replace with actual GAFI API integration
+      const mockTransactionId = `cr_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Simple validation rules for mock
+      const isValidFormat = /^\d{7,}$/.test(registrationNumber);
+      const hasValidName = companyName.length > 3;
+      
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const isValid = isValidFormat && hasValidName;
+      
+      const response = {
+        transaction_id: mockTransactionId,
+        is_valid: isValid,
+        status: isValid ? 'success' : 'failed',
+        company_data: isValid ? {
+          name: companyName,
+          registration_number: registrationNumber,
+          tax_id: taxId || undefined,
+          status: 'active',
+          issue_date: '2020-01-01',
+          expiry_date: '2025-12-31'
+        } : undefined,
+        error_message: isValid ? undefined : 'Invalid commercial registration format'
+      };
+
+      await this.logVerificationAttempt(
+        user_id,
+        'commercial_registration',
+        mockTransactionId,
+        isValid ? 'success' : 'failed',
+        isValid ? 100 : 0,
+        response
+      );
+
+      return response;
+    } catch (error) {
+      console.error('Commercial registration validation error:', error);
+      throw new Error('Failed to validate commercial registration');
+    }
+  }
+
+  /**
    * Log verification attempt to database
    */
   private async logVerificationAttempt(

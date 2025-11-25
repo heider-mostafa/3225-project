@@ -1,19 +1,26 @@
-const { getDefaultConfig } = require('expo/metro-config');
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const path = require('path');
 
-// Use Expo's metro config instead of React Native's
-const config = getDefaultConfig(__dirname);
-
-// Add custom resolver options
-config.resolver.alias = {
-  '@': path.resolve(__dirname, 'src'),
+/**
+ * Metro configuration
+ * https://reactnative.dev/docs/metro
+ *
+ * @type {import('@react-native/metro-config').MetroConfig}
+ */
+const config = {
+  resolver: {
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@components': path.resolve(__dirname, 'src/components'),
+      '@screens': path.resolve(__dirname, 'src/screens'),
+      '@services': path.resolve(__dirname, 'src/services'),
+      '@utils': path.resolve(__dirname, 'src/utils'),
+      '@types': path.resolve(__dirname, 'src/types'),
+      '@config': path.resolve(__dirname, 'src/config'),
+      '@store': path.resolve(__dirname, 'src/store'),
+      '@navigation': path.resolve(__dirname, 'src/navigation'),
+    },
+  },
 };
 
-// Add asset and source extensions
-config.resolver.assetExts.push('bin');
-config.resolver.sourceExts.push('cjs');
-
-// Remove parent node_modules watching to avoid conflicts
-// watchFolders: [path.resolve(__dirname, '..', 'node_modules')],
-
-module.exports = config;
+module.exports = mergeConfig(getDefaultConfig(__dirname), config);

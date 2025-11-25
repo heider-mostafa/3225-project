@@ -185,7 +185,7 @@ export function PremiumIntelligenceSection({
             <div>
               <div className="text-lg font-bold text-green-600">{data.highYieldAreasCount}</div>
               <div className="text-xs text-gray-600">High Yield Areas</div>
-              <div className="text-xs text-gray-500">(>6% yield)</div>
+              <div className="text-xs text-gray-500">(&gt;6% yield)</div>
             </div>
             <div>
               <div className="text-lg font-bold text-purple-600">{data.premiumNeighborhoodsCount}</div>

@@ -21,7 +21,9 @@ import {
   Clock,
   Mail,
   Calculator,
-  Home
+  Home,
+  Factory,
+  UserCog
 } from 'lucide-react'
 import { useAuth } from '@/components/providers'
 import { getCurrentUserRole, type UserRole } from '@/lib/auth/admin-client'
@@ -74,6 +76,25 @@ const sidebarItems = [
     name: 'Users',
     href: '/admin/users',
     icon: Users,
+    permission: 'users:read'
+  },
+  // Community Management Section
+  {
+    name: 'Developers',
+    href: '/admin/developers',
+    icon: Factory,
+    permission: 'users:read'
+  },
+  {
+    name: 'Compounds',
+    href: '/admin/compounds',
+    icon: Building2,
+    permission: 'properties:read'
+  },
+  {
+    name: 'Residents',
+    href: '/admin/residents',
+    icon: UserCog,
     permission: 'users:read'
   },
   {

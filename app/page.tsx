@@ -1112,7 +1112,7 @@ export default function HomePage() {
               <p className="text-sm sm:text-base text-slate-600">{t('properties.hottestListingsDescription', 'Properties with the highest interest and price growth')}</p>
             </div>
             <Link href="/properties?sort=trending" className="shrink-0">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="w-auto">
                 {t('properties.viewAllTrending', 'View All Trending')}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -1302,15 +1302,16 @@ export default function HomePage() {
                     trigger={
                       <Button 
                         size="lg" 
-                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-lg sm:text-xl px-6 sm:px-12 py-6 sm:py-8 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
+                        className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold text-sm sm:text-lg px-4 sm:px-12 py-6 sm:py-8 rounded-full shadow-2xl hover:shadow-[0_0_40px_rgba(59,130,246,0.5)] transition-all duration-300 transform hover:scale-105 w-full sm:w-auto max-w-[280px] sm:max-w-none min-h-[64px] sm:min-h-auto"
                       >
                         <span className="relative z-10 flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                           <div className="flex items-center gap-2">
                             <Gift className="h-5 w-5 sm:h-7 sm:w-7 flex-shrink-0" />
-                            <span className="block sm:hidden text-center leading-tight">
-                              {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').replace(' ', '\n')}
+                            <span className="text-center leading-tight">
+                              <span className="block sm:hidden">Claim My FREE</span>
+                              <span className="block sm:hidden">Virtual Tour</span>
+                              <span className="hidden sm:block">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                             </span>
-                            <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                           </div>
                           <ArrowRight className="h-4 w-4 sm:h-6 sm:w-6 group-hover:translate-x-1 transition-transform flex-shrink-0 block sm:inline-block" />
                         </span>
@@ -1875,7 +1876,7 @@ export default function HomePage() {
                   <div className="text-center">
                     <Button 
                       size="lg"
-                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold hover:from-blue-700 hover:to-blue-800 transition-all w-full sm:w-auto"
+                      className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-full font-bold hover:from-blue-700 hover:to-blue-800 transition-all w-auto"
                       onClick={() => router.push('/find-appraisers')}
                     >
                       <Calculator className="w-5 h-5 mr-2" />
@@ -1933,7 +1934,7 @@ export default function HomePage() {
               <p className="text-sm sm:text-base text-slate-600">{t('areas.topAreasDescription', 'Explore the most popular neighborhoods and districts')}</p>
             </div>
             <Link href="/areas" className="shrink-0">
-              <Button variant="outline" size="sm" className="w-full sm:w-auto">
+              <Button variant="outline" size="sm" className="w-auto">
                 {t('areas.viewAllAreas', 'View All Areas')}
                 <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
@@ -2112,18 +2113,24 @@ export default function HomePage() {
                 </p>
                 
                 {/* Benefits Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                  <div className="flex items-center justify-center gap-3">
-                    <CheckCircle className="h-6 w-6 text-green-300" />
-                    <span>{t('cta.professionalPhotography', 'Professional Photography')}</span>
-            </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <CheckCircle className="h-6 w-6 text-green-300" />
-                    <span>{t('cta.virtualTourCreation', '3D Virtual Tour Creation')}</span>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 place-items-center">
+                  <div className="flex flex-col items-center justify-center gap-2 text-center w-full max-w-xs">
+                    <div className="flex items-center justify-center w-full">
+                      <CheckCircle className="h-6 w-6 text-green-300 mx-auto" />
+                    </div>
+                    <span className="leading-6 text-center">{t('cta.professionalPhotography', 'Professional Photography')}</span>
                   </div>
-                  <div className="flex items-center justify-center gap-3">
-                    <CheckCircle className="h-6 w-6 text-green-300" />
-                    <span>{t('cta.brokerNetworkMarketing', 'Broker Network Marketing')}</span>
+                  <div className="flex flex-col items-center justify-center gap-2 text-center w-full max-w-xs">
+                    <div className="flex items-center justify-center w-full">
+                      <CheckCircle className="h-6 w-6 text-green-300 mx-auto" />
+                    </div>
+                    <span className="leading-6 text-center">{t('cta.virtualTourCreation', '3D Virtual Tour Creation')}</span>
+                  </div>
+                  <div className="flex flex-col items-center justify-center gap-2 text-center w-full max-w-xs">
+                    <div className="flex items-center justify-center w-full">
+                      <CheckCircle className="h-6 w-6 text-green-300 mx-auto" />
+                    </div>
+                    <span className="leading-6 text-center">{t('cta.brokerNetworkMarketing', 'Broker Network Marketing')}</span>
                   </div>
                 </div>
 
@@ -2131,15 +2138,16 @@ export default function HomePage() {
                   trigger={
                     <Button 
                       size="lg" 
-                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-lg sm:text-xl px-6 sm:px-8 py-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto min-h-[64px] sm:min-h-auto"
+                      className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold text-sm sm:text-lg px-4 sm:px-8 py-6 sm:py-8 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 w-full sm:w-auto max-w-[280px] sm:max-w-none min-h-[64px] sm:min-h-auto"
                     >
                       <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
                         <div className="flex items-center gap-2">
                           <Gift className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
-                          <span className="block sm:hidden text-center leading-tight">
-                            {t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour').replace(' ', '\n')}
+                          <span className="text-center leading-tight whitespace-nowrap">
+                            <span className="block sm:hidden">Claim My FREE</span>
+                            <span className="block sm:hidden">Virtual Tour</span>
+                            <span className="hidden sm:block">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                           </span>
-                          <span className="hidden sm:block text-center">{t('cta.claimFreeVirtualTour', 'Claim My FREE Virtual Tour')}</span>
                         </div>
                       </div>
                     </Button>
